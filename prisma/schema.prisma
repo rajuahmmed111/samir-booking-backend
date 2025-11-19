@@ -1,0 +1,593 @@
+// datasource and generator setup
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ---------------------------------------------------------
+//  ENUMS
+// ---------------------------------------------------------
+
+enum UserRole {
+  USER
+  PROPERTY_OWNER
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  REJECTED
+}
+
+enum EveryServiceStatus {
+  AVAILABLE
+  BOOKED
+}
+
+enum PaymentStatus {
+  PAID
+  UNPAID
+  REFUNDED
+}
+
+enum Weekday {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+  EXPIRED
+}
+
+enum PaymentProvider {
+  STRIPE
+  PAYSTACK
+}
+
+enum PromoStatus {
+  ACTIVE
+  INACTIVE
+  EXPIRED
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FLAT
+}
+
+enum SupportType {
+  Critical
+  High
+  Medium
+  Low
+}
+
+enum SupportStatus {
+  Pending
+  Closed
+}
+
+// ---------------------------------------------------------
+//  MODEL
+// ---------------------------------------------------------
+
+model User {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  fullName        String?
+  email           String     @unique
+  password        String     @default("123456")
+  profileImage    String     @default("https://i.ibb.co/Ps9gZ8DD/Profile-image.png")
+  contactNumber   String?
+  address         String?
+  country         String?
+  role            UserRole   @default(USER)
+  status          UserStatus @default(ACTIVE)
+  fcmToken        String?    @default("")
+  age             Int?
+  dateOfBirth     DateTime?
+  profession      String?
+  gender          String?
+  companyName     String?
+  isEmailVerified Boolean    @default(false)
+  isPhoneVerified Boolean    @default(false)
+
+  // Stripe
+  stripeAccountId   String?
+  isStripeConnected Boolean @default(false)
+
+  // Pay-stack
+  payStackMerchantId  String?
+  isPayStackConnected Boolean @default(false)
+
+  // Sub-account info for pay-stack
+  payStackSubAccountId String?
+  payStackSubAccount   String?
+
+  // notification Preferences
+  supportNotification Boolean @default(true)
+  paymentNotification Boolean @default(true)
+  emailNotification   Boolean @default(true)
+
+  isHotel      Boolean @default(false)
+  isSecurity   Boolean @default(false)
+  isCar        Boolean @default(false)
+  isAttraction Boolean @default(false)
+
+  otp        String?
+  otpExpiry  DateTime?
+  identifier String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // relationships
+  payment            Payment[]
+  notifications      Notifications[]
+  hotel              Hotel[]
+  room               Room[]
+  review             Review[]
+  hotel_bookings     Hotel_Booking[]
+  favorite           Favorite[]
+  sender             Channel[]            @relation("ChannelPerson1")
+  receiver           Channel[]            @relation("ChannelPerson2")
+  messages           Message[]            @relation("sentMessages")
+  support            Support[]
+
+  @@map("users")
+}
+
+model Admin {
+  id          String  @id @default(auto()) @map("_id") @db.ObjectId
+  fullName    String?
+  phoneNumber String?
+  email       String  @unique
+  password    String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("admins")
+}
+
+model Hotel {
+  id                     String   @id @default(auto()) @map("_id") @db.ObjectId
+  hotelBusinessName      String   @unique
+  hotelName              String
+  hotelBusinessType      String
+  hotelRegNum            String
+  hotelRegDate           String
+  hotelPhone             String
+  hotelEmail             String
+  businessTagline        String
+  businessDescription    String
+  businessLogo           String // @default("https://i.ibb.co/zWxSgQL8/download.png")
+  hotelBookingCondition  String
+  hotelCancelationPolicy String
+  hotelDocs              String[]
+  hotelLate              Float?
+  hotelLong              Float?
+  hotelAddress           String
+  hotelCity              String
+  hotelPostalCode        String
+  hotelDistrict          String
+  hotelCountry           String
+
+  hotelAC                       Boolean
+  hotelParking                  Boolean
+  hoitelWifi                    Boolean
+  hotelBreakfast                Boolean
+  hotelPool                     Boolean
+  hotelSmoking                  Boolean
+  hotelTv                       Boolean
+  hotelWashing                  Boolean
+  hotelAccommodationType        String
+  hotelKitchen                  Boolean
+  hotelRestaurant               Boolean
+  hotelGym                      Boolean
+  hotelSpa                      Boolean
+  hotel24HourFrontDesk          Boolean
+  hotelAirportShuttle           Boolean
+  hotelNoSmokingPreference      Boolean
+  hotelNoNSmoking               Boolean
+  hotelPetsAllowed              Boolean
+  hotelNoPetsPreferences        Boolean
+  hotelPetsNotAllowed           Boolean
+  hotelLocationFeatureWaterView Boolean
+  hotelLocationFeatureIsland    Boolean
+  hotelCoffeeBar                Boolean
+  isFavorite                    Boolean  @default(false)
+  createdAt                     DateTime @default(now())
+  updatedAt                     DateTime @updatedAt
+
+  // relationships
+  user           User            @relation(fields: [partnerId], references: [id])
+  partnerId      String          @db.ObjectId
+  hotel_bookings Hotel_Booking[]
+  favorite       Favorite[]
+  room           Room[]
+  review         Review[]
+
+  @@map("hotels")
+}
+
+model Room {
+  id                   String             @id @default(auto()) @map("_id") @db.ObjectId
+  hotelRoomType        String
+  hotelRoomDescription String
+  hotelImages          String[] // 5 image
+  hotelRoomImages      String[] // 5 image
+  hotelRoomCapacity    String
+  hotelNumberOfRooms   Int                @default(1)
+  hotelNumAdults       Int                @default(1)
+  hotelNumChildren     Int                @default(1)
+  category             String
+  hotelRating          String             @default("0")
+  hotelRoomPriceNight  Float
+  discount             Float              @default(0)
+  isBooked             EveryServiceStatus @default(AVAILABLE)
+  currency             String             @default("USD")
+  hotelReviewCount     Int                @default(0)
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+
+  // relationships
+  hotelId        String?         @db.ObjectId
+  hotel          Hotel?          @relation(fields: [hotelId], references: [id])
+  user           User?           @relation(fields: [partnerId], references: [id])
+  partnerId      String?         @db.ObjectId
+  hotel_bookings Hotel_Booking[]
+  review         Review[]
+
+  @@map("rooms")
+}
+
+model Hotel_Booking {
+  id                String        @id @default(auto()) @map("_id") @db.ObjectId
+  checkoutSessionId String?
+  rooms             Int
+  adults            Int
+  children          Int
+  bookedFromDate    String
+  bookedToDate      String
+  totalPrice        Float
+  convertedPrice    Float
+  displayCurrency   String?
+  discountedPrice   Float
+  specialRequest    String?
+  category          String?
+  bookingStatus     BookingStatus @default(PENDING)
+  name              String?
+  email             String?
+  phone             String?
+  address           String?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  // relationships
+  partnerId String    @db.ObjectId
+  hotel     Hotel?    @relation(fields: [hotelId], references: [id])
+  hotelId   String?   @db.ObjectId
+  user      User?     @relation(fields: [userId], references: [id])
+  userId    String?   @db.ObjectId
+  payment   Payment[]
+  room      Room?     @relation(fields: [roomId], references: [id])
+  roomId    String?   @db.ObjectId
+
+  @@map("hotel_bookings")
+}
+
+
+model Review {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  rating     Float
+  subRatings Json?
+  comment    String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // relationships
+  user             User               @relation(fields: [userId], references: [id])
+  userId           String             @db.ObjectId
+  hotel            Hotel?             @relation(fields: [hotelId], references: [id])
+  hotelId          String?            @db.ObjectId
+  room             Room?              @relation(fields: [roomId], references: [id])
+  roomId           String?            @db.ObjectId
+ 
+  @@map("reviews")
+}
+
+model Favorite {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String   @db.ObjectId
+  hotel     Hotel    @relation(fields: [hotelId], references: [id])
+  hotelId   String   @db.ObjectId
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, hotelId])
+  @@map("favorites")
+}
+
+model Notifications {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  receiverId   String?  @db.ObjectId
+  partnerId    String?  @db.ObjectId
+  supportId    String?  @db.ObjectId
+  title        String
+  message      String?
+  body         String
+  serviceTypes String?
+  bookingId    String?
+  read         Boolean  @default(false)
+  isClicked    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  user         User?    @relation(fields: [receiverId], references: [id])
+
+  @@map("notifications")
+}
+
+model Faq {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  question  String
+  answer    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("faqs")
+}
+
+model CustomerContact {
+  id          String  @id @default(auto()) @map("_id") @db.ObjectId
+  fullName    String
+  email       String
+  phone       String?
+  description String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("customer_contacts")
+}
+
+model Newsroom {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  tagline     String
+  title       String
+  summary     String
+  category    String
+  country     String
+  image       String[]
+  publishedAt DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  author      String?
+  isPublished Boolean  @default(true)
+
+  @@map("newsrooms")
+}
+
+model Human_Rights {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  description String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("human_rights")
+}
+
+model Cancel_Reservation {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  description String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("cancel_reservations")
+}
+
+model Refund_Policy {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  description String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("refund_policies")
+}
+
+model About_App {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  appName       String
+  description   String
+  ourServices   String[]
+  whyFasisty    String[]
+  ourMission    String
+  ourVision     String
+  securityTrust String
+  futurePlans   String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("about_apps")
+}
+
+model Terms_Condition {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  title                 String
+  acceptance_terms      String
+  app_purpose           String
+  user_responsibilities String
+  data_usage            String
+  intellectual_property String
+  limitation            String
+  updates               String
+  contactUS             String
+  adminId               String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("terms_conditions")
+}
+
+model Privacy_Policy {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  title                String
+  introduction         String
+  information_collect  String[]
+  how_useYour_data     String[]
+  data_security        String
+  third_party_services String
+  user_control         String[]
+  children_privacy     String
+  changes_to_policy    String
+  contact_info         String
+  adminId              String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("privacy_policies")
+}
+
+model Advertise {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  description String
+  videoUrl    String?
+  adminId     String?  @db.ObjectId
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("advertisements")
+}
+
+model Investor_Relations {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  description String
+  imageUrl    String?
+  revenue     Float?
+  profit      Float?
+  growth      Float?
+  adminId     String?  @db.ObjectId
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("investor_relations")
+}
+
+model Channel {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  channelName String   @unique
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  //Relations
+  person1Id String?   @db.ObjectId
+  person1   User?     @relation("ChannelPerson1", fields: [person1Id], references: [id])
+  person2Id String?   @db.ObjectId
+  person2   User?     @relation("ChannelPerson2", fields: [person2Id], references: [id])
+  messages  Message[]
+
+  @@map("channels")
+}
+
+model Message {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  message   String?
+  files     String[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  senderId    String   @db.ObjectId
+  sender      User     @relation("sentMessages", fields: [senderId], references: [id])
+  channelName String
+  Channel     Channel? @relation(fields: [channelName], references: [channelName])
+
+  @@map("messages")
+}
+
+model Payment {
+  id               String          @id @default(auto()) @map("_id") @db.ObjectId
+  amount           Float
+  description      String?
+  currency         String?
+  sessionId        String?         @unique
+  paymentMethod    String?
+  status           PaymentStatus
+  // status           String
+  provider         PaymentProvider
+  payable_name     String?
+  payable_email    String?
+  payment_intent   String?
+  country          String?
+  admin_commission Float?
+  service_fee      Float?
+  paystack_fee     Float?
+  vat_amount       Float? // 5% only for admin
+  transactionId    String?
+  serviceType      String // HOTEL | SECURITY | CAR | ATTRACTION
+  partnerId        String          @db.ObjectId
+  isDeleted        Boolean         @default(false)
+  metadata         Json? // extra(fullName, email, contactNumber, country, description etc).
+
+  // Relations
+  user                 User                @relation(fields: [userId], references: [id])
+  userId               String              @db.ObjectId
+  hotel_booking        Hotel_Booking?      @relation(fields: [hotel_bookingId], references: [id])
+  hotel_bookingId      String?             @db.ObjectId
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("payments")
+}
+
+model Support {
+  id            String        @id @default(auto()) @map("_id") @db.ObjectId
+  fullName      String?
+  email         String?
+  contactNumber String?
+  subject       String
+  description   String
+  supportType   SupportType   @default(High)
+  status        SupportStatus @default(Pending)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  // Relations
+  user   User?   @relation(fields: [userId], references: [id])
+  userId String? @db.ObjectId
+
+  @@map("supports")
+}
+
+model CurrencyRate {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  baseCurrency String   @default("USD")
+  rates        Json // { "BDT": 110, "AED": 3.67, "NGN": 1630, ... }
+  lastUpdated  DateTime @default(now())
+
+  @@map("currency_rates")
+}
