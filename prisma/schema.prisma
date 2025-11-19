@@ -82,6 +82,12 @@ enum SupportStatus {
   Closed
 }
 
+enum Currency {
+  USD
+  BDT
+  EUR
+}
+
 // ---------------------------------------------------------
 //  MODEL
 // ---------------------------------------------------------
@@ -137,17 +143,18 @@ model User {
   updatedAt DateTime @updatedAt
 
   // relationships
-  payment            Payment[]
-  notifications      Notifications[]
-  hotel              Hotel[]
-  room               Room[]
-  review             Review[]
-  hotel_bookings     Hotel_Booking[]
-  favorite           Favorite[]
-  sender             Channel[]            @relation("ChannelPerson1")
-  receiver           Channel[]            @relation("ChannelPerson2")
-  messages           Message[]            @relation("sentMessages")
-  support            Support[]
+  payment        Payment[]
+  notifications  Notifications[]
+  hotel          Hotel[]
+  room           Room[]
+  review         Review[]
+  hotel_bookings Hotel_Booking[]
+  favorite       Favorite[]
+  sender         Channel[]       @relation("ChannelPerson1")
+  receiver       Channel[]       @relation("ChannelPerson2")
+  messages       Message[]       @relation("sentMessages")
+  support        Support[]
+  subscriptions  Subscription[]
 
   @@map("users")
 }
@@ -292,7 +299,6 @@ model Hotel_Booking {
   @@map("hotel_bookings")
 }
 
-
 model Review {
   id         String   @id @default(auto()) @map("_id") @db.ObjectId
   rating     Float
@@ -302,13 +308,13 @@ model Review {
   updatedAt  DateTime @updatedAt
 
   // relationships
-  user             User               @relation(fields: [userId], references: [id])
-  userId           String             @db.ObjectId
-  hotel            Hotel?             @relation(fields: [hotelId], references: [id])
-  hotelId          String?            @db.ObjectId
-  room             Room?              @relation(fields: [roomId], references: [id])
-  roomId           String?            @db.ObjectId
- 
+  user    User    @relation(fields: [userId], references: [id])
+  userId  String  @db.ObjectId
+  hotel   Hotel?  @relation(fields: [hotelId], references: [id])
+  hotelId String? @db.ObjectId
+  room    Room?   @relation(fields: [roomId], references: [id])
+  roomId  String? @db.ObjectId
+
   @@map("reviews")
 }
 
@@ -553,10 +559,10 @@ model Payment {
   metadata         Json? // extra(fullName, email, contactNumber, country, description etc).
 
   // Relations
-  user                 User                @relation(fields: [userId], references: [id])
-  userId               String              @db.ObjectId
-  hotel_booking        Hotel_Booking?      @relation(fields: [hotel_bookingId], references: [id])
-  hotel_bookingId      String?             @db.ObjectId
+  user            User           @relation(fields: [userId], references: [id])
+  userId          String         @db.ObjectId
+  hotel_booking   Hotel_Booking? @relation(fields: [hotel_bookingId], references: [id])
+  hotel_bookingId String?        @db.ObjectId
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -590,4 +596,34 @@ model CurrencyRate {
   lastUpdated  DateTime @default(now())
 
   @@map("currency_rates")
+}
+
+enum ValidityType {
+  months
+  years
+}
+
+type Price {
+  currency Currency @default(USD)
+  amount   Float
+}
+
+type Validity {
+  type  ValidityType
+  value Int
+}
+
+model Subscription {
+  id       String   @id @default(auto()) @map("_id") @db.ObjectId
+  name     String
+  price    Price
+  validity Validity
+  features String[]
+  user     User?    @relation(fields: [userId], references: [id])
+  userId   String?  @db.ObjectId
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("subscription")
 }
