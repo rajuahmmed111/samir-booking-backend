@@ -15,6 +15,7 @@ generator client {
 enum UserRole {
   USER
   PROPERTY_OWNER
+  SERVICE_PROVIDER
   ADMIN
   SUPER_ADMIN
 }
@@ -88,6 +89,11 @@ enum Currency {
   EUR
 }
 
+enum SubscriptionStatus {
+  ACTIVE
+  INACTIVE
+}
+
 // ---------------------------------------------------------
 //  MODEL
 // ---------------------------------------------------------
@@ -143,18 +149,19 @@ model User {
   updatedAt DateTime @updatedAt
 
   // relationships
-  payment        Payment[]
-  notifications  Notifications[]
-  hotel          Hotel[]
-  room           Room[]
-  review         Review[]
-  hotel_bookings Hotel_Booking[]
-  favorite       Favorite[]
-  sender         Channel[]       @relation("ChannelPerson1")
-  receiver       Channel[]       @relation("ChannelPerson2")
-  messages       Message[]       @relation("sentMessages")
-  support        Support[]
-  subscriptions  Subscription[]
+  payment              Payment[]
+  notifications        Notifications[]
+  hotel                Hotel[]
+  room                 Room[]
+  review               Review[]
+  hotel_bookings       Hotel_Booking[]
+  favorite             Favorite[]
+  sender               Channel[]              @relation("ChannelPerson1")
+  receiver             Channel[]              @relation("ChannelPerson2")
+  messages             Message[]              @relation("sentMessages")
+  support              Support[]
+  subscriptions        SubscriptionPlan[]
+  purchaseSubscription Purchase_subscription?
 
   @@map("users")
 }
@@ -564,8 +571,10 @@ model Payment {
   hotel_booking   Hotel_Booking? @relation(fields: [hotel_bookingId], references: [id])
   hotel_bookingId String?        @db.ObjectId
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt               DateTime               @default(now())
+  updatedAt               DateTime               @updatedAt
+  purchaseSubscription    Purchase_subscription? @relation(fields: [purchase_subscriptionId], references: [id])
+  purchase_subscriptionId String?                @db.ObjectId
 
   @@map("payments")
 }
@@ -613,7 +622,7 @@ type Validity {
   value Int
 }
 
-model Subscription {
+model SubscriptionPlan {
   id       String   @id @default(auto()) @map("_id") @db.ObjectId
   name     String
   price    Price
@@ -622,8 +631,32 @@ model Subscription {
   user     User?    @relation(fields: [userId], references: [id])
   userId   String?  @db.ObjectId
 
+  createdAt            DateTime               @default(now())
+  updatedAt            DateTime               @updatedAt
+  purchaseSubscription Purchase_subscription?
+
+  @@map("subscription")
+}
+
+model Purchase_subscription {
+  id                String             @id @default(auto()) @map("_id") @db.ObjectId
+  startDate         DateTime           @default(now())
+  endDate           DateTime
+  cancelAtPeriodEnd Boolean            @default(false)
+  status            SubscriptionStatus @default(ACTIVE)
+
+  // which provider with we subscribe
+  paymentProvider      PaymentProvider
+  stripeSubscriptionId String          @unique
+  stripePriceId        String
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@map("subscription")
+  // relationships
+  user     User              @relation(fields: [userId], references: [id])
+  userId   String            @unique @db.ObjectId
+  planId   String            @unique @db.ObjectId
+  plan     SubscriptionPlan? @relation(fields: [planId], references: [id])
+  payments Payment[]
 }

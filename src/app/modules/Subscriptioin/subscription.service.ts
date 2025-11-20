@@ -1,13 +1,14 @@
-import { Currency, Subscription, ValidityType } from "@prisma/client";
+import {  SubscriptionPlan } from "@prisma/client";
 import prisma from "../../../shared/prisma";
 import ApiError from "../../../errors/ApiErrors";
 import httpStatus from "http-status";
-import { ICreateSubscription } from "./subscription.interface";
+import { ICreateSubscriptionPlan } from "./subscription.interface";
 
-const createSubscription = async (
-  data: ICreateSubscription,
+// create subscription plan
+const createSubscriptionPlan = async (
+  data: ICreateSubscriptionPlan,
   userId?: string
-): Promise<Subscription> => {
+): Promise<SubscriptionPlan> => {
   if (userId) {
     const findUser = await prisma.user.findUnique({ where: { id: userId } });
     if (!findUser) {
@@ -15,7 +16,7 @@ const createSubscription = async (
     }
   }
 
-  const newSubscription = await prisma.subscription.create({
+  const newSubscription = await prisma.subscriptionPlan.create({
     data: {
       name: data.name,
       price: {
@@ -35,11 +36,11 @@ const createSubscription = async (
 };
 
 // get all subscriptions
-const getAllSubscriptions = async (
+const getAllSubscriptionsPlan= async (
   searchQuery?: string,
   skip: number = 0,
   limit: number = 10
-): Promise<Subscription[]> => {
+): Promise<SubscriptionPlan[]> => {
   const where: any = {};
   if (searchQuery) {
     where.OR = [
@@ -48,46 +49,46 @@ const getAllSubscriptions = async (
     ];
   }
 
-  return await prisma.subscription.findMany({
+  return await prisma.subscriptionPlan.findMany({
     where,
     skip,
     take: limit,
   });
 };
 
-// get specific subscription
-const getSpecificSubscription = async (
+// get specific subscriptionPlan
+const getSpecificSubscriptionPlan = async (
   id: string
-): Promise<Subscription | null> => {
-  return await prisma.subscription.findUnique({
+): Promise<SubscriptionPlan | null> => {
+  return await prisma.subscriptionPlan.findUnique({
     where: { id },
   });
 };
 
-// update specific subscription
-const updateSpecificSubscription = async (
+// update specific subscriptionPlan
+const updateSpecificSubscriptionPlan = async (
   id: string,
-  data: Partial<ICreateSubscription>
-): Promise<Subscription> => {
-  return await prisma.subscription.update({
+  data: Partial<ICreateSubscriptionPlan>
+): Promise<SubscriptionPlan> => {
+  return await prisma.subscriptionPlan.update({
     where: { id },
     data,
   });
 };
 
-// delete specific subscription
-const deleteSpecificSubscription = async (
+// delete specific subscriptionPlan
+const deleteSpecificSubscriptionPlan = async (
   id: string
-): Promise<Subscription> => {
-  return await prisma.subscription.delete({
+): Promise<SubscriptionPlan> => {
+  return await prisma.subscriptionPlan.delete({
     where: { id },
   });
 };
 
 export const SubscriptionService = {
-  createSubscription,
-  getAllSubscriptions,
-  getSpecificSubscription,
-  updateSpecificSubscription,
-  deleteSpecificSubscription,
+  createSubscriptionPlan,
+  getAllSubscriptionsPlan,
+  getSpecificSubscriptionPlan,
+  updateSpecificSubscriptionPlan,
+  deleteSpecificSubscriptionPlan,
 };

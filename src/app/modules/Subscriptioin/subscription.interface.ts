@@ -1,6 +1,6 @@
 import { Currency, ValidityType } from "@prisma/client";
 
-export interface ICreateSubscription {
+export interface ICreateSubscriptionPlan {
   name: string;
   price: {
     currency: Currency;
