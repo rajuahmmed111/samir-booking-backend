@@ -7,9 +7,11 @@ import validateRequest from "../../middlewares/validateRequest";
 
 const router = Router();
 
+// ----------------------------subscription plan--------------------------------
+
 // create subscription plan
 router.post(
-  "/create",
+  "/plan/create",
   auth(UserRole.SUPER_ADMIN, UserRole.ADMIN),
   validateRequest(SubscriptionValidationZodSchema.createSubscriptionZodSchema),
   subscriptionController.createSubscriptionPlan
@@ -17,30 +19,32 @@ router.post(
 
 // get all subscriptions plan
 router.get(
-  "/retrieve/search",
+  "/plan/retrieve/search",
   auth(UserRole.SUPER_ADMIN, UserRole.ADMIN),
   subscriptionController.getAllSubscriptionsPlan
 );
 
 // get single subscription plan
 router.get(
-  "/retrieve/:id",
+  "/plan/retrieve/:id",
   auth(UserRole.SUPER_ADMIN, UserRole.ADMIN),
   subscriptionController.getSpecificSubscriptionPlan
 );
 
 // update subscription plan
 router.patch(
-  "/update/:id",
+  "/plan/update/:id",
   auth(UserRole.SUPER_ADMIN, UserRole.ADMIN),
   subscriptionController.updateSpecificSubscriptionPlan
 );
 
 // delete subscription plan
 router.delete(
-  "/delete/:id",
+  "/plan/delete/:id",
   auth(UserRole.SUPER_ADMIN, UserRole.ADMIN),
   subscriptionController.deleteSpecificSubscriptionPlan
 );
+
+// ----------------------------subscription--------------------------------
 
 export const subscriptionRoutes = router;

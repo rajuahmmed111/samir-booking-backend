@@ -6,6 +6,8 @@ import ApiError from "../../../errors/ApiErrors";
 import httpStatus from "http-status";
 import { SubscriptionService } from "./subscription.service";
 
+// ----------------------------subscription plan--------------------------------
+
 // create subscription plan
 const createSubscriptionPlan = catchAsync(
   async (req: Request, res: Response) => {
@@ -108,6 +110,8 @@ const deleteSpecificSubscriptionPlan = catchAsync(
     });
   }
 );
+
+// ----------------------------subscription--------------------------------
 
 export default {
   createSubscriptionPlan,

@@ -1,8 +1,10 @@
-import {  SubscriptionPlan } from "@prisma/client";
+import { SubscriptionPlan } from "@prisma/client";
 import prisma from "../../../shared/prisma";
 import ApiError from "../../../errors/ApiErrors";
 import httpStatus from "http-status";
 import { ICreateSubscriptionPlan } from "./subscription.interface";
+
+// ----------------------------subscription plan--------------------------------
 
 // create subscription plan
 const createSubscriptionPlan = async (
@@ -36,7 +38,7 @@ const createSubscriptionPlan = async (
 };
 
 // get all subscriptions
-const getAllSubscriptionsPlan= async (
+const getAllSubscriptionsPlan = async (
   searchQuery?: string,
   skip: number = 0,
   limit: number = 10
@@ -84,6 +86,8 @@ const deleteSpecificSubscriptionPlan = async (
     where: { id },
   });
 };
+
+// ----------------------------subscription--------------------------------
 
 export const SubscriptionService = {
   createSubscriptionPlan,
