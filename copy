@@ -1,0 +1,3 @@
+NODE_ENV=development
+DATABASE_URL="mongodb+srv://samir:1AENsiCTlicZ4Z9L@cluster0.wqymbxc.mongodb.net/samir-booking?appName=Cluster0"
+PORT=5003
