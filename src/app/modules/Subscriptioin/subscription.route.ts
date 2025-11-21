@@ -52,6 +52,13 @@ router.post(
   SubscriptionController.createSubscription
 );
 
+// create checkout session for subscription
+router.post(
+  "/checkout",
+  auth(UserRole.USER),
+  SubscriptionController.createCheckoutSession
+);
+
 router.post(
   "/webhooks/stripe",
   express.raw({ type: "application/json" }),

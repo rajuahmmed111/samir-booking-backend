@@ -119,7 +119,6 @@ const deleteSpecificSubscriptionPlan = catchAsync(
 // create subscription
 const createSubscription = catchAsync(async (req: Request, res: Response) => {
   const userId = req.user?.id;
-
   const { planId } = req.body;
 
   const subscription = await SubscriptionService.createSubscription(
@@ -134,6 +133,22 @@ const createSubscription = catchAsync(async (req: Request, res: Response) => {
     data: subscription,
   });
 });
+
+// create checkout session for subscription
+const createCheckoutSession = async (req: Request, res: Response) => {
+  const userId = req.user?.id;
+  const { planId } = req.body;
+  const session = await SubscriptionService.createCheckoutSession(
+    userId,
+    planId
+  );
+  return sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Checkout session created",
+    data: session,
+  });
+};
 
 // Webhook handlers for payment providers
 const handleStripeWebhook = catchAsync(async (req: Request, res: Response) => {
@@ -173,5 +188,6 @@ export const SubscriptionController = {
   deleteSpecificSubscriptionPlan,
 
   createSubscription,
+  createCheckoutSession,
   handleStripeWebhook,
 };
