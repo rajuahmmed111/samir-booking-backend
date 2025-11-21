@@ -1,11 +1,11 @@
-import { Router } from "express";
-import subscriptionController from "./subscription.controller";
+import express from "express";
 import SubscriptionValidationZodSchema from "./subscription.validation";
 import auth from "../../middlewares/auth";
 import { UserRole } from "@prisma/client";
 import validateRequest from "../../middlewares/validateRequest";
+import { SubscriptionController } from "./subscription.controller";
 
-const router = Router();
+const router = express.Router();
 
 // ----------------------------subscription plan--------------------------------
 
@@ -14,37 +14,48 @@ router.post(
   "/plan/create",
   auth(UserRole.SUPER_ADMIN, UserRole.ADMIN),
   validateRequest(SubscriptionValidationZodSchema.createSubscriptionZodSchema),
-  subscriptionController.createSubscriptionPlan
+  SubscriptionController.createSubscriptionPlan
 );
 
 // get all subscriptions plan
 router.get(
   "/plan/retrieve/search",
   auth(UserRole.SUPER_ADMIN, UserRole.ADMIN),
-  subscriptionController.getAllSubscriptionsPlan
+  SubscriptionController.getAllSubscriptionsPlan
 );
 
 // get single subscription plan
 router.get(
   "/plan/retrieve/:id",
   auth(UserRole.SUPER_ADMIN, UserRole.ADMIN),
-  subscriptionController.getSpecificSubscriptionPlan
+  SubscriptionController.getSpecificSubscriptionPlan
 );
 
 // update subscription plan
 router.patch(
   "/plan/update/:id",
   auth(UserRole.SUPER_ADMIN, UserRole.ADMIN),
-  subscriptionController.updateSpecificSubscriptionPlan
+  SubscriptionController.updateSpecificSubscriptionPlan
 );
 
 // delete subscription plan
 router.delete(
   "/plan/delete/:id",
   auth(UserRole.SUPER_ADMIN, UserRole.ADMIN),
-  subscriptionController.deleteSpecificSubscriptionPlan
+  SubscriptionController.deleteSpecificSubscriptionPlan
 );
 
 // ----------------------------subscription--------------------------------
+router.post(
+  "/create",
+  auth(UserRole.USER),
+  SubscriptionController.createSubscription
+);
+
+router.post(
+  "/webhooks/stripe",
+  express.raw({ type: "application/json" }),
+  SubscriptionController.handleStripeWebhook
+);
 
 export const subscriptionRoutes = router;

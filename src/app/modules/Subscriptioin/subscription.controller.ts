@@ -5,6 +5,9 @@ import sendResponse from "../../../shared/sendResponse";
 import ApiError from "../../../errors/ApiErrors";
 import httpStatus from "http-status";
 import { SubscriptionService } from "./subscription.service";
+import config from "../../../config";
+import stripe from "../../../helpars/stripe";
+import Stripe from "stripe";
 
 // ----------------------------subscription plan--------------------------------
 
@@ -113,10 +116,62 @@ const deleteSpecificSubscriptionPlan = catchAsync(
 
 // ----------------------------subscription--------------------------------
 
-export default {
+// create subscription
+const createSubscription = catchAsync(async (req: Request, res: Response) => {
+  const userId = req.user?.id;
+
+  const { planId } = req.body;
+
+  const subscription = await SubscriptionService.createSubscription(
+    userId,
+    planId
+  );
+
+  sendResponse(res, {
+    statusCode: httpStatus.CREATED,
+    success: true,
+    message: "Subscription created successfully",
+    data: subscription,
+  });
+});
+
+// Webhook handlers for payment providers
+const handleStripeWebhook = catchAsync(async (req: Request, res: Response) => {
+  const sig = req.headers["stripe-signature"] as string;
+  if (!sig) {
+    throw new ApiError(httpStatus.BAD_REQUEST, "Missing stripe signature", "");
+  }
+
+  let event: Stripe.Event;
+  try {
+    event = stripe.webhooks.constructEvent(
+      req.body,
+      sig,
+      config.stripe.webhookSecret as string
+    );
+  } catch (err: any) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      `Webhook Error: ${err.message}`,
+      ""
+    );
+  }
+
+  try {
+    await SubscriptionService.handleStripeWebhook(event);
+    res.json({ received: true });
+  } catch (err) {
+    res.status(500).send(`Webhook processing error.`);
+  }
+});
+
+export const SubscriptionController = {
   createSubscriptionPlan,
   getAllSubscriptionsPlan,
   getSpecificSubscriptionPlan,
   updateSpecificSubscriptionPlan,
   deleteSpecificSubscriptionPlan,
+
+  createSubscription,
+  handleStripeWebhook,
 };

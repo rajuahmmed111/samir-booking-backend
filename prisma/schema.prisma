@@ -35,6 +35,7 @@ enum PaymentStatus {
   PAID
   UNPAID
   REFUNDED
+  SUCCESS
 }
 
 enum Weekday {
@@ -92,6 +93,7 @@ enum Currency {
 enum SubscriptionStatus {
   ACTIVE
   INACTIVE
+  CANCELED
 }
 
 // ---------------------------------------------------------
@@ -122,6 +124,7 @@ model User {
   // Stripe
   stripeAccountId   String?
   isStripeConnected Boolean @default(false)
+  stripeCustomerId  String?
 
   // Pay-stack
   payStackMerchantId  String?
@@ -547,9 +550,8 @@ model Payment {
   description      String?
   currency         String?
   sessionId        String?         @unique
-  paymentMethod    String?
+  paymentIntentId  String?
   status           PaymentStatus
-  // status           String
   provider         PaymentProvider
   payable_name     String?
   payable_email    String?
@@ -560,10 +562,11 @@ model Payment {
   paystack_fee     Float?
   vat_amount       Float? // 5% only for admin
   transactionId    String?
-  serviceType      String // HOTEL | SECURITY | CAR | ATTRACTION
-  partnerId        String          @db.ObjectId
+  serviceType      String
+  partnerId        String?         @db.ObjectId
+  planId           String?
   isDeleted        Boolean         @default(false)
-  metadata         Json? // extra(fullName, email, contactNumber, country, description etc).
+  metadata         Json?
 
   // Relations
   user            User           @relation(fields: [userId], references: [id])
@@ -623,19 +626,21 @@ type Validity {
 }
 
 model SubscriptionPlan {
-  id       String   @id @default(auto()) @map("_id") @db.ObjectId
-  name     String
-  price    Price
-  validity Validity
-  features String[]
-  user     User?    @relation(fields: [userId], references: [id])
-  userId   String?  @db.ObjectId
-
+  id                   String                 @id @default(auto()) @map("_id") @db.ObjectId
+  name                 String
+  price                Price
+  validity             Validity
+  features             String[]
+  user                 User?                  @relation(fields: [userId], references: [id])
+  userId               String?                @db.ObjectId
+  stripeProductId      String?
+  stripePriceId        String?
+  isActive             Boolean                @default(true)
   createdAt            DateTime               @default(now())
   updatedAt            DateTime               @updatedAt
   purchaseSubscription Purchase_subscription?
 
-  @@map("subscription")
+  @@map("subscription_plans")
 }
 
 model Purchase_subscription {
@@ -659,4 +664,6 @@ model Purchase_subscription {
   planId   String            @unique @db.ObjectId
   plan     SubscriptionPlan? @relation(fields: [planId], references: [id])
   payments Payment[]
+
+  @@map("purchase_subscriptions")
 }
