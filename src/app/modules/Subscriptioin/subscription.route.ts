@@ -48,15 +48,15 @@ router.delete(
 // ----------------------------subscription--------------------------------
 router.post(
   "/create",
-  auth(UserRole.USER),
+  auth(UserRole.PROPERTY_OWNER),
   SubscriptionController.createSubscription
 );
 
 // create checkout session for subscription
 router.post(
   "/checkout",
-  auth(UserRole.USER),
-  SubscriptionController.createCheckoutSession
+  auth(UserRole.PROPERTY_OWNER),
+  SubscriptionController.createCheckoutSessionForSubscription
 );
 
 router.post(

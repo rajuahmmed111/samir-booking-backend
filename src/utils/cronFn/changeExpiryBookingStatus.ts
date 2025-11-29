@@ -10,6 +10,36 @@ const isPastDate = (date: string) => {
 };
 
 export const changeExpiryBookingStatus = () => {
+  cron.schedule("0 0 * * *", async () => {
+    console.log("Running daily subscription expiry check...");
+
+    const now = new Date();
+
+    // Find expired subscriptions
+    const expired = await prisma.purchase_subscription.findMany({
+      where: {
+        endDate: { lt: now },
+        status: "ACTIVE",
+      },
+    });
+
+    for (const sub of expired) {
+      // Set subscription INACTIVE
+      await prisma.purchase_subscription.update({
+        where: { id: sub.id },
+        data: { status: "INACTIVE" },
+      });
+
+      // Set user unsubscribed
+      await prisma.user.update({
+        where: { id: sub.userId },
+        data: { isSubscribed: false },
+      });
+
+      console.log("Expired subscription updated:", sub.id);
+    }
+  });
+
   cron.schedule("0 * * * *", async () => {
     console.log("⏰ Booking status update job running...");
 

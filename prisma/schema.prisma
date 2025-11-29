@@ -125,6 +125,7 @@ model User {
   stripeAccountId   String?
   isStripeConnected Boolean @default(false)
   stripeCustomerId  String?
+  isSubscribed      Boolean @default(false)
 
   // Pay-stack
   payStackMerchantId  String?

@@ -156,7 +156,10 @@ const createSubscription = async (userId: string, planId: string) => {
 };
 
 // create checkout session for subscription
-const createCheckoutSession = async (userId: string, planId: string) => {
+const createCheckoutSessionForSubscription = async (
+  userId: string,
+  planId: string
+) => {
   const user = await prisma.user.findUnique({ where: { id: userId } });
 
   const plan = await prisma.subscriptionPlan.findUnique({
@@ -263,6 +266,12 @@ const handleStripeWebhook = async (event: Stripe.Event) => {
         },
       });
 
+      // user isSubscribed
+      await prisma.user.update({
+        where: { id: purchase.userId },
+        data: { isSubscribed: true },
+      });
+
       return { ok: true, handled: "invoice.payment_succeeded" };
     }
 
@@ -314,6 +323,6 @@ export const SubscriptionService = {
   deleteSpecificSubscriptionPlan,
 
   createSubscription,
-  createCheckoutSession,
+  createCheckoutSessionForSubscription,
   handleStripeWebhook,
 };

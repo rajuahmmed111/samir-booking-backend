@@ -135,13 +135,17 @@ const createSubscription = catchAsync(async (req: Request, res: Response) => {
 });
 
 // create checkout session for subscription
-const createCheckoutSession = async (req: Request, res: Response) => {
+const createCheckoutSessionForSubscription = async (
+  req: Request,
+  res: Response
+) => {
   const userId = req.user?.id;
   const { planId } = req.body;
-  const session = await SubscriptionService.createCheckoutSession(
-    userId,
-    planId
-  );
+  const session =
+    await SubscriptionService.createCheckoutSessionForSubscription(
+      userId,
+      planId
+    );
   return sendResponse(res, {
     statusCode: 200,
     success: true,
@@ -160,7 +164,7 @@ const handleStripeWebhook = catchAsync(async (req: Request, res: Response) => {
   let event: Stripe.Event;
   try {
     event = stripe.webhooks.constructEvent(
-      req.body,
+      req.rawBody!, // RAW BODY
       sig,
       config.stripe.webhookSecret as string
     );
@@ -188,6 +192,6 @@ export const SubscriptionController = {
   deleteSpecificSubscriptionPlan,
 
   createSubscription,
-  createCheckoutSession,
+  createCheckoutSessionForSubscription,
   handleStripeWebhook,
 };

@@ -21,11 +21,11 @@ router.post(
 );
 
 // stripe webhook payment
-router.post(
-  "/stripe-webhook",
-  express.raw({ type: "application/json" }), // important: keep raw body
-  PaymentController.stripeHandleWebhook
-);
+// router.post(
+//   "/stripe-webhook",
+//   express.raw({ type: "application/json" }), // important: keep raw body
+//   PaymentController.stripeHandleWebhook
+// );
 
 // cancel booking stripe
 router.post(
