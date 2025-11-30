@@ -184,7 +184,18 @@ model Admin {
 }
 
 model Hotel {
-  id                     String   @id @default(auto()) @map("_id") @db.ObjectId
+  id                   String   @id @default(auto()) @map("_id") @db.ObjectId
+  uploadPhotosOrVideos String[]
+  propertyTitle        String
+  propertyAddress      String
+  propertyDescription  String
+  capacity             Int
+  amenities            String[]
+  inventoryCheckList   String[]
+  houseRules           String // image
+  addSecurityKeys      String // todo
+  addLocalTips         String // todo
+
   hotelBusinessName      String   @unique
   hotelName              String
   hotelBusinessType      String
