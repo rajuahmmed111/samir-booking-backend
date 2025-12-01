@@ -96,6 +96,12 @@ enum SubscriptionStatus {
   CANCELED
 }
 
+enum GuardStatus {
+  AVAILABLE
+  ON_DUTY
+  OFF_DUTY
+}
+
 // ---------------------------------------------------------
 //  MODEL
 // ---------------------------------------------------------
@@ -184,75 +190,89 @@ model Admin {
 }
 
 model Hotel {
-  id                   String   @id @default(auto()) @map("_id") @db.ObjectId
+  id                   String          @id @default(auto()) @map("_id") @db.ObjectId
   uploadPhotosOrVideos String[]
   propertyTitle        String
   propertyAddress      String
   propertyDescription  String
-  capacity             Int
+  latitude             Float?
+  longitude            Float?
+  // Capacity
+  maxGuests            Int
+  bedrooms             Int
+  bathrooms            Int
+  // Security Access
+  smartLockCode        String?
+  keyBoxPin            String?
+  // Amenities
   amenities            String[]
-  inventoryCheckList   String[]
+  // inventory
+  inventoryItems       InventoryItem[]
   houseRules           String // image
   addSecurityKeys      String // todo
   addLocalTips         String // todo
-
-  hotelBusinessName      String   @unique
-  hotelName              String
-  hotelBusinessType      String
-  hotelRegNum            String
-  hotelRegDate           String
-  hotelPhone             String
-  hotelEmail             String
-  businessTagline        String
-  businessDescription    String
-  businessLogo           String // @default("https://i.ibb.co/zWxSgQL8/download.png")
-  hotelBookingCondition  String
-  hotelCancelationPolicy String
-  hotelDocs              String[]
-  hotelLate              Float?
-  hotelLong              Float?
-  hotelAddress           String
-  hotelCity              String
-  hotelPostalCode        String
-  hotelDistrict          String
-  hotelCountry           String
-
-  hotelAC                       Boolean
-  hotelParking                  Boolean
-  hoitelWifi                    Boolean
-  hotelBreakfast                Boolean
-  hotelPool                     Boolean
-  hotelSmoking                  Boolean
-  hotelTv                       Boolean
-  hotelWashing                  Boolean
-  hotelAccommodationType        String
-  hotelKitchen                  Boolean
-  hotelRestaurant               Boolean
-  hotelGym                      Boolean
-  hotelSpa                      Boolean
-  hotel24HourFrontDesk          Boolean
-  hotelAirportShuttle           Boolean
-  hotelNoSmokingPreference      Boolean
-  hotelNoNSmoking               Boolean
-  hotelPetsAllowed              Boolean
-  hotelNoPetsPreferences        Boolean
-  hotelPetsNotAllowed           Boolean
-  hotelLocationFeatureWaterView Boolean
-  hotelLocationFeatureIsland    Boolean
-  hotelCoffeeBar                Boolean
-  isFavorite                    Boolean  @default(false)
-  createdAt                     DateTime @default(now())
-  updatedAt                     DateTime @updatedAt
+  basePrice            Float
+  customPrices         CustomPrice[]
+  weeklyOffers         Float?
+  monthlyOffers        Float?
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime        @updatedAt
 
   // relationships
   user           User            @relation(fields: [partnerId], references: [id])
   partnerId      String          @db.ObjectId
   hotel_bookings Hotel_Booking[]
   favorite       Favorite[]
-  room           Room[]
   review         Review[]
+  rooms          Room[]
+  guards         Guard?
 
   @@map("hotels")
+}
+
+model CustomPrice {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  startDate DateTime
+  endDate   DateTime
+  price     Float // override price per night
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // relationships
+  hotel   Hotel  @relation(fields: [hotelId], references: [id])
+  hotelId String @db.ObjectId
+}
+
+model InventoryItem {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String // e.g., "Dinner Plates", "Forks", "Knives"
+  quantity  Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // relationships
+  hotel   Hotel  @relation(fields: [hotelId], references: [id], onDelete: Cascade)
+  hotelId String @db.ObjectId
+
+  @@index([hotelId])
+}
+
+model Guard {
+  id       String      @id @default(auto()) @map("_id") @db.ObjectId
+  name     String
+  phone    String
+  whatsapp String?
+  photo    String?
+  status   GuardStatus @default(AVAILABLE)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // relationships
+  hotel   Hotel  @relation(fields: [hotelId], references: [id], onDelete: Cascade)
+  hotelId String @unique @db.ObjectId
+
+  @@map("guards")
 }
 
 model Room {
@@ -262,7 +282,7 @@ model Room {
   hotelImages          String[] // 5 image
   hotelRoomImages      String[] // 5 image
   hotelRoomCapacity    String
-  hotelNumberOfRooms   Int                @default(1)
+  // hotelNumberOfRooms   Int                @default(1)
   hotelNumAdults       Int                @default(1)
   hotelNumChildren     Int                @default(1)
   category             String
@@ -315,6 +335,8 @@ model Hotel_Booking {
   user      User?     @relation(fields: [userId], references: [id])
   userId    String?   @db.ObjectId
   payment   Payment[]
+  // room      Room?     @relation(fields: [roomId], references: [id])
+  // roomId    String?   @db.ObjectId
   room      Room?     @relation(fields: [roomId], references: [id])
   roomId    String?   @db.ObjectId
 
