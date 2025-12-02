@@ -215,7 +215,7 @@ model Hotel {
   weeklyOffers         Float?
   monthlyOffers        Float?
   // availability
-  availableForBooking  Boolean         @default(true)
+  availableForBooking  EveryServiceStatus         @default(AVAILABLE)
   syncWithAirbnb       Boolean         @default(false)
   syncWithBooking      Boolean         @default(false)
   createdAt            DateTime        @default(now())
