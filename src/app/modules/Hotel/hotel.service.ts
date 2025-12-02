@@ -480,33 +480,38 @@ const getAllHotelsForPartner = async (
 
   const total = await prisma.hotel.count({ where });
 
-  // total rooms in each hotel
-  const roomCounts = await prisma.room.groupBy({
-    by: ["hotelId"],
-    _count: { hotelId: true },
-    where: {
-      hotelId: { in: hotels.map((h) => h.id) },
-    },
-  });
-
-  // merge room count into hotel result
-  const hotelsWithRoomCount = hotels.map((hotel) => {
-    const countObj = roomCounts.find((r) => r.hotelId === hotel.id);
-    return {
-      ...hotel,
-      totalRooms: countObj?._count.hotelId || 0,
-    };
-  });
-
   return {
     meta: {
       total,
       page,
       limit,
     },
-    data: hotelsWithRoomCount,
+    data: hotels ? hotels : [],
   };
 };
+
+// generate property share link
+// const generatePropertyShareLink = async (
+//   hotelId: string,
+//   partnerId: string
+// ) => {
+//   // find hotel
+//   const partnerExists = await prisma.user.findUnique({
+//     where: { id: partnerId },
+//   });
+//   if (!partnerExists) {
+//     throw new ApiError(httpStatus.NOT_FOUND, "Partner not found");
+//   }
+
+//   // find hotel
+//   const hotel = await prisma.hotel.findUnique({
+//     where: { id: hotelId },
+//   });
+
+//   if (!hotel) {
+//     throw new ApiError(httpStatus.NOT_FOUND, "Hotel not found");
+//   }
+// };
 
 // get single hotel
 const getSingleHotel = async (hotelId: string) => {
@@ -802,6 +807,7 @@ export const HotelService = {
   createHotel,
   getAllHotels,
   getAllHotelsForPartner,
+  // generatePropertyShareLink,
   getSingleHotel,
   getPopularHotels,
   toggleFavorite,

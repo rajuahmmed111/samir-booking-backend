@@ -19,6 +19,13 @@ router.get(
   HotelController.getAllHotelsForPartner
 );
 
+// generate property share link
+// router.get(
+//   "/share/:hotelId",
+//   auth(UserRole.PROPERTY_OWNER),
+//   HotelController.generatePropertyShareLink
+// );
+
 // get my favorites
 router.get(
   "/my-favorites",
@@ -43,7 +50,10 @@ router.post(
 router.post(
   "/",
   auth(UserRole.PROPERTY_OWNER),
-  uploadFile.upload.fields([{ name: "uploadPhotosOrVideos", maxCount: 5 }, { name: "houseRules", maxCount: 5 }]),
+  uploadFile.upload.fields([
+    { name: "uploadPhotosOrVideos", maxCount: 5 },
+    { name: "houseRules", maxCount: 5 },
+  ]),
   parseBodyData,
   validateRequest(hotelValidation.createHotelSchema),
   HotelController.createHotel

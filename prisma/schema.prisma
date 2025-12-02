@@ -189,7 +189,7 @@ model Admin {
 }
 
 model Hotel {
-  id                   String          @id @default(auto()) @map("_id") @db.ObjectId
+  id                   String             @id @default(auto()) @map("_id") @db.ObjectId
   uploadPhotosOrVideos String[]
   propertyTitle        String
   propertyAddress      String
@@ -215,11 +215,11 @@ model Hotel {
   weeklyOffers         Float?
   monthlyOffers        Float?
   // availability
-  availableForBooking  EveryServiceStatus         @default(AVAILABLE)
-  syncWithAirbnb       Boolean         @default(false)
-  syncWithBooking      Boolean         @default(false)
-  createdAt            DateTime        @default(now())
-  updatedAt            DateTime        @updatedAt
+  availableForBooking  EveryServiceStatus @default(AVAILABLE)
+  syncWithAirbnb       Boolean            @default(false)
+  syncWithBooking      Boolean            @default(false)
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
 
   // relationships
   user           User            @relation(fields: [partnerId], references: [id])
