@@ -162,7 +162,6 @@ model User {
   payment              Payment[]
   notifications        Notifications[]
   hotel                Hotel[]
-  room                 Room[]
   review               Review[]
   hotel_bookings       Hotel_Booking[]
   favorite             Favorite[]
@@ -195,15 +194,15 @@ model Hotel {
   propertyTitle        String
   propertyAddress      String
   propertyDescription  String
-  latitude             Float
-  longitude            Float
+  latitude             Float?
+  longitude            Float?
   // Capacity
   maxGuests            Int
   bedrooms             Int
   bathrooms            Int
   // Security Access
-  smartLockCode        String
-  keyBoxPin            String
+  smartLockCode        String?
+  keyBoxPin            String?
   // Amenities
   amenities            String[]
   // inventory
@@ -213,10 +212,8 @@ model Hotel {
   addLocalTips         String? // todo
   basePrice            Float
   customPrices         CustomPrice[]
-  weeklyOffers         Float           @default(10)
-  weeklyOfferStatus    Boolean         @default(true)
-  monthlyOffers        Float           @default(15)
-  monthlyOfferStatus   Boolean         @default(true)
+  weeklyOffers         Float?
+  monthlyOffers        Float?
   createdAt            DateTime        @default(now())
   updatedAt            DateTime        @updatedAt
 
@@ -226,7 +223,6 @@ model Hotel {
   hotel_bookings Hotel_Booking[]
   favorite       Favorite[]
   review         Review[]
-  rooms          Room[]
   guards         Guard?
 
   @@map("hotels")
@@ -279,37 +275,6 @@ model Guard {
   @@map("guards")
 }
 
-model Room {
-  id                   String             @id @default(auto()) @map("_id") @db.ObjectId
-  hotelRoomType        String
-  hotelRoomDescription String
-  hotelImages          String[] // 5 image
-  hotelRoomImages      String[] // 5 image
-  hotelRoomCapacity    String
-  // hotelNumberOfRooms   Int                @default(1)
-  hotelNumAdults       Int                @default(1)
-  hotelNumChildren     Int                @default(1)
-  category             String
-  hotelRating          String             @default("0")
-  hotelRoomPriceNight  Float
-  discount             Float              @default(0)
-  isBooked             EveryServiceStatus @default(AVAILABLE)
-  currency             String             @default("USD")
-  hotelReviewCount     Int                @default(0)
-  createdAt            DateTime           @default(now())
-  updatedAt            DateTime           @updatedAt
-
-  // relationships
-  hotelId        String?         @db.ObjectId
-  hotel          Hotel?          @relation(fields: [hotelId], references: [id])
-  user           User?           @relation(fields: [partnerId], references: [id])
-  partnerId      String?         @db.ObjectId
-  hotel_bookings Hotel_Booking[]
-  review         Review[]
-
-  @@map("rooms")
-}
-
 model Hotel_Booking {
   id                String        @id @default(auto()) @map("_id") @db.ObjectId
   checkoutSessionId String?
@@ -339,10 +304,6 @@ model Hotel_Booking {
   user      User?     @relation(fields: [userId], references: [id])
   userId    String?   @db.ObjectId
   payment   Payment[]
-  // room      Room?     @relation(fields: [roomId], references: [id])
-  // roomId    String?   @db.ObjectId
-  room      Room?     @relation(fields: [roomId], references: [id])
-  roomId    String?   @db.ObjectId
 
   @@map("hotel_bookings")
 }
@@ -360,8 +321,6 @@ model Review {
   userId  String  @db.ObjectId
   hotel   Hotel?  @relation(fields: [hotelId], references: [id])
   hotelId String? @db.ObjectId
-  room    Room?   @relation(fields: [roomId], references: [id])
-  roomId  String? @db.ObjectId
 
   @@map("reviews")
 }
