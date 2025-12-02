@@ -214,6 +214,10 @@ model Hotel {
   customPrices         CustomPrice[]
   weeklyOffers         Float?
   monthlyOffers        Float?
+  // availability
+  availableForBooking  Boolean         @default(true)
+  syncWithAirbnb       Boolean         @default(false)
+  syncWithBooking      Boolean         @default(false)
   createdAt            DateTime        @default(now())
   updatedAt            DateTime        @updatedAt
 

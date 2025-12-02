@@ -3,16 +3,11 @@ import prisma from "../../../shared/prisma";
 import { IUploadedFile } from "../../../interfaces/file";
 import ApiError from "../../../errors/ApiErrors";
 import httpStatus from "http-status";
-import {
-  Hotel,
-  Prisma,
-} from "@prisma/client";
+import { Hotel, Prisma } from "@prisma/client";
 import { paginationHelpers } from "../../../helpars/paginationHelper";
 import { IPaginationOptions } from "../../../interfaces/paginations";
 import { IHotelFilterRequest } from "./hotel.interface";
-import {
-  searchableFields,
-} from "./hotel.constant";
+import { searchableFields } from "./hotel.constant";
 import { uploadFile } from "../../../helpars/fileUploader";
 import { CurrencyHelpers } from "../../../helpars/currency";
 
@@ -85,6 +80,10 @@ const createHotel = async (req: Request) => {
 
     customPrices, // [{startDate, endDate, price}]
     inventoryItems, // [{name, quantity}]
+
+    availableForBooking,
+    syncWithAirbnb,
+    syncWithBooking,
   } = req.body;
 
   const result = await prisma.hotel.create({
@@ -94,8 +93,8 @@ const createHotel = async (req: Request) => {
       propertyAddress,
       propertyDescription,
 
-      latitude: latitude ? parseFloat(latitude) : null as any,
-      longitude: longitude ? parseFloat(longitude) : null as any,
+      latitude: latitude ? parseFloat(latitude) : (null as any),
+      longitude: longitude ? parseFloat(longitude) : (null as any),
 
       maxGuests: parseInt(maxGuests),
       bedrooms: parseInt(bedrooms),
@@ -136,6 +135,10 @@ const createHotel = async (req: Request) => {
             })),
           }
         : undefined,
+
+      availableForBooking,
+      syncWithAirbnb,
+      syncWithBooking,
     },
     include: {
       customPrices: true,
@@ -164,7 +167,10 @@ const createGuard = async (req: Request) => {
     where: { hotelId },
   });
   if (existingGuard) {
-    throw new ApiError(httpStatus.BAD_REQUEST, "Guard already exists for this hotel");
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      "Guard already exists for this hotel"
+    );
   }
 
   // handle photo upload
@@ -172,7 +178,7 @@ const createGuard = async (req: Request) => {
   const files = req.files as {
     [fieldname: string]: Express.Multer.File[];
   };
-  
+
   const guardPhotoFile = files?.guardPhoto?.[0];
   if (guardPhotoFile) {
     const uploaded = await uploadFile.uploadToCloudinary(guardPhotoFile);
@@ -750,8 +756,8 @@ const updateHotel = async (req: Request) => {
       propertyTitle,
       propertyAddress,
       propertyDescription,
-      latitude: latitude ? parseFloat(latitude) : null as any,
-      longitude: longitude ? parseFloat(longitude) : null as any,
+      latitude: latitude ? parseFloat(latitude) : (null as any),
+      longitude: longitude ? parseFloat(longitude) : (null as any),
       maxGuests: maxGuests ? parseInt(maxGuests) : undefined,
       bedrooms: bedrooms ? parseInt(bedrooms) : undefined,
       bathrooms: bathrooms ? parseInt(bathrooms) : undefined,
@@ -791,8 +797,6 @@ const deleteHotel = async (hotelId: string, partnerId: string) => {
     where: { id: hotelId, partnerId },
   });
 };
-
-
 
 export const HotelService = {
   createHotel,
