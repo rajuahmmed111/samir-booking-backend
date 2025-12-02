@@ -49,6 +49,16 @@ router.post(
   HotelController.createHotel
 );
 
+// create guard
+router.post(
+  "/guard/:hotelId",
+  auth(UserRole.PROPERTY_OWNER),
+  uploadFile.upload.fields([{ name: "guardPhoto", maxCount: 1 }]),
+  parseBodyData,
+  validateRequest(hotelValidation.createGuardSchema),
+  HotelController.createGuard
+);
+
 // update hotel
 router.patch(
   "/:hotelId",

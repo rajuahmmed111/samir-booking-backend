@@ -19,6 +19,17 @@ const createHotel = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+// create guard
+const createGuard = catchAsync(async (req: Request, res: Response) => {
+  const result = await HotelService.createGuard(req);
+  sendResponse(res, {
+    statusCode: httpStatus.CREATED,
+    success: true,
+    message: "Guard created successfully",
+    data: result,
+  });
+});
+
 // get all hotels
 const getAllHotels = catchAsync(async (req: Request, res: Response) => {
   const userCurrency = await getUserCurrency(req);
@@ -154,4 +165,5 @@ export const HotelController = {
   getAllFavoriteHotels,
   updateHotel,
   deleteHotel,
+  createGuard,
 };

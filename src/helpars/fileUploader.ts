@@ -95,6 +95,7 @@ const profileImage = upload.single("profileImage");
 
 const uploadPhotosOrVideos = upload.array("uploadPhotosOrVideos", 40);
 const houseRules = upload.single("houseRules");
+const guardPhoto = upload.single("guardPhoto");
 
 const uploadMessageImages = upload.array("messageImages", 40);
 
