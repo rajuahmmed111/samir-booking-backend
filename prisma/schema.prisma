@@ -209,8 +209,8 @@ model Hotel {
   // inventory
   inventoryItems       InventoryItem[]
   houseRules           String // image
-  addSecurityKeys      String // todo
-  addLocalTips         String // todo
+  addSecurityKeys      String? // todo
+  addLocalTips         String? // todo
   basePrice            Float
   customPrices         CustomPrice[]
   weeklyOffers         Float?
@@ -241,6 +241,8 @@ model CustomPrice {
   // relationships
   hotel   Hotel  @relation(fields: [hotelId], references: [id])
   hotelId String @db.ObjectId
+
+  @@map("custom_prices")
 }
 
 model InventoryItem {
@@ -254,7 +256,7 @@ model InventoryItem {
   hotel   Hotel  @relation(fields: [hotelId], references: [id], onDelete: Cascade)
   hotelId String @db.ObjectId
 
-  @@index([hotelId])
+  @@map("inventory_items")
 }
 
 model Guard {
