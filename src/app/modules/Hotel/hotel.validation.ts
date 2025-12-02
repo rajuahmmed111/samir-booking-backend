@@ -1,58 +1,134 @@
 import { z } from "zod";
 
-const createHotelSchema = {
-  body: {
-    hotelBusinessName: z.string().min(1, "hotelBusinessName is required"),
-    hotelName: z.string().min(1, "hotelName is required"),
-    hotelBusinessType: z.string().min(1, "hotelBusinessType is required"),
-    hotelRegNum: z.string().min(1, "hotelRegNum is required"),
-    hotelRegDate: z.string().min(1, "hotelRegDate is required"), // Could be refined as date string
-    hotelPhone: z.string().min(1, "hotelPhone is required"),
-    hotelEmail: z.string().email("Invalid email format"),
+// Custom price schema
+const customPriceSchema = z.object({
+  startDate: z.string().refine((date) => !isNaN(Date.parse(date)), {
+    message: "Invalid start date format",
+  }),
+  endDate: z.string().refine((date) => !isNaN(Date.parse(date)), {
+    message: "Invalid end date format",
+  }),
+  price: z.number().positive("Price must be positive"),
+});
 
-    businessTagline: z.string().min(1, "businessTagline is required"),
-    businessDescription: z.string().min(1, "businessDescription is required"),
-    businessLogo: z.string().url().optional(),
+// Inventory item schema
+const inventoryItemSchema = z.object({
+  name: z.string().min(1, "Item name is required"),
+  quantity: z.number().int().positive("Quantity must be positive"),
+});
 
-    hotelRoomType: z.string().min(1, "hotelRoomType is required"),
-    hotelRoomPriceNight: z
-      .number()
-      .int()
-      .positive("Must be a positive integer"),
+const createHotelSchema = z.object({
+  body: z.object({
+    // Basic property information
+    propertyTitle: z.string().min(1, "Property title is required"),
+    propertyAddress: z.string().min(1, "Property address is required"),
+    propertyDescription: z.string().min(1, "Property description is required"),
 
-    hotelAC: z.boolean(),
-    hotelParking: z.boolean(),
-    hoitelWifi: z.boolean(),
-    hotelBreakfast: z.boolean(),
-    hotelPool: z.boolean(),
+    // Location
+    latitude: z.string().optional(),
+    longitude: z.string().optional(),
 
-    hotelRating: z.string().min(1, "hotelRating is required"), // You can refine this e.g. z.enum or regex
+    // Capacity
+    maxGuests: z.string().min(1, "Max guests is required"),
+    bedrooms: z.string().min(1, "Bedrooms is required"),
+    bathrooms: z.string().min(1, "Bathrooms is required"),
 
-    hotelSmoking: z.boolean(),
-    hotelTv: z.boolean(),
-    hotelWashing: z.boolean(),
+    // Security Access
+    smartLockCode: z.string().optional(),
+    keyBoxPin: z.string().optional(),
 
-    hotelBookingCondition: z
-      .string()
-      .min(1, "hotelBookingCondition is required"),
-    hotelCancelationPolicy: z
-      .string()
-      .min(1, "hotelCancelationPolicy is required"),
-    hotelDocs: z.array(z.string().url()).optional(), // array of URLs for docs (PDF, DOC, etc.)
-    hotelRoomDescription: z.string().min(1, "hotelRoomDescription is required"),
-    hotelAddress: z.string().min(1, "hotelAddress is required"),
-    hotelCity: z.string().min(1, "hotelCity is required"),
-    hotelPostalCode: z.string().min(1, "hotelPostalCode is required"),
-    hotelDistrict: z.string().min(1, "hotelDistrict is required"),
-    hotelCountry: z.string().min(1, "hotelCountry is required"),
-    hotelRoomImages: z.array(z.string().url()),
-    hotelRoomCapacity: z.number().optional(),
+    // Amenities (JSON string)
+    amenities: z.string().optional(),
 
-    category: z.string().optional(),
-    discount: z.number().positive().optional(),
-  },
-};
+    // Additional info
+    addSecurityKeys: z.string().optional(),
+    addLocalTips: z.string().optional(),
+
+    // Pricing
+    basePrice: z.string().min(1, "Base price is required"),
+    weeklyOffers: z.string().optional(),
+    monthlyOffers: z.string().optional(),
+
+    // Custom prices (JSON string)
+    customPrices: z.string().optional(),
+
+    // Inventory items (JSON string)
+    inventoryItems: z.string().optional(),
+  }),
+});
+
+// Update hotel schema
+const updateHotelSchema = z.object({
+  body: z.object({
+    propertyTitle: z.string().min(1, "Property title is required").optional(),
+    propertyAddress: z.string().min(1, "Property address is required").optional(),
+    propertyDescription: z.string().min(1, "Property description is required").optional(),
+
+    latitude: z.string().optional(),
+    longitude: z.string().optional(),
+
+    maxGuests: z.string().optional(),
+    bedrooms: z.string().optional(),
+    bathrooms: z.string().optional(),
+
+    smartLockCode: z.string().optional(),
+    keyBoxPin: z.string().optional(),
+
+    amenities: z.string().optional(),
+
+    addSecurityKeys: z.string().optional(),
+    addLocalTips: z.string().optional(),
+
+    basePrice: z.string().optional(),
+    weeklyOffers: z.string().optional(),
+    monthlyOffers: z.string().optional(),
+
+    customPrices: z.string().optional(),
+    inventoryItems: z.string().optional(),
+  }),
+});
+
+// Custom price validation schema for direct API usage
+const createCustomPriceSchema = z.object({
+  body: z.object({
+    hotelId: z.string().min(1, "Hotel ID is required"),
+    startDate: z.string().refine((date) => !isNaN(Date.parse(date)), {
+      message: "Invalid start date format",
+    }),
+    endDate: z.string().refine((date) => !isNaN(Date.parse(date)), {
+      message: "Invalid end date format",
+    }),
+    price: z.number().positive("Price must be positive"),
+  }),
+});
+
+// Inventory item validation schema for direct API usage
+const createInventoryItemSchema = z.object({
+  body: z.object({
+    hotelId: z.string().min(1, "Hotel ID is required"),
+    name: z.string().min(1, "Item name is required"),
+    quantity: z.number().int().positive("Quantity must be positive"),
+  }),
+});
+
+// Guard validation schema
+const createGuardSchema = z.object({
+  body: z.object({
+    hotelId: z.string().min(1, "Hotel ID is required"),
+    name: z.string().min(1, "Guard name is required"),
+    phone: z.string().min(1, "Guard phone is required"),
+    whatsapp: z.string().optional(),
+    photo: z.string().url().optional(),
+    status: z.enum(["AVAILABLE", "ON_DUTY", "OFF_DUTY"]).optional(),
+  }),
+});
 
 export const hotelValidation = {
   createHotelSchema,
+  updateHotelSchema,
+  createCustomPriceSchema,
+  createInventoryItemSchema,
+  createGuardSchema,
+  customPriceSchema,
+  inventoryItemSchema,
 };

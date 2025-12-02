@@ -289,8 +289,8 @@ const getAllHotels = async (
       return false;
     }
 
-    // jodi room array empty hoy → hotel skip
-    if (hotel.room.length === 0) return false;
+    // jodi hotel er basePrice na thake → skip
+    if (!hotel.basePrice) return false;
 
     return true;
   });
@@ -301,81 +301,55 @@ const getAllHotels = async (
   // Convert prices এবং filter
   let resultWithAverages = filteredHotels
     .map((hotel) => {
-      if (hotel.room.length === 0) return null;
+      if (!hotel.basePrice) return null;
 
-      // room price convert
-      const roomsWithConvertedPrices = hotel.room.map((room) => {
-        const roomCurrency = room.currency || "USD";
+      // hotel price convert
+      const hotelCurrency = "USD"; // Default currency for hotel
 
-        const convertedPrice = CurrencyHelpers.convertPrice(
-          room.hotelRoomPriceNight,
-          roomCurrency,
-          userCurrency,
-          exchangeRates
-        );
-
-        const discountedPrice = CurrencyHelpers.convertPrice(
-          room.discount,
-          roomCurrency,
-          userCurrency,
-          exchangeRates
-        );
-
-        return {
-          ...room,
-          originalPrice: room.hotelRoomPriceNight,
-          originalCurrency: roomCurrency,
-          convertedPrice,
-          discountedPrice,
-          displayCurrency: userCurrency,
-          exchangeRate:
-            exchangeRates[userCurrency] / exchangeRates[roomCurrency],
-        };
-      });
-
-      // if no room found
-      if (roomsWithConvertedPrices.length === 0) return null;
-
-      // averages calculate
-      const totalPrice = roomsWithConvertedPrices.reduce(
-        (sum, room) => sum + room.discountedPrice,
-        0
+      const convertedPrice = CurrencyHelpers.convertPrice(
+        hotel.basePrice,
+        hotelCurrency,
+        userCurrency,
+        exchangeRates
       );
 
-      const totalRating = roomsWithConvertedPrices.reduce(
-        (sum, room) => sum + (parseFloat(room.hotelRating) || 0),
-        0
-      );
+      const convertedWeeklyPrice = hotel.weeklyOffers
+        ? CurrencyHelpers.convertPrice(
+            hotel.weeklyOffers,
+            hotelCurrency,
+            userCurrency,
+            exchangeRates
+          )
+        : null;
 
-      const totalReviews = roomsWithConvertedPrices.reduce(
-        (sum, room) => sum + (room.hotelReviewCount || 0),
-        0
-      );
+      const convertedMonthlyPrice = hotel.monthlyOffers
+        ? CurrencyHelpers.convertPrice(
+            hotel.monthlyOffers,
+            hotelCurrency,
+            userCurrency,
+            exchangeRates
+          )
+        : null;
 
       return {
         ...hotel,
-        room: roomsWithConvertedPrices,
-        averagePrice: Number(
-          (totalPrice / roomsWithConvertedPrices.length).toFixed(2)
-        ),
-        averageRating: Number(
-          (totalRating / roomsWithConvertedPrices.length).toFixed(1)
-        ),
-        averageReviewCount: Math.round(
-          totalReviews / roomsWithConvertedPrices.length
-        ),
+        originalPrice: hotel.basePrice,
+        originalCurrency: hotelCurrency,
+        convertedPrice,
+        convertedWeeklyPrice,
+        convertedMonthlyPrice,
         displayCurrency: userCurrency,
-        currencySymbol: CurrencyHelpers.getCurrencySymbol(userCurrency),
+        exchangeRate: exchangeRates[userCurrency] || 1,
       };
     })
     .filter((hotel) => hotel !== null);
 
-  // sort by averagePrice (low → high / high → low)
+  // sort by price (low → high / high → low)
   if (options.sortBy === "price") {
     resultWithAverages = resultWithAverages.sort((a, b) =>
       options.sortOrder === "asc"
-        ? a.averagePrice - b.averagePrice
-        : b.averagePrice - a.averagePrice
+        ? (a?.convertedPrice || 0) - (b?.convertedPrice || 0)
+        : (b?.convertedPrice || 0) - (a?.convertedPrice || 0)
     );
   }
 
@@ -499,90 +473,71 @@ const getPopularHotels = async (
   userCurrency: string = "USD"
 ): Promise<Hotel[]> => {
   const { searchTerm, ...filterData } = params;
-  const { limit, page, skip } = paginationHelpers.calculatedPagination(options);
+  const { limit = 4 } = options;
 
   // all hotels
   const hotels = await prisma.hotel.findMany({
     where: {
       ...(searchTerm && {
         OR: [
-          { hotelName: { contains: searchTerm, mode: "insensitive" } },
-          { hotelCity: { contains: searchTerm, mode: "insensitive" } },
-          { hotelCountry: { contains: searchTerm, mode: "insensitive" } },
+          { propertyTitle: { contains: searchTerm, mode: "insensitive" } },
+          { propertyAddress: { contains: searchTerm, mode: "insensitive" } },
         ],
       }),
-    },
-    include: {
-      room: true,
     },
   });
 
   // ✅ Get exchange rates
   const exchangeRates = await CurrencyHelpers.getExchangeRates();
 
-  // Calculate averages and add to each hotel
-  const hotelsWithAverages = hotels
-    .filter((hotel) => hotel.room.length > 0)
+  // Convert hotel prices and add to each hotel
+  const hotelsWithConvertedPrices = hotels
+    .filter((hotel) => hotel.basePrice)
     .map((hotel) => {
-      // ✅ Convert room prices by country/currency
-      const convertedRooms = hotel.room.map((room) => {
-        const roomCurrency = room.currency || "USD";
+      // ✅ Convert hotel prices by country/currency
+      const hotelCurrency = "USD"; // Default currency for hotel
 
-        const convertedPrice = CurrencyHelpers.convertPrice(
-          room.hotelRoomPriceNight,
-          roomCurrency,
-          userCurrency,
-          exchangeRates
-        );
-
-        const discountedPrice = CurrencyHelpers.convertPrice(
-          room.discount || 0,
-          roomCurrency,
-          userCurrency,
-          exchangeRates
-        );
-
-        return {
-          ...room,
-          originalPrice: room.hotelRoomPriceNight,
-          originalCurrency: roomCurrency,
-          convertedPrice,
-          discountedPrice,
-          displayCurrency: userCurrency,
-          exchangeRate:
-            exchangeRates[userCurrency] / exchangeRates[roomCurrency],
-        };
-      });
-
-      // average calculations
-      const totalPrice = convertedRooms.reduce(
-        (sum, room) => sum + room.convertedPrice,
-        0
+      const convertedPrice = CurrencyHelpers.convertPrice(
+        hotel.basePrice,
+        hotelCurrency,
+        userCurrency,
+        exchangeRates
       );
-      const totalRating = convertedRooms.reduce(
-        (sum, room) => sum + (parseFloat(room.hotelRating) || 0),
-        0
-      );
-      const totalReviews = convertedRooms.reduce(
-        (sum, room) => sum + (room.hotelReviewCount || 0),
-        0
-      );
+
+      const convertedWeeklyPrice = hotel.weeklyOffers
+        ? CurrencyHelpers.convertPrice(
+            hotel.weeklyOffers,
+            hotelCurrency,
+            userCurrency,
+            exchangeRates
+          )
+        : null;
+
+      const convertedMonthlyPrice = hotel.monthlyOffers
+        ? CurrencyHelpers.convertPrice(
+            hotel.monthlyOffers,
+            hotelCurrency,
+            userCurrency,
+            exchangeRates
+          )
+        : null;
 
       return {
         ...hotel,
-        room: convertedRooms,
-        averagePrice: Number((totalPrice / convertedRooms.length).toFixed(2)),
-        averageRating: Number((totalRating / convertedRooms.length).toFixed(1)),
-        averageReviewCount: Math.round(totalReviews / convertedRooms.length),
+        originalPrice: hotel.basePrice,
+        originalCurrency: hotelCurrency,
+        convertedPrice,
+        convertedWeeklyPrice,
+        convertedMonthlyPrice,
         displayCurrency: userCurrency,
         currencySymbol: CurrencyHelpers.getCurrencySymbol(userCurrency),
       };
     });
 
-  // Sort by average rating and take top 4
-  const sortedHotels = hotelsWithAverages
-    .sort((a, b) => b.averageRating - a.averageRating)
-    .slice(0, 4);
+  // Sort by price and take top results
+  const sortedHotels = hotelsWithConvertedPrices
+    .sort((a: any, b: any) => b.convertedPrice - a.convertedPrice)
+    .slice(0, limit);
 
   return sortedHotels;
 };
@@ -708,117 +663,57 @@ const updateHotel = async (req: Request) => {
     [fieldname: string]: Express.Multer.File[];
   };
 
-  const hotelLogoFile = files?.businessLogo?.[0];
-  const docsFiles = files?.hotelDocs || [];
+  const hotelLogoFile = files?.uploadPhotosOrVideos?.[0];
 
-  // Upload new logo if exists
-  let businessLogo = hotelExists.businessLogo;
+  // Upload new photos if exists
+  let uploadedMedia = hotelExists.uploadPhotosOrVideos || [];
   if (hotelLogoFile) {
     const logoResult = await uploadFile.uploadToCloudinary(hotelLogoFile);
-    businessLogo = logoResult?.secure_url || businessLogo;
-  }
-
-  // Upload multiple docs if exists
-  let hotelDocUrls = hotelExists.hotelDocs || [];
-  if (docsFiles.length > 0) {
-    const docUploads = await Promise.all(
-      docsFiles.map((file) => uploadFile.uploadToCloudinary(file))
-    );
-    hotelDocUrls = docUploads.map((img) => img?.secure_url || "");
+    if (logoResult?.secure_url) {
+      uploadedMedia = [...uploadedMedia, logoResult.secure_url];
+    }
   }
 
   const {
-    hotelBusinessName,
-    hotelName,
-    hotelBusinessType,
-    hotelRegNum,
-    hotelRegDate,
-    hotelPhone,
-    hotelEmail,
-    businessTagline,
-    businessDescription,
-    hotelBookingCondition,
-    hotelCancelationPolicy,
-    hotelLate,
-    hotelLong,
-    hotelAddress,
-    hotelCity,
-    hotelPostalCode,
-    hotelDistrict,
-    hotelCountry,
-
-    hotelAC,
-    hotelParking,
-    hoitelWifi,
-    hotelBreakfast,
-    hotelPool,
-    hotelSmoking,
-    hotelTv,
-    hotelWashing,
-    hotelAccommodationType,
-    hotelKitchen,
-    hotelRestaurant,
-    hotelGym,
-    hotelSpa,
-    hotel24HourFrontDesk,
-    hotelAirportShuttle,
-    hotelNoSmokingPreference,
-    hotelNoNSmoking,
-    hotelPetsAllowed,
-    hotelNoPetsPreferences,
-    hotelPetsNotAllowed,
-    hotelLocationFeatureWaterView,
-    hotelLocationFeatureIsland,
-    hotelCoffeeBar,
+    propertyTitle,
+    propertyAddress,
+    propertyDescription,
+    latitude,
+    longitude,
+    maxGuests,
+    bedrooms,
+    bathrooms,
+    smartLockCode,
+    keyBoxPin,
+    amenities,
+    addSecurityKeys,
+    addLocalTips,
+    basePrice,
+    weeklyOffers,
+    monthlyOffers,
   } = req.body;
 
   // Update hotel
   const updatedHotel = await prisma.hotel.update({
     where: { id: hotelId },
     data: {
-      hotelBusinessName,
-      hotelName,
-      hotelBusinessType,
-      hotelRegNum,
-      hotelRegDate,
-      hotelPhone,
-      hotelEmail,
-      businessTagline,
-      businessDescription,
-      businessLogo,
-      hotelBookingCondition,
-      hotelCancelationPolicy,
-      hotelDocs: hotelDocUrls,
-      hotelLate: hotelLate ? parseFloat(hotelLate) : undefined,
-      hotelLong: hotelLong ? parseFloat(hotelLong) : undefined,
-      hotelAddress,
-      hotelCity,
-      hotelPostalCode,
-      hotelDistrict,
-      hotelCountry,
-      hotelAC: Boolean(hotelAC),
-      hotelParking: Boolean(hotelParking),
-      hoitelWifi: Boolean(hoitelWifi),
-      hotelBreakfast: Boolean(hotelBreakfast),
-      hotelPool: Boolean(hotelPool),
-      hotelSmoking: Boolean(hotelSmoking),
-      hotelTv: Boolean(hotelTv),
-      hotelWashing: Boolean(hotelWashing),
-      hotelAccommodationType,
-      hotelKitchen: Boolean(hotelKitchen),
-      hotelRestaurant: Boolean(hotelRestaurant),
-      hotelGym: Boolean(hotelGym),
-      hotelSpa: Boolean(hotelSpa),
-      hotel24HourFrontDesk: Boolean(hotel24HourFrontDesk),
-      hotelAirportShuttle: Boolean(hotelAirportShuttle),
-      hotelNoSmokingPreference: Boolean(hotelNoSmokingPreference),
-      hotelNoNSmoking: Boolean(hotelNoNSmoking),
-      hotelPetsAllowed: Boolean(hotelPetsAllowed),
-      hotelNoPetsPreferences: Boolean(hotelNoPetsPreferences),
-      hotelPetsNotAllowed: Boolean(hotelPetsNotAllowed),
-      hotelLocationFeatureWaterView: Boolean(hotelLocationFeatureWaterView),
-      hotelLocationFeatureIsland: Boolean(hotelLocationFeatureIsland),
-      hotelCoffeeBar: Boolean(hotelCoffeeBar),
+      uploadPhotosOrVideos: uploadedMedia,
+      propertyTitle,
+      propertyAddress,
+      propertyDescription,
+      latitude: latitude ? parseFloat(latitude) : null,
+      longitude: longitude ? parseFloat(longitude) : null,
+      maxGuests: maxGuests ? parseInt(maxGuests) : undefined,
+      bedrooms: bedrooms ? parseInt(bedrooms) : undefined,
+      bathrooms: bathrooms ? parseInt(bathrooms) : undefined,
+      smartLockCode,
+      keyBoxPin,
+      amenities: amenities ? JSON.parse(amenities) : undefined,
+      addSecurityKeys,
+      addLocalTips,
+      basePrice: basePrice ? parseFloat(basePrice) : undefined,
+      weeklyOffers: weeklyOffers ? parseFloat(weeklyOffers) : null,
+      monthlyOffers: monthlyOffers ? parseFloat(monthlyOffers) : null,
     },
   });
 

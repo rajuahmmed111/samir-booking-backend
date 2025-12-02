@@ -4,7 +4,8 @@ import { UserRole } from "@prisma/client";
 import { HotelController } from "./hotel.controller";
 import { uploadFile } from "../../../helpars/fileUploader";
 import { parseBodyData } from "../../middlewares/parseNestedJson";
-// import validateRequest from "../../middlewares/validateRequest";
+import validateRequest from "../../middlewares/validateRequest";
+import { hotelValidation } from "./hotel.validation";
 
 const router = express.Router();
 
@@ -44,7 +45,7 @@ router.post(
   auth(UserRole.PROPERTY_OWNER),
   uploadFile.upload.fields([{ name: "uploadPhotosOrVideos", maxCount: 5 }, { name: "houseRules", maxCount: 5 }]),
   parseBodyData,
-  //   validateRequest(HotelController.createHotelSchema),
+  validateRequest(hotelValidation.createHotelSchema),
   HotelController.createHotel
 );
 

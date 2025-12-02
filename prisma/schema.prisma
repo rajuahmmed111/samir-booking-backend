@@ -195,15 +195,15 @@ model Hotel {
   propertyTitle        String
   propertyAddress      String
   propertyDescription  String
-  latitude             Float?
-  longitude            Float?
+  latitude             Float
+  longitude            Float
   // Capacity
   maxGuests            Int
   bedrooms             Int
   bathrooms            Int
   // Security Access
-  smartLockCode        String?
-  keyBoxPin            String?
+  smartLockCode        String
+  keyBoxPin            String
   // Amenities
   amenities            String[]
   // inventory
@@ -213,8 +213,10 @@ model Hotel {
   addLocalTips         String? // todo
   basePrice            Float
   customPrices         CustomPrice[]
-  weeklyOffers         Float?
-  monthlyOffers        Float?
+  weeklyOffers         Float           @default(10)
+  weeklyOfferStatus    Boolean         @default(true)
+  monthlyOffers        Float           @default(15)
+  monthlyOfferStatus   Boolean         @default(true)
   createdAt            DateTime        @default(now())
   updatedAt            DateTime        @updatedAt
 
