@@ -25,6 +25,7 @@ import { newsRoomRoute } from "../modules/NewsRoom/news_room.route";
 import { advertisingRoutes } from "../modules/Advertise/advertising.route";
 import { investorRelationsRoutes } from "../modules/Investor_Relations/investor.route";
 import { subscriptionRoutes } from "../modules/Subscriptioin/subscription.route";
+import { serviceRoutes } from "../modules/Service/service.route";
 
 const router = express.Router();
 
@@ -41,14 +42,22 @@ const moduleRoutes = [
     path: "/hotels",
     route: hotelRoute,
   },
-  {
-    path: "/reviews",
-    route: reviewRoute,
-  },
+
   {
     path: "/hotel-booking",
     route: hotelBookingRoute,
   },
+
+  {
+    path: "/services",
+    route: serviceRoutes,
+  },
+
+  {
+    path: "/reviews",
+    route: reviewRoute,
+  },
+
   {
     path: "/contracts",
     route: contractRoutes,
