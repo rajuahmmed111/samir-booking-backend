@@ -102,6 +102,12 @@ enum GuardStatus {
   OFF_DUTY
 }
 
+enum ServiceStatus {
+  ACTIVE
+  INACTIVE
+  PENDING
+}
+
 // ---------------------------------------------------------
 //  MODEL
 // ---------------------------------------------------------
@@ -310,6 +316,23 @@ model Hotel_Booking {
   payment   Payment[]
 
   @@map("hotel_bookings")
+}
+
+model Service {
+  id                String        @id @default(auto()) @map("_id") @db.ObjectId
+  serviceName       String
+  serviceType       String
+  description       String
+  price             Float
+  estimatedDuration String
+  coverImage        String
+  serviceStatus     ServiceStatus
+  recordProofVideo  String
+  addRemark         String?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  @@map("services")
 }
 
 model Review {
