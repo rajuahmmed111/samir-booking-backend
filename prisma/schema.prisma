@@ -324,7 +324,7 @@ model Service {
   serviceType       String
   description       String
   price             Float
-  estimatedDuration String
+  // estimatedDuration String
   coverImage        String
   serviceStatus     ServiceStatus
   recordProofVideo  String
