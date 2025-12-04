@@ -319,18 +319,18 @@ model Hotel_Booking {
 }
 
 model Service {
-  id                String        @id @default(auto()) @map("_id") @db.ObjectId
-  serviceName       String
-  serviceType       String
-  description       String
-  price             Float
+  id               String        @id @default(auto()) @map("_id") @db.ObjectId
+  serviceName      String
+  serviceType      String
+  description      String
+  price            Float
   // estimatedDuration String
-  coverImage        String
-  serviceStatus     ServiceStatus
-  recordProofVideo  String
-  addRemark         String?
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
+  coverImage       String
+  serviceStatus    ServiceStatus
+  recordProofVideo String?
+  addRemark        String?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
 
   // relationships
   availability  Availability[]
@@ -354,8 +354,8 @@ model Availability {
 
 model ScheduleSlot {
   id   String @id @default(auto()) @map("_id") @db.ObjectId
-  from String // "10:00:00"
-  to   String // "12:00:00"
+  from String // "10:00 AM or PM"
+  to   String // "12:00 AM or PM"
 
   // relationships
   serviceId          String?       @db.ObjectId

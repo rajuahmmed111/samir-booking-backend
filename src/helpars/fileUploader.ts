@@ -97,6 +97,8 @@ const uploadPhotosOrVideos = upload.array("uploadPhotosOrVideos", 40);
 const houseRules = upload.single("houseRules");
 const guardPhoto = upload.single("guardPhoto");
 
+const coverImage = upload.single("coverImage")
+
 const uploadMessageImages = upload.array("messageImages", 40);
 
 const newsImage = upload.array("image", 40);
@@ -157,6 +159,9 @@ export const uploadFile = {
 
   uploadPhotosOrVideos,
   houseRules,
+  guardPhoto,
+
+  coverImage,
 
   uploadMessageImages,
 

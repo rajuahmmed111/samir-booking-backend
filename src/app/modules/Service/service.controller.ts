@@ -6,10 +6,10 @@ import httpStatus from "http-status";
 
 // create service
 const createService = catchAsync(async (req: Request, res: Response) => {
-  const serviceProviderId = req.user?.id;
+  const coverImageFile = req.file;
   const result = await ServiceService.createService(
-    serviceProviderId,
-    req.body
+    req.body,
+    coverImageFile
   );
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
@@ -19,6 +19,44 @@ const createService = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+// update service
+const updateService = catchAsync(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const result = await ServiceService.updateService(id, req.body);
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Service updated successfully",
+    data: result,
+  });
+});
+
+// get single service
+const getServiceById = catchAsync(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const result = await ServiceService.getServiceById(id);
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Service retrieved successfully",
+    data: result,
+  });
+});
+
+// get all services
+const getAllServices = catchAsync(async (req: Request, res: Response) => {
+  const result = await ServiceService.getAllServices();
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Services retrieved successfully",
+    data: result,
+  });
+});
+
 export const ServiceController = {
   createService,
+  updateService,
+  getServiceById,
+  getAllServices,
 };

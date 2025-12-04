@@ -80,10 +80,6 @@ const loginUser = async (payload: ILoginRequest): Promise<ILoginResponse> => {
     refreshToken,
     user: {
       fcmToken: updatedFcmToken.fcmToken,
-      isHotel: updatedFcmToken.isHotel,
-      isSecurity: updatedFcmToken.isSecurity,
-      isCar: updatedFcmToken.isCar,
-      isAttraction: updatedFcmToken.isAttraction,
     },
   };
 
