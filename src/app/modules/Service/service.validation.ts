@@ -32,17 +32,25 @@ export const createServiceSchema = z.object({
 });
 
 export const updateServiceSchema = z.object({
-  serviceName: z.string().min(1, "Service name is required").optional(),
-  serviceType: z.string().min(1, "Service type is required").optional(),
-  description: z.string().min(1, "Description is required").optional(),
-  price: z.number().min(0, "Price must be a positive number").optional(),
-  coverImage: z.string().optional(),
-  serviceStatus: z
-    .enum([ServiceStatus.ACTIVE, ServiceStatus.INACTIVE, ServiceStatus.PENDING])
-    .optional(),
-  recordProofVideo: z.string().optional(),
-  addRemark: z.string().optional(),
-  availability: z.array(ServiceAvailabilitySchema).optional(),
+  body: z.object({
+    serviceName: z.string().min(1, "Service name is required").optional(),
+    serviceType: z.string().min(1, "Service type is required").optional(),
+    description: z.string().min(1, "Description is required").optional(),
+    price: z.number().min(0, "Price must be a positive number").optional(),
+    serviceStatus: z
+      .enum([
+        ServiceStatus.ACTIVE,
+        ServiceStatus.INACTIVE,
+        ServiceStatus.PENDING,
+      ])
+      .optional(),
+    recordProofVideo: z.string().optional(),
+    addRemark: z.string().optional(),
+    availability: z
+      .array(ServiceAvailabilitySchema)
+      .min(1, "At least one availability is required")
+      .optional(),
+  }),
 });
 
 export const ServiceValidation = {

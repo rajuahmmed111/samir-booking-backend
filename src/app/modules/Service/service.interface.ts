@@ -1,9 +1,13 @@
+import { ServiceStatus } from "@prisma/client";
+
 export interface ServiceSlot {
+  id?: string;
   from: string;
   to: string;
 }
 
 export interface ServiceAvailability {
+  id?: string;
   day: string;
   slots: ServiceSlot[];
 }
@@ -31,7 +35,6 @@ export interface IServiceUpdate {
   addRemark?: string;
   availability?: ServiceAvailability[];
 }
-
 export interface IServiceResponse {
   id: string;
   serviceName: string;

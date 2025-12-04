@@ -21,8 +21,9 @@ router.post(
 
 // update service
 router.patch(
-  "/:id",
+  "/:serviceId",
   auth(UserRole.SERVICE_PROVIDER),
+  uploadFile.coverImage,
   parseBodyData,
   validateRequest(ServiceValidation.updateServiceSchema),
   ServiceController.updateService

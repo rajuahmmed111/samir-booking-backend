@@ -74,71 +74,102 @@ const createService = async (
 };
 
 // update service
-const updateService = async (serviceId: string, payload: IServiceUpdate) => {
-  const { availability, ...serviceData } = payload;
+const updateService = async (
+  serviceId: string,
+  payload: IServiceUpdate,
+  coverImageFile?: Express.Multer.File
+) => {
+  // Check if service exists
+  const existingService = await prisma.service.findUnique({
+    where: { id: serviceId },
+    include: {
+      availability: {
+        include: {
+          slots: true,
+        },
+      },
+    },
+  });
 
-  // Convert serviceStatus to proper enum type if present
-  const updateData: any = { ...serviceData };
-  if (serviceData.serviceStatus) {
-    updateData.serviceStatus = serviceData.serviceStatus as ServiceStatus;
+  if (!existingService) {
+    throw new Error("Service not found");
   }
 
-  // First, update the basic service information
+  const { availability, ...serviceData } = payload;
+
+  // Handle cover image upload
+  let coverImagePath = serviceData.coverImage;
+  if (coverImageFile) {
+    const uploaded = await uploadFile.uploadToCloudinary(coverImageFile);
+    if (!uploaded?.secure_url) {
+      throw new Error("Cloudinary upload failed for cover image");
+    }
+    coverImagePath = uploaded.secure_url;
+  }
+
+  // Prepare update data
+  const updateData: any = {};
+
+  if (serviceData.serviceName) updateData.serviceName = serviceData.serviceName;
+  if (serviceData.serviceType) updateData.serviceType = serviceData.serviceType;
+  if (serviceData.description) updateData.description = serviceData.description;
+  if (serviceData.price !== undefined) updateData.price = serviceData.price;
+  if (serviceData.recordProofVideo)
+    updateData.recordProofVideo = serviceData.recordProofVideo;
+  if (serviceData.addRemark) updateData.addRemark = serviceData.addRemark;
+  if (coverImagePath) updateData.coverImage = coverImagePath;
+  if (serviceData.serviceStatus)
+    updateData.serviceStatus = serviceData.serviceStatus as ServiceStatus;
+
+  // Update service basic info
   const updatedService = await prisma.service.update({
     where: { id: serviceId },
     data: updateData,
-    include: {
-      availability: {
-        include: {
-          slots: true,
-        },
-      },
-    },
   });
 
-  // If availability is provided, update it
-  if (availability) {
+  // Update availability if provided
+  if (availability && availability.length > 0) {
     // Delete existing availability and slots
     await prisma.scheduleSlot.deleteMany({
-      where: {
-        serviceId,
-      },
+      where: { serviceId: serviceId },
     });
 
     await prisma.availability.deleteMany({
-      where: {
-        serviceId,
-      },
+      where: { serviceId: serviceId },
     });
 
-    // Create new availability and slots
-    await prisma.service.update({
-      where: { id: serviceId },
-      data: {
-        availability: {
-          create: availability.map((avail) => ({
-            day: avail.day,
-            slots: {
-              create: avail.slots.map((slot) => ({
-                from: slot.from,
-                to: slot.to,
-              })),
-            },
-          })),
+    // Create new availability with slots
+    for (const avail of availability) {
+      const createdAvailability = await prisma.availability.create({
+        data: {
+          day: avail.day,
+          serviceId: serviceId,
         },
-      },
-      include: {
-        availability: {
-          include: {
-            slots: true,
+      });
+
+      // Create slots for availability
+      for (const slot of avail.slots) {
+        const formatTime = (time: string) => {
+          return time
+            .replace(/\s+(AM|PM)/i, " $1")
+            .replace(/(AM|PM)/i, " $1")
+            .trim();
+        };
+
+        await prisma.scheduleSlot.create({
+          data: {
+            from: formatTime(slot.from),
+            to: formatTime(slot.to),
+            serviceId: serviceId,
+            availableServiceId: createdAvailability.id,
           },
-        },
-      },
-    });
+        });
+      }
+    }
   }
 
-  // Return the updated service with new availability
-  const finalService = await prisma.service.findUnique({
+  // Fetch and return complete updated service
+  const completeService = await prisma.service.findUnique({
     where: { id: serviceId },
     include: {
       availability: {
@@ -149,7 +180,12 @@ const updateService = async (serviceId: string, payload: IServiceUpdate) => {
     },
   });
 
-  return finalService;
+  return completeService;
+};
+
+// Format time (AM/PM proper spacing)
+const formatTime = (time: string) => {
+  return time.replace(/\s+(AM|PM)/i, " $1").trim();
 };
 
 // get single service

@@ -7,10 +7,7 @@ import httpStatus from "http-status";
 // create service
 const createService = catchAsync(async (req: Request, res: Response) => {
   const coverImageFile = req.file;
-  const result = await ServiceService.createService(
-    req.body,
-    coverImageFile
-  );
+  const result = await ServiceService.createService(req.body, coverImageFile);
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
     success: true,
@@ -21,8 +18,13 @@ const createService = catchAsync(async (req: Request, res: Response) => {
 
 // update service
 const updateService = catchAsync(async (req: Request, res: Response) => {
-  const { id } = req.params;
-  const result = await ServiceService.updateService(id, req.body);
+  const coverImageFile = req.file;
+  const { serviceId } = req.params;
+  const result = await ServiceService.updateService(
+    serviceId,
+    req.body,
+    coverImageFile
+  );
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
@@ -33,8 +35,8 @@ const updateService = catchAsync(async (req: Request, res: Response) => {
 
 // get single service
 const getServiceById = catchAsync(async (req: Request, res: Response) => {
-  const { id } = req.params;
-  const result = await ServiceService.getServiceById(id);
+  const serviceId = req.params.serviceId;
+  const result = await ServiceService.getServiceById(serviceId);
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
