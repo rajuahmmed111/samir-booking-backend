@@ -7,7 +7,12 @@ import httpStatus from "http-status";
 // create service
 const createService = catchAsync(async (req: Request, res: Response) => {
   const coverImageFile = req.file;
-  const result = await ServiceService.createService(req.body, coverImageFile);
+  const providerId = req.user?.providerId;
+  const result = await ServiceService.createService(
+    providerId,
+    req.body,
+    coverImageFile
+  );
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
     success: true,

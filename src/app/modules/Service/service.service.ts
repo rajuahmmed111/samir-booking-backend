@@ -2,9 +2,12 @@ import prisma from "../../../shared/prisma";
 import { IServiceCreate, IServiceUpdate } from "./service.interface";
 import { ServiceStatus } from "@prisma/client";
 import { uploadFile } from "../../../helpars/fileUploader";
+import ApiError from "../../../errors/ApiErrors";
+import httpStatus from "http-status";
 
 // create service
 const createService = async (
+  providerId: string,
   payload: IServiceCreate,
   coverImageFile?: Express.Multer.File
 ) => {
@@ -20,12 +23,23 @@ const createService = async (
     coverImagePath = uploaded.secure_url;
   }
 
+  // find user
+  const findUser = await prisma.user.findUnique({
+    where: {
+      id: providerId,
+    },
+  });
+  if (!findUser) {
+    throw new ApiError(httpStatus.NOT_FOUND, "User not found.");
+  }
+
   // create service
   const service = await prisma.service.create({
     data: {
       ...serviceData,
       coverImage: coverImagePath,
       serviceStatus: serviceData.serviceStatus as ServiceStatus,
+      providerId: providerId,
     },
   });
 
