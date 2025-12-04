@@ -40,10 +40,18 @@ const createService = async (
 
     // create slots for availability
     for (const slot of avail.slots) {
+      // space before AM/PM formate
+      const formatTime = (time: string) => {
+        return time
+          .replace(/\s+(AM|PM)/i, " $1") // replace multiple spaces
+          .replace(/(AM|PM)/i, " $1") // add space
+          .trim();
+      };
+
       await prisma.scheduleSlot.create({
         data: {
-          from: slot.from,
-          to: slot.to,
+          from: formatTime(slot.from),
+          to: formatTime(slot.to),
           serviceId: service.id,
           availableServiceId: createdAvailability.id,
         },
