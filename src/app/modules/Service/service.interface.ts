@@ -1,4 +1,12 @@
 import { ServiceStatus } from "@prisma/client";
+import { type } from "os";
+
+export type IServiceFilterRequest = {
+  searchTerm?: string | undefined;
+  serviceName?: string | undefined;
+  serviceType?: string | undefined;
+  serviceStatus?: string | undefined;
+};
 
 export interface ServiceSlot {
   id?: string;

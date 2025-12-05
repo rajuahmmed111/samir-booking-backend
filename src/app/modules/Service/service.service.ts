@@ -1,9 +1,13 @@
 import prisma from "../../../shared/prisma";
 import { IServiceCreate, IServiceUpdate } from "./service.interface";
-import { ServiceStatus } from "@prisma/client";
+import { Prisma, ServiceStatus } from "@prisma/client";
 import { uploadFile } from "../../../helpars/fileUploader";
 import ApiError from "../../../errors/ApiErrors";
 import httpStatus from "http-status";
+import { IPaginationOptions } from "../../../interfaces/paginations";
+import { IHotelFilterRequest } from "../Hotel/hotel.interface";
+import { searchableFields } from "./service.constant";
+import { paginationHelpers } from "../../../helpars/paginationHelper";
 
 // create service
 const createService = async (
@@ -197,11 +201,6 @@ const updateService = async (
   return completeService;
 };
 
-// Format time (AM/PM proper spacing)
-const formatTime = (time: string) => {
-  return time.replace(/\s+(AM|PM)/i, " $1").trim();
-};
-
 // get single service
 const getServiceById = async (serviceId: string) => {
   const service = await prisma.service.findUnique({
@@ -233,9 +232,83 @@ const getAllServices = async () => {
   return services;
 };
 
+// get all my services
+const getMyServices = async (
+  providerId: string,
+  params: IHotelFilterRequest,
+  options: IPaginationOptions
+) => {
+  const { limit, page, skip } = paginationHelpers.calculatedPagination(options);
+
+  const { searchTerm, ...filterData } = params;
+
+  const filters: Prisma.ServiceWhereInput[] = [];
+
+  // text search
+  if (searchTerm) {
+    filters.push({
+      OR: searchableFields.map((field) => ({
+        [field]: {
+          contains: searchTerm,
+          mode: "insensitive",
+        },
+      })),
+    });
+  }
+
+  filters.push({
+    providerId,
+  });
+
+  // exact match filters
+  if (Object.keys(filterData).length > 0) {
+    filters.push({
+      AND: Object.keys(filterData).map((key) => ({
+        [key]: {
+          equals: (filterData as any)[key],
+        },
+      })),
+    });
+  }
+
+  const where: Prisma.ServiceWhereInput = { AND: filters };
+
+  const services = await prisma.service.findMany({
+    where,
+    skip,
+    take: limit,
+    orderBy:
+      options.sortBy && options.sortOrder
+        ? { [options.sortBy]: options.sortOrder }
+        : { createdAt: "desc" },
+    include: {
+      availability: {
+        include: {
+          slots: true,
+        },
+      },
+    },
+  });
+
+  // total count
+  const total = await prisma.service.count({
+    where,
+  });
+
+  return {
+    meta: {
+      total,
+      page,
+      limit,
+    },
+    data: services,
+  };
+};
+
 export const ServiceService = {
   createService,
   updateService,
   getServiceById,
   getAllServices,
+  getMyServices,
 };

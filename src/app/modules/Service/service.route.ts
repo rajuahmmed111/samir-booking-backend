@@ -29,16 +29,18 @@ router.patch(
   ServiceController.updateService
 );
 
-// get single service
-router.get(
-  "/:id",
-  ServiceController.getServiceById
-);
+// // get single service
+// router.get("/:id", ServiceController.getServiceById);
 
 // get all services
+router.get("/", ServiceController.getAllServices);
+
+// get all my services
 router.get(
-  "/",
-  ServiceController.getAllServices
+  "/my-services",
+// (() => console.log("kjfkdfs")),
+  auth(UserRole.SERVICE_PROVIDER),
+  ServiceController.getMyServices
 );
 
 export const serviceRoutes = router;
