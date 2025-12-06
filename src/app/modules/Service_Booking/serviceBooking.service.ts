@@ -44,6 +44,18 @@ const createServiceBooking = async (
     );
   }
 
+  // validate that the booking date is not in the past
+  const bookingDate = new Date(data.date);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // Set to start of day for accurate comparison
+  
+  if (bookingDate < today) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      "Cannot book for past dates. Please select a future date."
+    );
+  }
+
   // check if the requested date and day is available
   const availability = findService.availability.find(
     (avail: any) => avail.day.toLowerCase() === data.day.toLowerCase()
@@ -54,12 +66,17 @@ const createServiceBooking = async (
       `Service is not available on ${data.day}`
     );
   }
+  // console.log("availability", availability);
 
   // check if the requested time slot is available
   const isTimeSlotAvailable = availability.slots.some(
     (slot: any) =>
-      slot.from === data.timeSlot.from && slot.to === data.timeSlot.to
+      slot.from.replace(/\s+/g, " ").trim() ===
+        data.timeSlot.from.replace(/\s+/g, " ").trim() &&
+      slot.to.replace(/\s+/g, " ").trim() ===
+        data.timeSlot.to.replace(/\s+/g, " ").trim()
   );
+  // console.log("isTimeSlotAvailable", isTimeSlotAvailable);
   if (!isTimeSlotAvailable) {
     throw new ApiError(
       httpStatus.BAD_REQUEST,
