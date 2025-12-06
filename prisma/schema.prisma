@@ -51,25 +51,13 @@ enum Weekday {
 enum BookingStatus {
   PENDING
   CONFIRMED
-  CANCELLED
   COMPLETED
+  CANCELLED
   EXPIRED
 }
 
 enum PaymentProvider {
   STRIPE
-  PAYSTACK
-}
-
-enum PromoStatus {
-  ACTIVE
-  INACTIVE
-  EXPIRED
-}
-
-enum DiscountType {
-  PERCENTAGE
-  FLAT
 }
 
 enum SupportType {
@@ -178,6 +166,7 @@ model User {
   subscriptions        SubscriptionPlan[]
   purchaseSubscription Purchase_subscription?
   services             Service[]
+  serviceBookings      Service_booking[]
 
   @@map("users")
 }
@@ -373,14 +362,26 @@ model ScheduleSlot {
 }
 
 model Service_booking {
-  id String @id @default(auto()) @map("_id") @db.ObjectId
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                  String        @id @default(auto()) @map("_id") @db.ObjectId
+  checkoutSessionId   String?
+  property            String // property name
+  serviceName         String
+  date                String
+  day                 String
+  timeSlot            Json // { "from": "10:00 AM", "to": "12:00 PM" }
+  totalPrice          Float
+  specialInstructions String?
+  bookingStatus       BookingStatus @default(PENDING)
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
 
   // relationships
-  serviceId String  @db.ObjectId
-  service   Service @relation(fields: [serviceId], references: [id])
+  providerId String?   @db.ObjectId
+  userId     String?   @db.ObjectId
+  user       User?     @relation(fields: [userId], references: [id])
+  serviceId  String?   @db.ObjectId
+  service    Service?  @relation(fields: [serviceId], references: [id])
+  payments   Payment[]
 
   @@map("service_bookings")
 }
@@ -618,44 +619,6 @@ model Message {
   @@map("messages")
 }
 
-model Payment {
-  id               String          @id @default(auto()) @map("_id") @db.ObjectId
-  amount           Float
-  description      String?
-  currency         String?
-  sessionId        String?         @unique
-  paymentIntentId  String?
-  status           PaymentStatus
-  provider         PaymentProvider
-  payable_name     String?
-  payable_email    String?
-  payment_intent   String?
-  country          String?
-  admin_commission Float?
-  service_fee      Float?
-  paystack_fee     Float?
-  vat_amount       Float? // 5% only for admin
-  transactionId    String?
-  serviceType      String
-  partnerId        String?         @db.ObjectId
-  planId           String?
-  isDeleted        Boolean         @default(false)
-  metadata         Json?
-
-  // Relations
-  user            User           @relation(fields: [userId], references: [id])
-  userId          String         @db.ObjectId
-  hotel_booking   Hotel_Booking? @relation(fields: [hotel_bookingId], references: [id])
-  hotel_bookingId String?        @db.ObjectId
-
-  createdAt               DateTime               @default(now())
-  updatedAt               DateTime               @updatedAt
-  purchaseSubscription    Purchase_subscription? @relation(fields: [purchase_subscriptionId], references: [id])
-  purchase_subscriptionId String?                @db.ObjectId
-
-  @@map("payments")
-}
-
 model Support {
   id            String        @id @default(auto()) @map("_id") @db.ObjectId
   fullName      String?
@@ -740,4 +703,44 @@ model Purchase_subscription {
   payments Payment[]
 
   @@map("purchase_subscriptions")
+}
+
+model Payment {
+  id               String          @id @default(auto()) @map("_id") @db.ObjectId
+  amount           Float
+  description      String?
+  currency         String?
+  sessionId        String?         @unique
+  paymentIntentId  String?
+  status           PaymentStatus
+  provider         PaymentProvider
+  payable_name     String?
+  payable_email    String?
+  payment_intent   String?
+  country          String?
+  admin_commission Float?
+  service_fee      Float?
+  paystack_fee     Float?
+  vat_amount       Float? // 5% only for admin
+  transactionId    String?
+  serviceType      String
+  partnerId        String?         @db.ObjectId
+  planId           String?
+  isDeleted        Boolean         @default(false)
+  metadata         Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user                    User                   @relation(fields: [userId], references: [id])
+  userId                  String                 @db.ObjectId
+  hotel_booking           Hotel_Booking?         @relation(fields: [hotel_bookingId], references: [id])
+  hotel_bookingId         String?                @db.ObjectId
+  purchaseSubscription    Purchase_subscription? @relation(fields: [purchase_subscriptionId], references: [id])
+  purchase_subscriptionId String?                @db.ObjectId
+  service_booking         Service_booking?       @relation(fields: [service_bookingId], references: [id])
+  service_bookingId       String?                @db.ObjectId
+
+  @@map("payments")
 }
