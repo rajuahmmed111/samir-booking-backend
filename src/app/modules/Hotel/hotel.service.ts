@@ -55,6 +55,7 @@ const createHotel = async (req: Request) => {
   }
 
   const {
+    // propertyName,
     propertyTitle,
     propertyAddress,
     propertyDescription,
@@ -88,6 +89,7 @@ const createHotel = async (req: Request) => {
 
   const result = await prisma.hotel.create({
     data: {
+      // propertyName,
       uploadPhotosOrVideos: uploadedMedia,
       propertyTitle,
       propertyAddress,
@@ -735,6 +737,7 @@ const updateHotel = async (req: Request) => {
   }
 
   const {
+    // propertyName,
     propertyTitle,
     propertyAddress,
     propertyDescription,
@@ -757,6 +760,7 @@ const updateHotel = async (req: Request) => {
   const updatedHotel = await prisma.hotel.update({
     where: { id: hotelId },
     data: {
+      // propertyName,
       uploadPhotosOrVideos: uploadedMedia,
       propertyTitle,
       propertyAddress,

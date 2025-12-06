@@ -24,6 +24,7 @@ export interface IServiceCreate {
   serviceName: string;
   serviceType: string;
   description: string;
+  experience: number;
   price: number;
   coverImage: string;
   serviceStatus: string;
@@ -36,6 +37,7 @@ export interface IServiceUpdate {
   serviceName?: string;
   serviceType?: string;
   description?: string;
+  experience?: number;
   price?: number;
   coverImage?: string;
   serviceStatus?: string;
@@ -48,6 +50,7 @@ export interface IServiceResponse {
   serviceName: string;
   serviceType: string;
   description: string;
+  experience: number;
   price: number;
   coverImage: string;
   serviceStatus: string;

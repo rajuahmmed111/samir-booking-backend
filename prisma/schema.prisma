@@ -197,6 +197,7 @@ model Admin {
 
 model Hotel {
   id                   String             @id @default(auto()) @map("_id") @db.ObjectId
+  // propertyName         String
   uploadPhotosOrVideos String[]
   propertyTitle        String
   propertyAddress      String
@@ -324,6 +325,7 @@ model Service {
   serviceName      String
   serviceType      String
   description      String
+  experience       Float
   price            Float
   // estimatedDuration String
   coverImage       String
@@ -334,10 +336,11 @@ model Service {
   updatedAt        DateTime      @updatedAt
 
   // relationships
-  availability  Availability[]
-  scheduleSlots ScheduleSlot[]
-  user          User?          @relation(fields: [providerId], references: [id])
-  providerId    String?        @db.ObjectId
+  availability    Availability[]
+  scheduleSlots   ScheduleSlot[]
+  user            User?             @relation(fields: [providerId], references: [id])
+  providerId      String?           @db.ObjectId
+  serviceBookings Service_booking[]
 
   @@map("services")
 }
@@ -367,6 +370,19 @@ model ScheduleSlot {
   availability       Availability? @relation(fields: [availableServiceId], references: [id])
 
   @@map("schedule_slots")
+}
+
+model Service_booking {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // relationships
+  serviceId String  @db.ObjectId
+  service   Service @relation(fields: [serviceId], references: [id])
+
+  @@map("service_bookings")
 }
 
 model Review {

@@ -55,7 +55,10 @@ const getServiceById = catchAsync(async (req: Request, res: Response) => {
 
 // get all services
 const getAllServices = catchAsync(async (req: Request, res: Response) => {
-  const result = await ServiceService.getAllServices();
+  const filter = pick(req.query, filterField);
+  const options = pick(req.query, paginationFields);
+
+  const result = await ServiceService.getAllServices(filter, options);
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,

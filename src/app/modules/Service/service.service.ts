@@ -203,12 +203,28 @@ const updateService = async (
 
 // get single service
 const getServiceById = async (serviceId: string) => {
+  // check if service exist
+  const result = await prisma.service.findUnique({
+    where: { id: serviceId },
+  });
+  if (!result) {
+    throw new Error("Service not found");
+  }
+
   const service = await prisma.service.findUnique({
     where: { id: serviceId },
     include: {
       availability: {
         include: {
           slots: true,
+        },
+      },
+      user: {
+        select: {
+          id: true,
+          fullName: true,
+          profileImage: true,
+          isEmailVerified: true,
         },
       },
     },
@@ -218,8 +234,49 @@ const getServiceById = async (serviceId: string) => {
 };
 
 // get all services
-const getAllServices = async () => {
+const getAllServices = async (
+  params: IHotelFilterRequest,
+  options: IPaginationOptions
+) => {
+  const { limit, page, skip } = paginationHelpers.calculatedPagination(options);
+
+  const { searchTerm, ...filterData } = params;
+
+  const filters: Prisma.ServiceWhereInput[] = [];
+
+  // text search
+  if (searchTerm) {
+    filters.push({
+      OR: searchableFields.map((field) => ({
+        [field]: {
+          contains: searchTerm,
+          mode: "insensitive",
+        },
+      })),
+    });
+  }
+
+  // exact match filters
+  if (Object.keys(filterData).length > 0) {
+    filters.push({
+      AND: Object.keys(filterData).map((key) => ({
+        [key]: {
+          equals: (filterData as any)[key],
+        },
+      })),
+    });
+  }
+
+  const where: Prisma.ServiceWhereInput = { AND: filters };
+
   const services = await prisma.service.findMany({
+    where,
+    skip,
+    take: limit,
+    orderBy:
+      options.sortBy && options.sortOrder
+        ? { [options.sortBy]: options.sortOrder }
+        : { createdAt: "desc" },
     include: {
       availability: {
         include: {
@@ -229,7 +286,19 @@ const getAllServices = async () => {
     },
   });
 
-  return services;
+  // total count
+  const total = await prisma.service.count({
+    where,
+  });
+
+  return {
+    meta: {
+      total,
+      page,
+      limit,
+    },
+    data: services,
+  };
 };
 
 // get all my services

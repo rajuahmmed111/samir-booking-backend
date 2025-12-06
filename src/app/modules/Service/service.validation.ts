@@ -16,6 +16,7 @@ export const createServiceSchema = z.object({
     serviceName: z.string().min(1, "Service name is required"),
     serviceType: z.string().min(1, "Service type is required"),
     description: z.string().min(1, "Description is required"),
+    experience: z.number().min(0, "Experience must be a positive number"),
     price: z.number().min(0, "Price must be a positive number"),
     // coverImage: z.string().min(1, "Cover image is required"),
     serviceStatus: z.enum([
@@ -36,6 +37,10 @@ export const updateServiceSchema = z.object({
     serviceName: z.string().min(1, "Service name is required").optional(),
     serviceType: z.string().min(1, "Service type is required").optional(),
     description: z.string().min(1, "Description is required").optional(),
+    experience: z
+      .number()
+      .min(0, "Experience must be a positive number")
+      .optional(),
     price: z.number().min(0, "Price must be a positive number").optional(),
     serviceStatus: z
       .enum([

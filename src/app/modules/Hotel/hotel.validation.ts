@@ -19,6 +19,7 @@ const inventoryItemSchema = z.object({
 
 const createHotelSchema = z.object({
   body: z.object({
+    // propertyName: z.string().min(1, "Property name is required"),
     propertyTitle: z.string().min(1, "Property title is required"),
     propertyAddress: z.string().min(1, "Property address is required"),
     propertyDescription: z.string().min(1, "Property description is required"),
@@ -50,6 +51,7 @@ const createHotelSchema = z.object({
 // update hotel schema
 const updateHotelSchema = z.object({
   body: z.object({
+    // propertyName: z.string().min(1, "Property name is required").optional(),
     propertyTitle: z.string().min(1, "Property title is required").optional(),
     propertyAddress: z
       .string()
