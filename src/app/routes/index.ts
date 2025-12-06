@@ -26,6 +26,7 @@ import { advertisingRoutes } from "../modules/Advertise/advertising.route";
 import { investorRelationsRoutes } from "../modules/Investor_Relations/investor.route";
 import { subscriptionRoutes } from "../modules/Subscriptioin/subscription.route";
 import { serviceRoutes } from "../modules/Service/service.route";
+import { serviceBookingRoute } from "../modules/Service_Booking/serviceBooking.route";
 
 const router = express.Router();
 
@@ -51,6 +52,10 @@ const moduleRoutes = [
   {
     path: "/services",
     route: serviceRoutes,
+  },
+  {
+    path: "/service-booking",
+    route: serviceBookingRoute,
   },
 
   {
