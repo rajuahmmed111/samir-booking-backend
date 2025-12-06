@@ -298,10 +298,10 @@ const getAllServiceBookingsOfProvider = async (providerId: string) => {
 
 // get single service booking
 const getSingleServiceBooking = async (bookingId: string, userId: string) => {
-  const result = await prisma.service_booking.findFirst({
+  const bookingInfo = await prisma.service_booking.findFirst({
     where: {
       id: bookingId,
-      userId, // ensure user can only access their own bookings
+      userId,
     },
     include: {
       user: {
@@ -320,17 +320,47 @@ const getSingleServiceBooking = async (bookingId: string, userId: string) => {
           price: true,
           coverImage: true,
           providerId: true,
+          user: {
+            select: {
+              id: true,
+              fullName: true,
+              email: true,
+              contactNumber: true,
+            },
+          },
         },
       },
       payments: true,
     },
   });
 
-  if (!result) {
+  if (!bookingInfo) {
     throw new ApiError(httpStatus.NOT_FOUND, "Service booking not found");
   }
 
-  return result;
+  //   const providerId = bookingInfo?.providerId;
+
+  //   let providerInfo = null;
+
+  //   if (providerId) {
+  //     providerInfo = await prisma.user.findUnique({
+  //       where: { id: providerId },
+  //       select: {
+  //         id: true,
+  //         fullName: true,
+  //         email: true,
+  //         contactNumber: true,
+  //       },
+  //     });
+  //   }
+
+  // merge providerInfo into bookingInfo
+  //   return {
+  //     ...bookingInfo,
+  //     providerInfo,
+  //   };
+
+  return bookingInfo;
 };
 
 // update service booking
