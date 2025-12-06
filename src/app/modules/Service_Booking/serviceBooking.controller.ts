@@ -23,37 +23,60 @@ const createServiceBooking = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-// get all service bookings for a user
-const getAllServiceBookings = catchAsync(async (req: Request, res: Response) => {
-  const userId = req.user?.id;
-  const filters = pick(req.query, ['searchTerm', 'bookingStatus', 'date']);
-  const result = await ServiceBookingService.getAllServiceBookings(
-    userId,
-    filters as IServiceFilterRequest
-  );
-  sendResponse(res, {
-    statusCode: httpStatus.OK,
-    success: true,
-    message: "Service bookings retrieved successfully",
-    data: result,
-  });
-});
+// get all service active bookings for a user
+const getAllServiceActiveBookingsOfUser = catchAsync(
+  async (req: Request, res: Response) => {
+    const userId = req.user?.id;
+    const filters = pick(req.query, ["searchTerm", "bookingStatus", "date"]);
+    const result =
+      await ServiceBookingService.getAllServiceActiveBookingsOfUser(
+        userId,
+        filters as IServiceFilterRequest
+      );
+    sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: "Service bookings retrieved successfully",
+      data: result,
+    });
+  }
+);
+
+// get all service past bookings for a user
+const getAllServicePastBookingsOfUser = catchAsync(
+  async (req: Request, res: Response) => {
+    const userId = req.user?.id;
+    const filters = pick(req.query, ["searchTerm", "bookingStatus", "date"]);
+    const result = await ServiceBookingService.getAllServicePastBookingsOfUser(
+      userId,
+      filters as IServiceFilterRequest
+    );
+    sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: "Service bookings retrieved successfully",
+      data: result,
+    });
+  }
+);
 
 // get single service booking
-const getSingleServiceBooking = catchAsync(async (req: Request, res: Response) => {
-  const userId = req.user?.id;
-  const bookingId = req.params.bookingId;
-  const result = await ServiceBookingService.getSingleServiceBooking(
-    bookingId,
-    userId
-  );
-  sendResponse(res, {
-    statusCode: httpStatus.OK,
-    success: true,
-    message: "Service booking retrieved successfully",
-    data: result,
-  });
-});
+const getSingleServiceBooking = catchAsync(
+  async (req: Request, res: Response) => {
+    const userId = req.user?.id;
+    const bookingId = req.params.bookingId;
+    const result = await ServiceBookingService.getSingleServiceBooking(
+      bookingId,
+      userId
+    );
+    sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: "Service booking retrieved successfully",
+      data: result,
+    });
+  }
+);
 
 // update service booking
 const updateServiceBooking = catchAsync(async (req: Request, res: Response) => {
@@ -72,11 +95,10 @@ const updateServiceBooking = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-
-
 export const ServiceBookingController = {
   createServiceBooking,
-  getAllServiceBookings,
+  getAllServiceActiveBookingsOfUser,
+  getAllServicePastBookingsOfUser,
   getSingleServiceBooking,
   updateServiceBooking,
 };

@@ -48,7 +48,7 @@ const createServiceBooking = async (
   const bookingDate = new Date(data.date);
   const today = new Date();
   today.setHours(0, 0, 0, 0); // Set to start of day for accurate comparison
-  
+
   if (bookingDate < today) {
     throw new ApiError(
       httpStatus.BAD_REQUEST,
@@ -134,8 +134,8 @@ const createServiceBooking = async (
   return result;
 };
 
-// get all service bookings (for a user or provider)
-const getAllServiceBookings = async (
+// get all service active bookings for user
+const getAllServiceActiveBookingsOfUser = async (
   userId: string,
   filters: IServiceFilterRequest
 ) => {
@@ -143,7 +143,7 @@ const getAllServiceBookings = async (
   const andConditions = [];
 
   // filter by userId (user can only see their own bookings)
-  andConditions.push({ userId });
+  andConditions.push({ userId, bookingStatus: BookingStatus.CONFIRMED });
 
   // filter by booking status
   if (bookingStatus) {
@@ -194,6 +194,105 @@ const getAllServiceBookings = async (
     },
   });
 
+  return result;
+};
+
+// get all service past bookings for user
+const getAllServicePastBookingsOfUser = async (
+  userId: string,
+  filters: IServiceFilterRequest
+) => {
+  const { searchTerm, bookingStatus, date } = filters;
+  const andConditions = [];
+
+  // filter by userId (user can only see their own bookings)
+  andConditions.push({
+    userId,
+    bookingStatus: {
+      in: [BookingStatus.COMPLETED, BookingStatus.CANCELLED],
+    },
+  });
+
+  // filter by booking status
+  if (bookingStatus) {
+    andConditions.push({ bookingStatus });
+  }
+
+  // filter by date
+  if (date) {
+    andConditions.push({ date });
+  }
+
+  // search by property name or service name
+  if (searchTerm) {
+    andConditions.push({
+      OR: [
+        { property: { contains: searchTerm } },
+        { serviceName: { contains: searchTerm } },
+      ],
+    });
+  }
+
+  const whereCondition = {
+    AND: andConditions,
+  };
+
+  const result = await prisma.service_booking.findMany({
+    where: whereCondition,
+    include: {
+      user: {
+        select: {
+          id: true,
+          fullName: true,
+          email: true,
+        },
+      },
+      service: {
+        select: {
+          id: true,
+          serviceName: true,
+          serviceType: true,
+          price: true,
+          coverImage: true,
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+
+  return result;
+};
+
+// get all service bookings for provider by providerId
+const getAllServiceBookingsOfProvider = async (providerId: string) => {
+  const result = await prisma.service_booking.findMany({
+    where: {
+      providerId,
+    },
+    include: {
+      user: {
+        select: {
+          id: true,
+          fullName: true,
+          email: true,
+        },
+      },
+      service: {
+        select: {
+          id: true,
+          serviceName: true,
+          serviceType: true,
+          price: true,
+          coverImage: true,
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
   return result;
 };
 
@@ -301,7 +400,8 @@ const updateServiceBooking = async (
 
 export const ServiceBookingService = {
   createServiceBooking,
-  getAllServiceBookings,
+  getAllServiceActiveBookingsOfUser,
+  getAllServicePastBookingsOfUser,
   getSingleServiceBooking,
   updateServiceBooking,
 };

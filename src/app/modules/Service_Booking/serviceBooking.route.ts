@@ -15,11 +15,18 @@ router.post(
   ServiceBookingController.createServiceBooking
 );
 
-// get all service bookings for a user
+// get all service active bookings for a user
 router.get(
-  "/",
+  "/user-active-bookings",
   auth(UserRole.PROPERTY_OWNER),
-  ServiceBookingController.getAllServiceBookings
+  ServiceBookingController.getAllServiceActiveBookingsOfUser
+);
+
+// get all service past bookings for a user
+router.get(
+  "/user-past-bookings",
+  auth(UserRole.PROPERTY_OWNER),
+  ServiceBookingController.getAllServicePastBookingsOfUser
 );
 
 // get single service booking
