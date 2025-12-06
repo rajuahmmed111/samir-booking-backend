@@ -260,6 +260,18 @@ const getMyServices = async (
     providerId,
   });
 
+  // enum validation
+  const validStatus = ["ACTIVE", "INACTIVE", "PENDING"];
+  for (const key of Object.keys(filterData)) {
+    const value = (filterData as any)[key];
+
+    if (key === "serviceStatus") {
+      if (!validStatus.includes(value)) {
+        throw new ApiError(400, "Invalid serviceStatus value");
+      }
+    }
+  }
+
   // exact match filters
   if (Object.keys(filterData).length > 0) {
     filters.push({

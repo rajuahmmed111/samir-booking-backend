@@ -66,10 +66,10 @@ const getAllServices = catchAsync(async (req: Request, res: Response) => {
 
 // get all my services
 const getMyServices = catchAsync(async (req: Request, res: Response) => {
+  const providerId = req.user?.id;
   const filter = pick(req.query, filterField);
   const options = pick(req.query, paginationFields);
 
-  const providerId = req.user?.providerId;
   const result = await ServiceService.getMyServices(
     providerId,
     filter,

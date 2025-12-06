@@ -38,7 +38,6 @@ router.get("/", ServiceController.getAllServices);
 // get all my services
 router.get(
   "/my/services",
-// (() => console.log("kjfkdfs")),
   auth(UserRole.SERVICE_PROVIDER),
   ServiceController.getMyServices
 );
