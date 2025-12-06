@@ -36,12 +36,11 @@ router.get(
   ServiceBookingController.getSingleServiceBooking
 );
 
-// update service booking
-router.patch(
-  "/:bookingId",
-  auth(UserRole.PROPERTY_OWNER),
-  validateRequest(ServiceBookingValidation.updateServiceBookingSchema),
-  ServiceBookingController.updateServiceBooking
+// get all service bookings for provider by providerId
+router.get(
+  "/provider/bookings",
+  auth(UserRole.SERVICE_PROVIDER),
+  ServiceBookingController.getAllServiceBookingsOfProvider
 );
 
 export const serviceBookingRoute = router;

@@ -78,27 +78,28 @@ const getSingleServiceBooking = catchAsync(
   }
 );
 
-// update service booking
-const updateServiceBooking = catchAsync(async (req: Request, res: Response) => {
-  const userId = req.user?.id;
-  const bookingId = req.params.bookingId;
-  const result = await ServiceBookingService.updateServiceBooking(
-    bookingId,
-    userId,
-    req.body
-  );
-  sendResponse(res, {
-    statusCode: httpStatus.OK,
-    success: true,
-    message: "Service booking updated successfully",
-    data: result,
-  });
-});
+// get all service bookings for provider by providerId
+const getAllServiceBookingsOfProvider = catchAsync(
+  async (req: Request, res: Response) => {
+    const providerId = req.user?.id;
+    const filter = req.query.filter as string;
+    const result = await ServiceBookingService.getAllServiceBookingsOfProvider(
+      providerId,
+      filter
+    );
+    sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: "Service bookings retrieved successfully",
+      data: result,
+    });
+  }
+);
 
 export const ServiceBookingController = {
   createServiceBooking,
   getAllServiceActiveBookingsOfUser,
   getAllServicePastBookingsOfUser,
   getSingleServiceBooking,
-  updateServiceBooking,
+  getAllServiceBookingsOfProvider,
 };

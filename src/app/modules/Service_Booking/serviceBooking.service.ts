@@ -265,37 +265,6 @@ const getAllServicePastBookingsOfUser = async (
   return result;
 };
 
-// get all service bookings for provider by providerId
-const getAllServiceBookingsOfProvider = async (providerId: string) => {
-  const result = await prisma.service_booking.findMany({
-    where: {
-      providerId,
-    },
-    include: {
-      user: {
-        select: {
-          id: true,
-          fullName: true,
-          email: true,
-        },
-      },
-      service: {
-        select: {
-          id: true,
-          serviceName: true,
-          serviceType: true,
-          price: true,
-          coverImage: true,
-        },
-      },
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
-  });
-  return result;
-};
-
 // get single service booking
 const getSingleServiceBooking = async (bookingId: string, userId: string) => {
   const bookingInfo = await prisma.service_booking.findFirst({
@@ -363,49 +332,46 @@ const getSingleServiceBooking = async (bookingId: string, userId: string) => {
   return bookingInfo;
 };
 
-// update service booking
-const updateServiceBooking = async (
-  bookingId: string,
-  userId: string,
-  data: IUpdateServiceBooking
+// get all service bookings for provider by providerId
+const getAllServiceBookingsOfProvider = async (
+  providerId: string,
+  filter?: string
 ) => {
-  // check if booking exists and belongs to user
-  const existingBooking = await prisma.service_booking.findFirst({
+  // find provider
+  const provider = await prisma.user.findUnique({
     where: {
-      id: bookingId,
-      userId,
+      id: providerId,
     },
   });
-
-  if (!existingBooking) {
-    throw new ApiError(httpStatus.NOT_FOUND, "Service booking not found");
+  if (!provider) {
+    throw new ApiError(httpStatus.NOT_FOUND, "Provider not found");
   }
 
-  // prevent status updates for confirmed/completed bookings
-  if (
-    existingBooking.bookingStatus === BookingStatus.CONFIRMED &&
-    data.bookingStatus &&
-    data.bookingStatus !== BookingStatus.CONFIRMED
-  ) {
-    throw new ApiError(
-      httpStatus.BAD_REQUEST,
-      "Cannot modify confirmed booking"
-    );
-  }
+  let whereClause: any = { providerId };
 
-  if (existingBooking.bookingStatus === BookingStatus.COMPLETED) {
-    throw new ApiError(
-      httpStatus.BAD_REQUEST,
-      "Cannot modify completed booking"
-    );
-  }
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
-  const result = await prisma.service_booking.update({
-    where: { id: bookingId },
-    data: {
-      ...data,
-      updatedAt: new Date(),
-    },
+  if (filter === "new-requests") {
+    // New Requests: CONFIRMED bookings for today or future dates
+    whereClause.bookingStatus = BookingStatus.CONFIRMED;
+    whereClause.date = {
+      gte: today.toISOString().split("T")[0],
+    };
+  } else if (filter === "ongoing") {
+    // Ongoing: CONFIRMED bookings where date is in the past (before today)
+    whereClause.bookingStatus = BookingStatus.CONFIRMED;
+    whereClause.date = {
+      lt: today.toISOString().split("T")[0],
+    };
+  } else if (filter === "completed") {
+    // Completed: COMPLETED bookings
+    whereClause.bookingStatus = BookingStatus.COMPLETED;
+  }
+  // if no filter return all
+
+  const result = await prisma.service_booking.findMany({
+    where: whereClause,
     include: {
       user: {
         select: {
@@ -420,11 +386,14 @@ const updateServiceBooking = async (
           serviceName: true,
           serviceType: true,
           price: true,
+          coverImage: true,
         },
       },
     },
+    orderBy: {
+      createdAt: "desc",
+    },
   });
-
   return result;
 };
 
@@ -433,5 +402,5 @@ export const ServiceBookingService = {
   getAllServiceActiveBookingsOfUser,
   getAllServicePastBookingsOfUser,
   getSingleServiceBooking,
-  updateServiceBooking,
+  getAllServiceBookingsOfProvider,
 };
