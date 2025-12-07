@@ -508,59 +508,28 @@ model Refund_Policy {
 }
 
 model About_App {
-  id            String   @id @default(auto()) @map("_id") @db.ObjectId
-  appName       String
-  description   String
-  ourServices   String[]
-  whyFasisty    String[]
-  ourMission    String
-  ourVision     String
-  securityTrust String
-  futurePlans   String
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  description String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   @@map("about_apps")
 }
 
 model Terms_Condition {
-  id String @id @default(auto()) @map("_id") @db.ObjectId
-
-  title                 String
-  acceptance_terms      String
-  app_purpose           String
-  user_responsibilities String
-  data_usage            String
-  intellectual_property String
-  limitation            String
-  updates               String
-  contactUS             String
-  adminId               String
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  description String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   @@map("terms_conditions")
 }
 
 model Privacy_Policy {
-  id String @id @default(auto()) @map("_id") @db.ObjectId
-
-  title                String
-  introduction         String
-  information_collect  String[]
-  how_useYour_data     String[]
-  data_security        String
-  third_party_services String
-  user_control         String[]
-  children_privacy     String
-  changes_to_policy    String
-  contact_info         String
-  adminId              String
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  description String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   @@map("privacy_policies")
 }

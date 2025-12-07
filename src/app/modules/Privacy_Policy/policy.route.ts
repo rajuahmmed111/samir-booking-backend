@@ -7,6 +7,14 @@ import { privacyPolicyValidation } from "./policy.validation";
 
 const router = express.Router();
 
+// create or update privacy policy
+router.patch(
+  "/",
+  auth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
+  validateRequest(privacyPolicyValidation.createPrivacyPolicySchema),
+  PrivacyController.createOrUpdatePolicy
+);
+
 // get all privacy policy
 router.get(
   "/",
@@ -14,37 +22,10 @@ router.get(
     UserRole.ADMIN,
     UserRole.SUPER_ADMIN,
     UserRole.USER,
-    UserRole.BUSINESS_PARTNER
+    UserRole.PROPERTY_OWNER,
+    UserRole.SERVICE_PROVIDER
   ),
   PrivacyController.getAllPolicy
-);
-
-// get privacy policy by id
-router.get(
-  "/:id",
-  auth(
-    UserRole.ADMIN,
-    UserRole.SUPER_ADMIN,
-    UserRole.USER,
-    UserRole.BUSINESS_PARTNER
-  ),
-  PrivacyController.getSinglePolicy
-);
-
-// create privacy policy
-router.post(
-  "/",
-  auth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
-  validateRequest(privacyPolicyValidation.createPrivacyPolicySchema),
-  PrivacyController.createPolicy
-);
-
-// update privacy policy
-router.patch(
-  "/update/:id",
-  auth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
-  validateRequest(privacyPolicyValidation.updatePrivacyPolicySchema),
-  PrivacyController.updatePolicy
 );
 
 export const privacyPolicyRoute = router;
