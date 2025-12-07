@@ -14,6 +14,7 @@ export interface ICreateServiceBooking {
   timeSlot: ITimeSlot;
   totalPrice: number;
   specialInstructions?: string;
+  hotelId: string;
 }
 
 export interface IUpdateServiceBooking {

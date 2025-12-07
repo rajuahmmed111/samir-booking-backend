@@ -15,12 +15,21 @@ export const createServiceBookingSchema = z.object({
     timeSlot: TimeSlotSchema,
     totalPrice: z.number().min(0, "Total price must be a positive number"),
     specialInstructions: z.string().optional(),
+    // hotelId ObjectId
+    hotelId: z.string().min(1, "Hotel ID is required"),
   }),
 });
 
 export const updateServiceBookingSchema = z.object({
   body: z.object({
-    bookingStatus: z.enum([BookingStatus.PENDING, BookingStatus.CONFIRMED, BookingStatus.CANCELLED, BookingStatus.COMPLETED]).optional(),
+    bookingStatus: z
+      .enum([
+        BookingStatus.PENDING,
+        BookingStatus.CONFIRMED,
+        BookingStatus.CANCELLED,
+        BookingStatus.COMPLETED,
+      ])
+      .optional(),
     specialInstructions: z.string().optional(),
   }),
 });

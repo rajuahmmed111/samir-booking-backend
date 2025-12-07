@@ -22,6 +22,14 @@ const createServiceBooking = async (
     throw new ApiError(httpStatus.NOT_FOUND, "User not found");
   }
 
+  // find hotel
+  const findHotel = await prisma.hotel.findUnique({
+    where: { id: data?.hotelId },
+  });
+  if (!findHotel) {
+    throw new ApiError(httpStatus.NOT_FOUND, "Hotel not found");
+  }
+
   // find service
   const findService = await prisma.service.findUnique({
     where: { id: serviceId },
@@ -104,6 +112,7 @@ const createServiceBooking = async (
       userId,
       serviceId,
       providerId: findService.providerId,
+      hotelId: findHotel?.id,
       property: data.property,
       serviceName: data.serviceName,
       date: data.date,
