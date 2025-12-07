@@ -316,29 +316,22 @@ const getSingleServiceBooking = async (bookingId: string, userId: string) => {
     throw new ApiError(httpStatus.NOT_FOUND, "Service booking not found");
   }
 
-  //   const providerId = bookingInfo?.providerId;
+  const hotelId = bookingInfo?.hotelId;
+  let hotelInfo = null;
+  if (hotelId) {
+    hotelInfo = await prisma.hotel.findUnique({
+      where: { id: hotelId },
+      include: {
+        guards: true,
+      },
+    });
+  }
 
-  //   let providerInfo = null;
-
-  //   if (providerId) {
-  //     providerInfo = await prisma.user.findUnique({
-  //       where: { id: providerId },
-  //       select: {
-  //         id: true,
-  //         fullName: true,
-  //         email: true,
-  //         contactNumber: true,
-  //       },
-  //     });
-  //   }
-
-  // merge providerInfo into bookingInfo
-  //   return {
-  //     ...bookingInfo,
-  //     providerInfo,
-  //   };
-
-  return bookingInfo;
+  // merge hotelInfo into bookingInfo
+  return {
+    ...bookingInfo,
+    hotelInfo,
+  };
 };
 
 // get all service bookings for provider by providerId
