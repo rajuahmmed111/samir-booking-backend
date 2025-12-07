@@ -6,13 +6,12 @@ import {
   BookingStatus,
   EveryServiceStatus,
   PaymentStatus,
-  UserStatus,
 } from "@prisma/client";
 import config from "../../../config";
 import Stripe from "stripe";
-import { mapStripeStatusToPaymentStatus, ServiceType } from "./Stripe/stripe";
+import { ServiceType } from "./Stripe/stripe";
 
-// Service configuration for different booking types
+// service configuration for different booking types
 const serviceConfig = {
   SERVICE: {
     bookingModel: prisma.service_booking,
@@ -29,24 +28,15 @@ const serviceConfig = {
     nameField: "propertyName",
   },
 } as const;
-import axios from "axios";
+
 import {
   BookingNotificationService,
   IBookingNotificationData,
   ServiceTypes,
 } from "../../../shared/notificationService";
-import * as crypto from "crypto";
 import emailSender from "../../../helpars/emailSender";
 
-const callback_url = "https://paystack.com/pay";
-const payStackBaseUrl = "https://api.paystack.co";
-const headers = {
-  Authorization: `Bearer ${config.payStack.secretKey}`,
-  "Content-Type": "application/json",
-};
-
 // --------------------------- Stripe ---------------------------
-
 // stripe account onboarding
 const stripeAccountOnboarding = async (userId: string) => {
   // find user
