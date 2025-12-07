@@ -4,33 +4,27 @@ import ApiError from "../../../errors/ApiErrors";
 import httpStatus from "http-status";
 import emailSender from "../../../helpars/emailSender";
 
-// verify email and phone number
-const verifyEmailAndPhoneNumber = async (userId: string) => {
-  // const result = await prisma.user.updateMany({ where: { id: userId }, data: { emailVerified: true, phoneVerified: true } });
-  // return result;
-};
-
 // create app about
-const createOrUpdateAbout = async (payload: any) => {
+const createOrUpdateAbout = async (description: string) => {
   // check if already exists
   const existing = await prisma.about_App.findFirst();
 
   if (existing) {
-    // Update
+    // update
     return prisma.about_App.update({
       where: { id: existing.id },
-      data: payload,
+      data: description,
     });
   } else {
-    // Create
+    // create
     return prisma.about_App.create({
-      data: payload,
+      data: description as any,
     });
   }
 };
 
 const getAbout = async () => {
-  const result = await prisma.about_App.findFirst();
+  const result = await prisma.about_App.findMany();
 
   if (!result) {
     throw new Error("About App not found");
@@ -128,7 +122,6 @@ const updateNotificationSettings = async (
 };
 
 export const SettingService = {
-  verifyEmailAndPhoneNumber,
   createOrUpdateAbout,
   getAbout,
   createCustomerContactInfo,

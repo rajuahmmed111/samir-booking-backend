@@ -7,20 +7,14 @@ import { settingValidation } from "./setting.validation";
 
 const router = express.Router();
 
-// verify email and phone number
-router.put(
-  "/verify",
-  auth(UserRole.USER, UserRole.BUSINESS_PARTNER),
-  SettingController.verifyEmailAndPhoneNumber
-);
-
 // get about App
 router.get(
   "/about",
   auth(
     UserRole.SUPER_ADMIN,
     UserRole.ADMIN,
-    UserRole.BUSINESS_PARTNER,
+    UserRole.PROPERTY_OWNER,
+    UserRole.SERVICE_PROVIDER,
     UserRole.USER
   ),
   SettingController.getAbout
@@ -32,7 +26,8 @@ router.get(
   auth(
     UserRole.SUPER_ADMIN,
     UserRole.ADMIN,
-    UserRole.BUSINESS_PARTNER,
+    UserRole.PROPERTY_OWNER,
+    UserRole.SERVICE_PROVIDER,
     UserRole.USER
   ),
   SettingController.getCustomerContactInfo
@@ -58,5 +53,5 @@ router.patch(
   "/notification-settings",
   auth(UserRole.SUPER_ADMIN, UserRole.ADMIN),
   SettingController.updateNotificationSettings
-)
+);
 export const settingRoute = router;

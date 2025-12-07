@@ -4,23 +4,9 @@ import sendResponse from "../../../shared/sendResponse";
 import httpStatus from "http-status";
 import { SettingService } from "./setting.service";
 
-// verify email and phone number
-const verifyEmailAndPhoneNumber = catchAsync(
-  async (req: Request, res: Response) => {
-    const userId = req.user?.id;
-    const result = await SettingService.verifyEmailAndPhoneNumber(userId);
-    sendResponse(res, {
-      statusCode: httpStatus.OK,
-      success: true,
-      message: "Email and phone number verified successfully",
-      data: result,
-    });
-  }
-);
-
 const createOrUpdateAbout = catchAsync(async (req: Request, res: Response) => {
-  const data = req.body;
-  const result = await SettingService.createOrUpdateAbout(data);
+  const { description } = req.body;
+  const result = await SettingService.createOrUpdateAbout(description);
 
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
@@ -71,22 +57,26 @@ const getCustomerContactInfo = catchAsync(
 );
 
 // updateNotificationSettings
-const updateNotificationSettings = catchAsync(async (req: Request, res: Response) => {
-  const result = await SettingService.updateNotificationSettings(req.user.id, req.body);
+const updateNotificationSettings = catchAsync(
+  async (req: Request, res: Response) => {
+    const result = await SettingService.updateNotificationSettings(
+      req.user.id,
+      req.body
+    );
 
-  sendResponse(res, {
-    statusCode: 200,
-    success: true,
-    message: "Notification settings updated",
-    data: result,
-  });
-});
+    sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message: "Notification settings updated",
+      data: result,
+    });
+  }
+);
 
 export const SettingController = {
-  verifyEmailAndPhoneNumber,
   createOrUpdateAbout,
   getAbout,
   createCustomerContactInfo,
   getCustomerContactInfo,
-  updateNotificationSettings
+  updateNotificationSettings,
 };
