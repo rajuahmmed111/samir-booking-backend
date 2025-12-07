@@ -8,10 +8,10 @@ import httpStatus from "http-status";
 const createHotelRoomBooking = catchAsync(
   async (req: Request, res: Response) => {
     const userId = req.user?.id;
-    const roomId = req.params.roomId;
+    const hotelId = req.params.hotelId;
     const result = await HotelBookingService.createHotelRoomBooking(
       userId,
-      roomId,
+      hotelId,
       req.body
     );
     sendResponse(res, {

@@ -43,7 +43,8 @@ router.get(
   auth(
     UserRole.SUPER_ADMIN,
     UserRole.ADMIN,
-    UserRole.BUSINESS_PARTNER,
+    UserRole.PROPERTY_OWNER,
+    UserRole.SERVICE_PROVIDER,
     UserRole.USER
   ),
   UserController.getMyProfile
@@ -53,10 +54,11 @@ router.get(
 router.get(
   "/:id",
   auth(
-    UserRole.ADMIN,
     UserRole.SUPER_ADMIN,
-    UserRole.USER,
-    UserRole.BUSINESS_PARTNER
+    UserRole.ADMIN,
+    UserRole.PROPERTY_OWNER,
+    UserRole.SERVICE_PROVIDER,
+    UserRole.USER
   ),
   UserController.getUserById
 );
@@ -64,10 +66,7 @@ router.get(
 // get user only partner
 router.get(
   "/inactive-partner/:id",
-  auth(
-    UserRole.ADMIN,
-    UserRole.SUPER_ADMIN,
-  ),
+  auth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
   UserController.getPartnerById
 );
 
@@ -123,7 +122,8 @@ router.patch(
   auth(
     UserRole.SUPER_ADMIN,
     UserRole.ADMIN,
-    UserRole.BUSINESS_PARTNER,
+    UserRole.PROPERTY_OWNER,
+    UserRole.SERVICE_PROVIDER,
     UserRole.USER
   ),
   uploadFile.profileImage,
@@ -138,7 +138,8 @@ router.patch(
   auth(
     UserRole.SUPER_ADMIN,
     UserRole.ADMIN,
-    UserRole.BUSINESS_PARTNER,
+    UserRole.PROPERTY_OWNER,
+    UserRole.SERVICE_PROVIDER,
     UserRole.USER
   ),
   uploadFile.profileImage,
@@ -148,7 +149,13 @@ router.patch(
 // delete my account
 router.patch(
   "/my-account",
-  auth(UserRole.USER, UserRole.BUSINESS_PARTNER),
+  auth(
+    UserRole.SUPER_ADMIN,
+    UserRole.ADMIN,
+    UserRole.PROPERTY_OWNER,
+    UserRole.SERVICE_PROVIDER,
+    UserRole.USER
+  ),
   UserController.deleteMyAccount
 );
 

@@ -5,7 +5,7 @@ import { v2 as cloudinary } from "cloudinary";
 import { ICloudinaryUploadResponse, IUploadedFile } from "../interfaces/file";
 import config from "../config";
 
-// Create uploads folder if not exists
+// create uploads folder if not exists
 const uploadsDir = path.join(process.cwd(), "uploads");
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
@@ -64,7 +64,7 @@ const allowedTypes = [
   "video/x-matroska", // MKV
 ];
 
-// File filter
+// file filter
 const fileFilter = (
   req: Express.Request,
   file: Express.Multer.File,
@@ -77,7 +77,7 @@ const fileFilter = (
   }
 };
 
-// Multer disk storage
+// multer disk storage
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, uploadsDir);
@@ -88,7 +88,7 @@ const storage = multer.diskStorage({
   },
 });
 
-// Multer middleware
+// multer middleware
 const upload = multer({ storage, fileFilter });
 
 const profileImage = upload.single("profileImage");
@@ -98,7 +98,11 @@ const recordProofVideoEnding = upload.array("recordProofVideoEnding", 40);
 const houseRules = upload.single("houseRules");
 const guardPhoto = upload.single("guardPhoto");
 
+// service
 const coverImage = upload.single("coverImage");
+
+// hotel booking
+const passportImageUrl = upload.single("passportImageUrl");
 
 const uploadMessageImages = upload.array("messageImages", 40);
 
@@ -108,14 +112,14 @@ const advertiseVideo = upload.single("advertiseVideo");
 
 const invertorRelationImage = upload.single("invertorRelationImage");
 
-// Cloudinary configuration
+// cloudinary configuration
 cloudinary.config({
   cloud_name: config.cloudinary.cloud_name,
   api_key: config.cloudinary.api_key,
   api_secret: config.cloudinary.api_secret,
 });
 
-// Cloudinary uploader function
+// cloudinary uploader function
 const uploadToCloudinary = async (
   file: IUploadedFile
 ): Promise<ICloudinaryUploadResponse | undefined> => {
@@ -163,7 +167,11 @@ export const uploadFile = {
   houseRules,
   guardPhoto,
 
+  // service
   coverImage,
+
+  // hotel booking
+  passportImageUrl,
 
   uploadMessageImages,
 

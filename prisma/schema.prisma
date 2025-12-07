@@ -206,8 +206,8 @@ model Hotel {
   addLocalTips         String? // todo
   basePrice            Float
   customPrices         CustomPrice[]
-  weeklyOffers         Float?
-  monthlyOffers        Float?
+  weeklyOffers         Float? // 100% off
+  monthlyOffers        Float? // 15% off
   // availability
   availableForBooking  EveryServiceStatus @default(AVAILABLE)
   hotelRating          String?
@@ -279,34 +279,35 @@ model Guard {
 model Hotel_Booking {
   id                String        @id @default(auto()) @map("_id") @db.ObjectId
   checkoutSessionId String?
-  rooms             Int
-  adults            Int
-  children          Int
   bookedFromDate    String
   bookedToDate      String
   totalPrice        Float
-  convertedPrice    Float
-  displayCurrency   String?
-  discountedPrice   Float
-  specialRequest    String?
-  category          String?
   bookingStatus     BookingStatus @default(PENDING)
-  name              String?
-  email             String?
-  phone             String?
-  address           String?
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
 
   // relationships
-  partnerId String    @db.ObjectId
-  hotel     Hotel?    @relation(fields: [hotelId], references: [id])
-  hotelId   String?   @db.ObjectId
-  user      User?     @relation(fields: [userId], references: [id])
-  userId    String?   @db.ObjectId
+  partnerId String     @db.ObjectId
+  hotel     Hotel?     @relation(fields: [hotelId], references: [id])
+  hotelId   String?    @db.ObjectId
+  user      User?      @relation(fields: [userId], references: [id])
+  userId    String?    @db.ObjectId
   payment   Payment[]
+  travelers Traveler[]
 
   @@map("hotel_bookings")
+}
+
+model Traveler {
+  id               String        @id @default(auto()) @map("_id") @db.ObjectId
+  fullName         String
+  passportImageUrl String
+  bookingId        String        @db.ObjectId
+  booking          Hotel_Booking @relation(fields: [bookingId], references: [id])
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  @@map("travelers")
 }
 
 model Service {

@@ -11,23 +11,10 @@ import {
 // create Hotel room Booking service
 const createHotelRoomBooking = async (
   userId: string,
-  roomId: string,
+  hotelId: string,
   data: IHotelBookingData
 ) => {
-  const {
-    name,
-    email,
-    phone,
-    address,
-    convertedPrice,
-    displayCurrency,
-    discountedPrice,
-    rooms,
-    adults,
-    children,
-    bookedFromDate,
-    bookedToDate,
-  } = data;
+  const { basePrice, bookedFromDate, bookedToDate } = data;
 
   const user = await prisma.user.findUnique({
     where: { id: userId },
@@ -36,61 +23,19 @@ const createHotelRoomBooking = async (
     throw new ApiError(httpStatus.NOT_FOUND, "User not found");
   }
 
-  const hotel = await prisma.room.findUnique({
-    where: { id: roomId },
+  const hotel = await prisma.hotel.findUnique({
+    where: { id: hotelId },
     select: {
       id: true,
-      hotelRoomPriceNight: true,
+      basePrice: true,
       partnerId: true,
-      hotelId: true,
-      discount: true,
-      category: true,
-      hotelNumAdults: true,
-      hotelNumChildren: true,
-      hotelNumberOfRooms: true,
-      hotel: {
-        select: {
-          id: true,
-          hotelName: true,
-        },
-      }, // Hotel name for notification
     },
   });
   if (!hotel) {
     throw new ApiError(httpStatus.NOT_FOUND, "Hotel not found");
   }
 
-  // validate room availability
-  // if (rooms > hotel.hotelNumberOfRooms) {
-  //   throw new ApiError(
-  //     httpStatus.BAD_REQUEST,
-  //     `Only ${hotel.hotelNumberOfRooms} rooms available`
-  //   );
-  // }
-
-  if (adults > hotel.hotelNumAdults) {
-    throw new ApiError(
-      httpStatus.BAD_REQUEST,
-      `Maximum ${hotel.hotelNumAdults} adults allowed in this room`
-    );
-  }
-
-  if (children > hotel.hotelNumChildren) {
-    throw new ApiError(
-      httpStatus.BAD_REQUEST,
-      `Maximum ${hotel.hotelNumChildren} children allowed in this room`
-    );
-  }
-
-  if (
-    convertedPrice == null ||
-    displayCurrency == null ||
-    rooms == null ||
-    adults == null ||
-    children == null ||
-    !bookedFromDate ||
-    !bookedToDate
-  ) {
+  if (!basePrice || !bookedFromDate || !bookedToDate) {
     throw new ApiError(httpStatus.BAD_REQUEST, "Missing required fields");
   }
 
@@ -110,28 +55,21 @@ const createHotelRoomBooking = async (
   }
 
   // calculate base price
-  // const roomPrice = hotel.hotelRoomPriceNight;
+  const hotelPrice = hotel.basePrice;
   // price not 0 or null
-  if (!convertedPrice || convertedPrice <= 0) {
-    throw new ApiError(httpStatus.BAD_REQUEST, "Invalid room price");
+  if (!hotelPrice || hotelPrice === 0) {
+    throw new ApiError(httpStatus.BAD_REQUEST, "Invalid hotel base price");
   }
-
-  let totalPrice = convertedPrice * rooms * numberOfNights;
 
   // apply discount if available
   // if (hotel.discount && hotel.discount > 0) {
   //   totalPrice -= (totalPrice * hotel.discount) / 100;
   // }
 
-  // apply discount if available
-  if (discountedPrice && discountedPrice > 0) {
-    totalPrice -= (totalPrice * discountedPrice) / 100;
-  }
-
   // check for overlapping bookings
   const overlappingBooking = await prisma.hotel_Booking.findFirst({
     where: {
-      roomId,
+      hotelId,
       bookingStatus: { not: BookingStatus.CANCELLED }, // ignore cancelled bookings
       OR: [
         {
@@ -156,42 +94,13 @@ const createHotelRoomBooking = async (
   const result = await prisma.hotel_Booking.create({
     data: {
       ...data,
-      name,
-      email,
-      phone,
-      address,
+
       totalPrice: Number(totalPrice.toFixed(2)),
-      convertedPrice,
-      displayCurrency,
-      discountedPrice: discountedPrice ?? 0,
-      roomId,
+
       userId,
-      hotelId: hotel.hotelId!,
+      hotelId: hotel?.id,
       partnerId: hotel.partnerId!,
       bookingStatus: BookingStatus.PENDING,
-      category: hotel.category as string,
-    },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      phone: true,
-      address: true,
-      totalPrice: true,
-      convertedPrice: true,
-      displayCurrency: true,
-      discountedPrice: true,
-      rooms: true,
-      adults: true,
-      children: true,
-      bookedFromDate: true,
-      bookedToDate: true,
-      userId: true,
-      roomId: true,
-      hotelId: true,
-      partnerId: true,
-      bookingStatus: true,
-      category: true,
     },
   });
 
