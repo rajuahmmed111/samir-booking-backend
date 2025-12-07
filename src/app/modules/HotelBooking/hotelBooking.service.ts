@@ -3,9 +3,7 @@ import ApiError from "../../../errors/ApiErrors";
 import prisma from "../../../shared/prisma";
 import { differenceInDays, parse, startOfDay } from "date-fns";
 import { BookingStatus, PaymentStatus } from "@prisma/client";
-import {
-  IHotelBookingData,
-} from "./hotelBooking.interface";
+import { IHotelBookingData } from "./hotelBooking.interface";
 
 // create Hotel room Booking service
 const createHotelRoomBooking = async (
@@ -106,7 +104,7 @@ const createHotelRoomBooking = async (
   return result;
 };
 
-// get all hotel room bookings
+// get all hotel  bookings
 const getAllHotelBookings = async (partnerId: string) => {
   // find partner
   const partner = await prisma.user.findUnique({ where: { id: partnerId } });
@@ -116,46 +114,6 @@ const getAllHotelBookings = async (partnerId: string) => {
 
   const result = await prisma.hotel_Booking.findMany({
     where: { id: partner.id },
-    include: {
-      room: {
-        select: {
-          id: true,
-          hotelRoomType: true,
-          hotelRoomCapacity: true,
-          hotelRoomPriceNight: true,
-          hotelRoomImages: true,
-          hotelRating: true,
-          discount: true,
-          category: true,
-          partnerId: true,
-        },
-      },
-      hotel: {
-        select: {
-          id: true,
-          hotelName: true,
-          partnerId: true,
-          hotelCity: true,
-          hotelCountry: true,
-        },
-      },
-      payment: {
-        where: { status: PaymentStatus.PAID },
-        select: {
-          id: true,
-          provider: true,
-          status: true,
-        },
-      },
-      user: {
-        select: {
-          id: true,
-          fullName: true,
-          email: true,
-          contactNumber: true,
-        },
-      },
-    },
   });
 
   if (result.length === 0) {
@@ -165,7 +123,7 @@ const getAllHotelBookings = async (partnerId: string) => {
   return result;
 };
 
-// get all my hotel room bookings
+// get all my hotel bookings
 const getAllMyHotelBookings = async (userId: string) => {
   // find user
   const user = await prisma.user.findUnique({ where: { id: userId } });
@@ -175,89 +133,21 @@ const getAllMyHotelBookings = async (userId: string) => {
 
   const result = await prisma.hotel_Booking.findMany({
     where: { userId, bookingStatus: BookingStatus.CONFIRMED },
-    include: {
-      room: {
-        select: {
-          id: true,
-          hotelRoomType: true,
-          hotelRoomCapacity: true,
-          hotelRoomPriceNight: true,
-          hotelRoomImages: true,
-          hotelRating: true,
-          discount: true,
-          category: true,
-          partnerId: true,
-        },
-      },
-      hotel: {
-        select: {
-          id: true,
-          hotelName: true,
-          partnerId: true,
-          hotelCity: true,
-          hotelCountry: true,
-          businessLogo: true,
-        },
-      },
-      payment: {
-        where: { status: PaymentStatus.PAID },
-        select: {
-          id: true,
-          provider: true,
-          status: true,
-          amount: true,
-        },
-      },
-      user: {
-        select: {
-          id: true,
-          fullName: true,
-          email: true,
-          contactNumber: true,
-        },
-      },
-    },
   });
 
   return result;
 };
 
-// get hotel room booking by id
+// get hotel booking by id
 const getHotelBookingById = async (partnerId: string, bookingId: string) => {
   const booking = await prisma.hotel_Booking.findUnique({
     where: { id: bookingId, partnerId },
-    include: {
-      room: {
-        select: {
-          id: true,
-          hotelRoomPriceNight: true,
-          discount: true,
-          category: true,
-          partnerId: true,
-        },
-      },
-      hotel: {
-        select: {
-          id: true,
-          hotelName: true,
-          partnerId: true,
-        },
-      },
-      user: {
-        select: {
-          id: true,
-          fullName: true,
-          email: true,
-          contactNumber: true,
-        },
-      },
-    },
   });
   if (!booking) {
     throw new ApiError(httpStatus.NOT_FOUND, "Booking not found");
   }
 
-  if (booking.hotel?.partnerId !== partnerId) {
+  if (booking?.partnerId !== partnerId) {
     throw new ApiError(
       httpStatus.FORBIDDEN,
       "You are not authorized to update this booking"
