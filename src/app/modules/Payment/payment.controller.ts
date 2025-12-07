@@ -27,14 +27,13 @@ const stripeAccountOnboarding = catchAsync(
 const createStripeCheckoutSession = catchAsync(
   async (req: Request, res: Response) => {
     const userId = req.user?.id;
-    const { serviceType, bookingId } = req.params;
-    const { description, country } = req.body;
+    const { bookingId } = req.params;
+    const { description } = req.body;
 
     const result = await PaymentService.createStripeCheckoutSession(
       userId,
       bookingId,
-      description,
-      country
+      description
     );
 
     sendResponse(res, {
@@ -45,7 +44,6 @@ const createStripeCheckoutSession = catchAsync(
     });
   }
 );
-
 
 // stripe webhook payment
 const stripeHandleWebhook = catchAsync(async (req: Request, res: Response) => {
@@ -113,7 +111,6 @@ const getMyTransactions = catchAsync(async (req: Request, res: Response) => {
     data: result,
   });
 });
-
 
 export const PaymentController = {
   stripeAccountOnboarding,

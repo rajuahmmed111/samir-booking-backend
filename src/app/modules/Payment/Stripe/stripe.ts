@@ -21,27 +21,6 @@ export const mapStripeStatusToPaymentStatus = (
 
 export type ServiceType = "HOTEL";
 
-export const serviceConfig: Record<
-  ServiceType,
-  {
-    bookingModel: any;
-    serviceModel: any;
-    bookingToServiceField: string;
-    serviceTypeField: string;
-    nameField: string;
-    partnerIdField: string;
-  }
-> = {
-  HOTEL: {
-    bookingModel: prisma.hotel_Booking,
-    serviceModel: prisma.room,
-    bookingToServiceField: "roomId",
-    serviceTypeField: "hotel_bookingId",
-    nameField: "hotelName",
-    partnerIdField: "partnerId",
-  },
-};
-
 // https://243102737055.signin.aws.amazon.com/console
 // Raju
 

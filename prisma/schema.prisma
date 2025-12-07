@@ -141,9 +141,6 @@ model User {
   emailNotification   Boolean @default(true)
 
   isHotel      Boolean @default(false)
-  isSecurity   Boolean @default(false)
-  isCar        Boolean @default(false)
-  isAttraction Boolean @default(false)
 
   otp        String?
   otpExpiry  DateTime?
@@ -710,18 +707,11 @@ model Payment {
   amount           Float
   description      String?
   currency         String?
+  country          String?
   sessionId        String?         @unique
   paymentIntentId  String?
   status           PaymentStatus
   provider         PaymentProvider
-  payable_name     String?
-  payable_email    String?
-  payment_intent   String?
-  country          String?
-  admin_commission Float?
-  service_fee      Float?
-  paystack_fee     Float?
-  vat_amount       Float? // 5% only for admin
   transactionId    String?
   serviceType      String
   partnerId        String?         @db.ObjectId

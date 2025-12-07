@@ -12,7 +12,6 @@ import config from "../../../config";
 import Stripe from "stripe";
 import {
   mapStripeStatusToPaymentStatus,
-  serviceConfig,
   ServiceType,
 } from "./Stripe/stripe";
 import axios from "axios";
@@ -195,25 +194,25 @@ const ensureUserStripeAccount = async (userId: string) => {
 const createStripeCheckoutSession = async (
   userId: string,
   bookingId: string,
-  description: string,
-  country: string
+  description: string
 ) => {
-  let booking: any;
-  let service: any;
-  let partner: any;
-  let serviceName: string;
-  let partnerId: string;
-  let totalPrice: number;
-
   // find user
   const user = await prisma.user.findUnique({ where: { id: userId } });
   if (!user) throw new ApiError(httpStatus.NOT_FOUND, "User not found");
 
+  // find booking
+  const booking = await prisma.service_booking.findUnique({
+    where: { id: bookingId, userId: userId },
+  });
 
+  if (!booking) throw new ApiError(httpStatus.NOT_FOUND, "Booking not found");
 
-  // find partner
-  partner = await prisma.user.findUnique({ where: { id: partnerId } });
-  if (!partner || !partner.stripeAccountId) {
+  // find provider
+  const provider = await prisma.user.findUnique({
+    where: { id: booking.providerId || "" },
+  });
+
+  if (!provider || !provider.stripeAccountId) {
     throw new ApiError(
       httpStatus.BAD_REQUEST,
       "Provider not onboarded with Stripe"
@@ -221,31 +220,7 @@ const createStripeCheckoutSession = async (
   }
 
   // amount (convert USD → cents)
-  const amount = Math.round(totalPrice * 100);
-
-  // add 5% vat
-  const vatPercentage = 5;
-  const vatAmount = Math.round(amount * (vatPercentage / 100));
-
-  // total amount with 5% vat
-  const totalWithVAT = amount + vatAmount;
-  // console.log("totalWithVAT", totalWithVAT);
-
-  // 15% admin commission
-  const adminCommissionPercentage = 15;
-  const adminCommission = Math.round(
-    amount * (adminCommissionPercentage / 100)
-  );
-
-  // total admin earnings
-  const adminFee = adminCommission + vatAmount;
-  // console.log("adminFee", adminFee);
-
-  // service fee (partner earnings)
-  const serviceFee = totalWithVAT - adminFee;
-
-  // currency support added
-  const currency = booking.displayCurrency?.toLowerCase() || "usd";
+  const amount = Math.round(booking.totalPrice * 100);
 
   // create Stripe checkout session
   const checkoutSession = await stripe.checkout.sessions.create({
@@ -253,60 +228,58 @@ const createStripeCheckoutSession = async (
     line_items: [
       {
         price_data: {
-          currency,
+          currency: "usd",
           product_data: {
-            name: serviceName || "Service Booking",
+            name: booking.serviceName,
             description: description || "Service payment",
           },
-          unit_amount: totalWithVAT,
+          unit_amount: amount, // total amount
         },
         quantity: 1,
       },
     ],
     mode: "payment",
-    success_url: `${config.stripe.checkout_success_url}`,
-    cancel_url: `${config.stripe.checkout_cancel_url}`,
+
+    success_url: config.stripe.checkout_success_url,
+    cancel_url: config.stripe.checkout_cancel_url,
+
+    // *** FULL AMOUNT GOES TO PROVIDER ***
     payment_intent_data: {
-      application_fee_amount: adminFee, // goes to Admin
-      transfer_data: { destination: partner.stripeAccountId }, // goes to Partner
+      transfer_data: {
+        destination: provider.stripeAccountId, // provider gets full amount
+      },
       description,
     },
+
     metadata: {
       bookingId: booking.id,
       userId,
-      serviceType,
+      providerId: provider.id,
+      serviceName: booking.serviceName,
     },
   });
 
-  // update booking with checkoutSessionId
-  switch (serviceType) {
-    case "HOTEL":
-      await prisma.hotel_Booking.update({
-        where: { id: booking.id },
-        data: { checkoutSessionId: checkoutSession.id },
-      });
-      break;
-  }
+  // update booking
+  await prisma.service_booking.update({
+    where: { id: booking.id },
+    data: { checkoutSessionId: checkoutSession.id },
+  });
 
+  // create payment record
   await prisma.payment.create({
     data: {
-      amount: totalWithVAT / 100,
+      amount: booking.totalPrice,
       description,
-      currency: checkoutSession.currency,
+      currency: "usd",
       sessionId: checkoutSession.id,
       paymentMethod: checkoutSession.payment_method_types.join(","),
       status: PaymentStatus.UNPAID,
       provider: "STRIPE",
-      payable_name: partner.fullName ?? "",
-      payable_email: partner.email,
-      country: partner.country ?? "",
-      admin_commission: adminCommission / 100,
-      service_fee: serviceFee / 100,
-      vat_amount: vatAmount / 100,
-      serviceType,
-      partnerId,
+      payable_email: provider?.email,
+      serviceType: "SERVICE",
+      providerId: provider?.id,
       userId,
-      hotel_bookingId: serviceType === "HOTEL" ? booking.id : undefined,
+      service_bookingId: booking.id,
     },
   });
 

@@ -15,7 +15,7 @@ router.post(
 
 // checkout session on stripe
 router.post(
-  "/create-stripe-checkout-session/:serviceType/:bookingId",
+  "/create-stripe-checkout-session/:bookingId",
   auth(UserRole.USER, UserRole.PROPERTY_OWNER, UserRole.SERVICE_PROVIDER),
   PaymentController.createStripeCheckoutSession
 );
