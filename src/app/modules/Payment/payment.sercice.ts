@@ -149,62 +149,6 @@ const stripeAccountOnboarding = async (userId: string) => {
   };
 };
 
-const ensureUserStripeAccount = async (userId: string) => {
-  const user = await prisma.user.findUnique({ where: { id: userId } });
-  if (!user) throw new ApiError(httpStatus.NOT_FOUND, "User not found");
-
-  // Create onboarding link helper
-  const createOnboardingLink = async (accountId: string) => {
-    const link = await stripe.accountLinks.create({
-      account: accountId,
-      refresh_url: `${config.stripe.refreshUrl}?accountId=${accountId}`,
-      return_url: `${config.stripe.returnUrl}?accountId=${accountId}`,
-      type: "account_onboarding",
-    });
-    return link.url;
-  };
-
-  // If user has no Stripe account → create one
-  if (!user.stripeAccountId) {
-    const account = await stripe.accounts.create({
-      type: "express",
-      country: "US",
-      email: user.email,
-      capabilities: {
-        card_payments: { requested: true },
-        transfers: { requested: true },
-      },
-      settings: { payouts: { schedule: { delay_days: 2 } } },
-    });
-
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { stripeAccountId: account.id, isStripeConnected: false },
-    });
-
-    const onboardingLink = await createOnboardingLink(account.id);
-    return { status: "onboarding_required", onboardingLink };
-  }
-
-  // User has a Stripe account → check capabilities
-  const account = await stripe.accounts.retrieve(user.stripeAccountId);
-
-  if (
-    account.capabilities?.card_payments !== "active" ||
-    account.capabilities?.transfers !== "active"
-  ) {
-    const onboardingLink = await createOnboardingLink(user.stripeAccountId);
-    return { status: "onboarding_required", onboardingLink };
-  }
-
-  // Optional: check balance
-  const balance = await stripe.balance.retrieve({
-    stripeAccount: user.stripeAccountId,
-  });
-
-  return { status: "active", stripeAccountId: user.stripeAccountId, balance };
-};
-
 // checkout session on stripe
 const createStripeCheckoutSession = async (
   userId: string,
@@ -293,7 +237,8 @@ const createStripeCheckoutSession = async (
       serviceType: "SERVICE",
       providerId: provider?.id,
       userId,
-      service_bookingId: booking.id,
+      service_bookingId: booking?.id,
+      hotelId: booking?.hotelId,
     },
   });
 
@@ -343,39 +288,43 @@ const stripeHandleWebhook = async (event: Stripe.Event) => {
       });
 
       // update booking & service status
-      const config = serviceConfig[payment.serviceType as ServiceType];
-      if (!config) return;
+      const configs = serviceConfig[payment.serviceType as ServiceType];
+      if (!configs) return;
 
-      const bookingId = (payment as any)[config.serviceTypeField];
+      // get bookingId from payment based on service type
+      let bookingId: string | undefined;
+      if (payment.serviceType === "SERVICE") {
+        bookingId = payment.service_bookingId || undefined;
+      } else if (payment.serviceType === "HOTEL") {
+        bookingId = (payment as any).hotel_BookingId || undefined;
+      }
 
-      // update booking totalPrice = paid amount (amount includes 5% VAT)
-      await (config.bookingModel as any).update({
-        where: { id: bookingId },
-        data: { totalPrice: payment.amount },
-      });
-
-      // // update booking & service status
-      // const config = serviceConfig[payment.serviceType as ServiceType];
-      // if (!config) return;
-
-      // const bookingId = (payment as any)[config.serviceTypeField];
-      const booking = await (config.bookingModel as any).findUnique({
+      const booking = await (configs.bookingModel as any).findUnique({
         where: { id: bookingId },
       });
       if (!booking) return;
 
+      // validate required fields before proceeding
+      if (!booking.userId || !booking.partnerId) {
+        console.error("Missing required fields in booking:", {
+          bookingId,
+          userId: booking.userId,
+          partnerId: booking.partnerId,
+        });
+        return;
+      }
+
       // update booking status → CONFIRMED
-      await (config.bookingModel as any).update({
+      await (configs.bookingModel as any).update({
         where: { id: booking.id },
         data: { bookingStatus: BookingStatus.CONFIRMED },
       });
 
-      // For service bookings, we don't update service status since services don't have isBooked field
-      // Only update hotel/service status for hotel bookings
+      // update hotel/service status
       if (payment.serviceType === "HOTEL") {
-        const serviceId = (booking as any)[config.bookingToServiceField];
+        const serviceId = (booking as any)[configs.bookingToServiceField];
         if (serviceId) {
-          await (config.serviceModel as any).update({
+          await (configs.serviceModel as any).update({
             where: { id: serviceId },
             data: { isBooked: EveryServiceStatus.BOOKED },
           });
@@ -384,9 +333,9 @@ const stripeHandleWebhook = async (event: Stripe.Event) => {
 
       // ---------- send notification ----------
       const notificationServiceId = (booking as any)[
-        config.bookingToServiceField
+        configs.bookingToServiceField
       ];
-      const service = await (config.serviceModel as any).findUnique({
+      const service = await (configs.serviceModel as any).findUnique({
         where: { id: notificationServiceId },
       });
       if (!service) return;
@@ -396,7 +345,7 @@ const stripeHandleWebhook = async (event: Stripe.Event) => {
         userId: booking.userId,
         partnerId: booking.partnerId,
         serviceTypes: payment.serviceType as ServiceTypes,
-        serviceName: service[config.nameField],
+        serviceName: service[configs.nameField],
         totalPrice: booking.totalPrice,
         // bookedFromDate:
         //   (booking as any).bookedFromDate || (booking as any).date,
