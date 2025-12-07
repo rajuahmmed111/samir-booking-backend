@@ -23,33 +23,7 @@ const createHotelReview = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-// get all reviews
-const getAllReviews = catchAsync(async (req: Request, res: Response) => {
-  const result = await ReviewService.getAllReviews();
-  sendResponse(res, {
-    statusCode: httpStatus.OK,
-    success: true,
-    message: "Reviews fetched successfully",
-    data: result,
-  });
-});
-
-// get all hotel reviews by hotel id
-const getAllHotelReviewsByHotelId = catchAsync(
-  async (req: Request, res: Response) => {
-    const hotelId = req.params.hotelId;
-    const result = await ReviewService.getAllHotelReviewsByHotelId(hotelId);
-    sendResponse(res, {
-      statusCode: httpStatus.OK,
-      success: true,
-      message: "Reviews fetched successfully",
-      data: result,
-    });
-  }
-);
 
 export const ReviewController = {
   createHotelReview,
-  getAllReviews,
-  getAllHotelReviewsByHotelId,
 };
