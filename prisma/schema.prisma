@@ -212,6 +212,7 @@ model Hotel {
   availableForBooking  EveryServiceStatus @default(AVAILABLE)
   hotelRating          String?
   hotelReviewCount     Int                @default(0)
+  isFavorite           Boolean            @default(false)
   syncWithAirbnb       Boolean            @default(false)
   syncWithBooking      Boolean            @default(false)
   createdAt            DateTime           @default(now())

@@ -1,50 +1,6 @@
-export const filterField: string[] = [
-  "searchTerm",
-  "hotelName",
-  "hotelRoomType",
-  "hotelBusinessType",
-  "hotelCity",
-  "hotelCountry",
-  "hotelRating",
-  "category",
-  "hotelNumberOfRooms",
-  "hotelNumAdults",
-  "hotelNumChildren",
-  "minPrice",
-  "maxPrice",
-  "fromDate",
-  "toDate",
-  "hotelBreakfast",
-  "hotelAccommodationType",
-  "hotelKitchen",
-  "hoitelWifi",
-  "hotelParking",
-  "hotelRestaurant",
-  "hotelGym",
-  "hotelPool",
-  "hotelSpa",
-  "hotel24HourFrontDesk",
-  "hotelAirportShuttle",
-  "hotelNoSmokingPreference",
-  "hotelNoNSmoking",
-  "hotelSmoking",
-  "hotelNoPetsPreferences",
-  "hotelPetsAllowed",
-  "hotelPetsNotAllowed",
-  "hotelLocationFeatureWaterView",
-  "hotelLocationFeatureIsland",
+export const filterField: string[] = ["searchTerm", "propertyTitle"];
 
-  "hotelAC",
-  "hotelTv",
-  "hotelWashing",
-  "hotelCoffeeBar",
-];
-
-export const searchableFields: string[] = [
-  "hotelName",
-  "hotelCity",
-  "hotelCountry",
-];
+export const searchableFields: string[] = ["hotelName", "propertyTitle"];
 
 export const numericFields = [
   "hotelNumberOfRooms",

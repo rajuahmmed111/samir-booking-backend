@@ -32,12 +32,10 @@ const createGuard = catchAsync(async (req: Request, res: Response) => {
 
 // get all hotels
 const getAllHotels = catchAsync(async (req: Request, res: Response) => {
-  const userCurrency = await getUserCurrency(req);
-  // console.log(`User currency detected: ${userCurrency}`);
-
   const filter = pick(req.query, filterField);
   const options = pick(req.query, paginationFields);
-  const result = await HotelService.getAllHotels(filter, options, userCurrency);
+
+  const result = await HotelService.getAllHotels(filter, options);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -91,25 +89,6 @@ const getSingleHotel = catchAsync(async (req: Request, res: Response) => {
     statusCode: httpStatus.OK,
     success: true,
     message: "Hotel fetched successfully",
-    data: result,
-  });
-});
-
-// get popular hotels
-const getPopularHotels = catchAsync(async (req: Request, res: Response) => {
-  const userCurrency = await getUserCurrency(req);
-  const filter = pick(req.query, filterField);
-  const options = pick(req.query, paginationFields);
-  const result = await HotelService.getPopularHotels(
-    filter,
-    options,
-    userCurrency
-  );
-
-  sendResponse(res, {
-    statusCode: httpStatus.OK,
-    success: true,
-    message: "Popular hotels fetched successfully",
     data: result,
   });
 });
@@ -176,7 +155,6 @@ export const HotelController = {
   getAllHotelsForPartner,
   // generatePropertyShareLink,
   getSingleHotel,
-  getPopularHotels,
   toggleFavorite,
   getAllFavoriteHotels,
   updateHotel,

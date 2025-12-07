@@ -33,9 +33,6 @@ router.get(
   HotelController.getAllFavoriteHotels
 );
 
-// get popular hotels
-router.get("/popular", HotelController.getPopularHotels);
-
 // get single hotel
 router.get("/:id", HotelController.getSingleHotel);
 

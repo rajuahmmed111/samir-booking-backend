@@ -207,23 +207,11 @@ const createGuard = async (req: Request) => {
 // get all hotels with search filtering and pagination
 const getAllHotels = async (
   params: IHotelFilterRequest,
-  options: IPaginationOptions,
-  userCurrency: string = "USD"
+  options: IPaginationOptions
 ) => {
   const { limit, page, skip } = paginationHelpers.calculatedPagination(options);
 
-  const {
-    searchTerm,
-    minPrice,
-    maxPrice,
-    fromDate,
-    toDate,
-    hotelRating,
-    hotelNumberOfRooms,
-    hotelNumAdults,
-    hotelNumChildren,
-    ...filterData
-  } = params;
+  const { searchTerm, ...filterData } = params;
 
   const filters: Prisma.HotelWhereInput[] = [];
 
@@ -239,20 +227,13 @@ const getAllHotels = async (
     });
   }
 
-  // convert string booleans to actual boolean
-  const normalizedFilterData: any = {};
-  Object.keys(filterData).forEach((key) => {
-    const value = (filterData as any)[key];
-    if (value === "true") normalizedFilterData[key] = true;
-    else if (value === "false") normalizedFilterData[key] = false;
-    else normalizedFilterData[key] = value;
-  });
-
   // Exact search filter
-  if (Object.keys(normalizedFilterData).length > 0) {
+  if (Object.keys(filterData).length > 0) {
     filters.push({
-      AND: Object.keys(normalizedFilterData).map((key) => ({
-        [key]: { equals: normalizedFilterData[key] },
+      AND: Object.keys(filterData).map((key) => ({
+        [key]: {
+          equals: (filterData as any)[key],
+        },
       })),
     });
   }
@@ -261,156 +242,27 @@ const getAllHotels = async (
     AND: filters,
   };
 
-  // room-level filters
-  const roomWhere: Prisma.RoomWhereInput = {
-    // room booking date block
-    NOT: {
-      hotel_bookings:
-        fromDate && toDate
-          ? {
-              some: {
-                OR: [
-                  {
-                    bookedFromDate: { lte: toDate },
-                    bookedToDate: { gte: fromDate },
-                  },
-                ],
-              },
-            }
-          : undefined,
-    },
-
-    // adults
-    ...(hotelNumAdults
-      ? { hotelNumAdults: { gte: Number(hotelNumAdults) } }
-      : {}),
-
-    // children
-    ...(hotelNumChildren
-      ? { hotelNumChildren: { gte: Number(hotelNumChildren) } }
-      : {}),
-
-    // min price
-    ...(minPrice ? { hotelRoomPriceNight: { gte: Number(minPrice) } } : {}),
-
-    // max price
-    ...(maxPrice
-      ? {
-          hotelRoomPriceNight: {
-            ...(minPrice ? { gte: Number(minPrice) } : {}),
-            lte: Number(maxPrice),
-          },
-        }
-      : {}),
-
-    // rating
-    ...(hotelRating ? { hotelRating: { gte: hotelRating } } : {}),
-  };
-
-  // fetch hotels
   const hotels = await prisma.hotel.findMany({
     where,
     skip,
     take: limit,
     orderBy:
-      options.sortBy && options.sortOrder && options.sortBy !== "price"
+      options.sortBy && options.sortOrder
         ? { [options.sortBy]: options.sortOrder }
         : { createdAt: "desc" },
-
     include: {
-      room: {
-        where: roomWhere,
-        // include: {
-        //   review: true,
-        // }
+      guards: true,
+      user: {
+        select: {
+          id: true,
+          fullName: true,
+          profileImage: true,
+        },
       },
     },
   });
 
-  // total room count for each hotel
-  const hotelRoomCounts = await prisma.room.groupBy({
-    by: ["hotelId"],
-    _count: { hotelId: true },
-  });
-
-  const hotelRoomCountMap = new Map(
-    hotelRoomCounts.map((h) => [String(h.hotelId), h._count.hotelId])
-  );
-
-  // filter hotel based on roomCount + matching rooms
-  let filteredHotels = hotels.filter((hotel) => {
-    const totalRoomCount = hotelRoomCountMap.get(String(hotel.id)) || 0;
-
-    // hotelNumberOfRooms diye filter
-    if (hotelNumberOfRooms && totalRoomCount < Number(hotelNumberOfRooms)) {
-      return false;
-    }
-
-    // jodi hotel er basePrice na thake → skip
-    if (!hotel.basePrice) return false;
-
-    return true;
-  });
-
-  // currency exchange
-  const exchangeRates = await CurrencyHelpers.getExchangeRates();
-
-  // Convert prices এবং filter
-  let resultWithAverages = filteredHotels
-    .map((hotel) => {
-      if (!hotel.basePrice) return null;
-
-      // hotel price convert
-      const hotelCurrency = "USD"; // Default currency for hotel
-
-      const convertedPrice = CurrencyHelpers.convertPrice(
-        hotel.basePrice,
-        hotelCurrency,
-        userCurrency,
-        exchangeRates
-      );
-
-      const convertedWeeklyPrice = hotel.weeklyOffers
-        ? CurrencyHelpers.convertPrice(
-            hotel.weeklyOffers,
-            hotelCurrency,
-            userCurrency,
-            exchangeRates
-          )
-        : null;
-
-      const convertedMonthlyPrice = hotel.monthlyOffers
-        ? CurrencyHelpers.convertPrice(
-            hotel.monthlyOffers,
-            hotelCurrency,
-            userCurrency,
-            exchangeRates
-          )
-        : null;
-
-      return {
-        ...hotel,
-        originalPrice: hotel.basePrice,
-        originalCurrency: hotelCurrency,
-        convertedPrice,
-        convertedWeeklyPrice,
-        convertedMonthlyPrice,
-        displayCurrency: userCurrency,
-        exchangeRate: exchangeRates[userCurrency] || 1,
-      };
-    })
-    .filter((hotel) => hotel !== null);
-
-  // sort by price (low → high / high → low)
-  if (options.sortBy === "price") {
-    resultWithAverages = resultWithAverages.sort((a, b) =>
-      options.sortOrder === "asc"
-        ? (a?.convertedPrice || 0) - (b?.convertedPrice || 0)
-        : (b?.convertedPrice || 0) - (a?.convertedPrice || 0)
-    );
-  }
-
-  const total = resultWithAverages.length;
+  const total = await prisma.hotel.count({ where });
 
   return {
     meta: {
@@ -418,7 +270,7 @@ const getAllHotels = async (
       page,
       limit,
     },
-    data: resultWithAverages,
+    data: hotels,
   };
 };
 
@@ -526,82 +378,6 @@ const getSingleHotel = async (hotelId: string) => {
   }
 
   return result;
-};
-
-// get popular hotels
-const getPopularHotels = async (
-  params: IHotelFilterRequest,
-  options: IPaginationOptions,
-  userCurrency: string = "USD"
-): Promise<Hotel[]> => {
-  const { searchTerm, ...filterData } = params;
-  const { limit, page, skip } = paginationHelpers.calculatedPagination(options);
-
-  // all hotels
-  const hotels = await prisma.hotel.findMany({
-    where: {
-      ...(searchTerm && {
-        OR: [
-          { propertyTitle: { contains: searchTerm, mode: "insensitive" } },
-          { propertyAddress: { contains: searchTerm, mode: "insensitive" } },
-        ],
-      }),
-    },
-  });
-
-  // ✅ Get exchange rates
-  const exchangeRates = await CurrencyHelpers.getExchangeRates();
-
-  // Convert hotel prices and add to each hotel
-  const hotelsWithConvertedPrices = hotels
-    .filter((hotel) => hotel.basePrice)
-    .map((hotel) => {
-      // ✅ Convert hotel prices by country/currency
-      const hotelCurrency = "USD"; // Default currency for hotel
-
-      const convertedPrice = CurrencyHelpers.convertPrice(
-        hotel.basePrice,
-        hotelCurrency,
-        userCurrency,
-        exchangeRates
-      );
-
-      const convertedWeeklyPrice = hotel.weeklyOffers
-        ? CurrencyHelpers.convertPrice(
-            hotel.weeklyOffers,
-            hotelCurrency,
-            userCurrency,
-            exchangeRates
-          )
-        : null;
-
-      const convertedMonthlyPrice = hotel.monthlyOffers
-        ? CurrencyHelpers.convertPrice(
-            hotel.monthlyOffers,
-            hotelCurrency,
-            userCurrency,
-            exchangeRates
-          )
-        : null;
-
-      return {
-        ...hotel,
-        originalPrice: hotel.basePrice,
-        originalCurrency: hotelCurrency,
-        convertedPrice,
-        convertedWeeklyPrice,
-        convertedMonthlyPrice,
-        displayCurrency: userCurrency,
-        currencySymbol: CurrencyHelpers.getCurrencySymbol(userCurrency),
-      };
-    });
-
-  // Sort by price and take top results
-  const sortedHotels = hotelsWithConvertedPrices
-    .sort((a: any, b: any) => b.convertedPrice - a.convertedPrice)
-    .slice(0, limit || 4);
-
-  return sortedHotels;
 };
 
 // add favorite hotel
@@ -813,7 +589,6 @@ export const HotelService = {
   getAllHotelsForPartner,
   // generatePropertyShareLink,
   getSingleHotel,
-  getPopularHotels,
   toggleFavorite,
   getAllFavoriteHotels,
   updateHotel,
