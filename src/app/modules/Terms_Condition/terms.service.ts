@@ -4,90 +4,9 @@ import ApiError from "../../../errors/ApiErrors";
 import httpStatus from "http-status";
 import { ICreateTermsCondition } from "./terms.interface";
 
-// Create terms & conditions
-const createTerms = async (
-  adminId: string,
-  payload: ICreateTermsCondition
-): Promise<Omit<Terms_Condition, "adminId">> => {
-  const result = await prisma.$transaction(async (tx) => {
-    // delete previous terms by this admin
-    await tx.terms_Condition.deleteMany({
-      where: {
-        adminId,
-      },
-    });
-
-    // then create new terms and conditions
-    const newTerms = await tx.terms_Condition.create({
-      data: {
-        ...payload,
-        adminId, // stored but not exposed
-      },
-      select: {
-        id: true,
-        title: true,
-        acceptance_terms: true,
-        app_purpose: true,
-        user_responsibilities: true,
-        data_usage: true,
-        intellectual_property: true,
-        limitation: true,
-        updates: true,
-        contactUS: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-    });
-
-    return newTerms;
-  });
-
-  return result;
-};
-
-// get all terms
-const getTerms = async (): Promise<Omit<Terms_Condition, "adminId"> | null> => {
-  const result = await prisma.terms_Condition.findFirst({
-    select: {
-      id: true,
-      title: true,
-      acceptance_terms: true,
-      app_purpose: true,
-      user_responsibilities: true,
-      data_usage: true,
-      intellectual_property: true,
-      limitation: true,
-      updates: true,
-      contactUS: true,
-      createdAt: true,
-      updatedAt: true,
-    },
-  });
-
-  if (!result) {
-    throw new ApiError(httpStatus.NOT_FOUND, "Terms and Conditions not found");
-  }
-
-  return result;
-};
-
-// get single terms
-const getSingleTerms = async (id: string): Promise<Terms_Condition> => {
-  const result = await prisma.terms_Condition.findUnique({
-    where: { id },
-  });
-  if (!result) {
-    throw new ApiError(httpStatus.NOT_FOUND, "Terms and Conditions not found");
-  }
-  return result;
-};
-
-// update terms
-const updateTermsByAdminId = async (
-  adminId: string,
-  termId: string,
-  payload: Partial<Terms_Condition>
-): Promise<Omit<Terms_Condition, "adminId">> => {
+// create or update terms & conditions
+const createOrUpdateTerms = async (adminId: string, description: string) => {
+  // find admin
   const admin = await prisma.user.findUnique({
     where: {
       id: adminId,
@@ -97,40 +16,42 @@ const updateTermsByAdminId = async (
     throw new ApiError(httpStatus.NOT_FOUND, "Admin not found");
   }
 
-  const result = await prisma.terms_Condition.findUnique({
-    where: { id: termId },
-  });
+  // find terms & conditions
+  const existTerms = await prisma.terms_Condition.findFirst();
+  if (!existTerms) {
+    throw new ApiError(httpStatus.NOT_FOUND, "Terms and Conditions not found");
+  }
+
+  let result;
+
+  if (existTerms) {
+    // update existing record
+    result = await prisma.terms_Condition.update({
+      where: { id: existTerms.id },
+      data: { description },
+    });
+  } else {
+    // create new record
+    result = await prisma.terms_Condition.create({
+      data: {
+        description,
+      },
+    });
+  }
+};
+
+// get all terms
+const getTerms = async () => {
+  const result = await prisma.terms_Condition.findMany();
 
   if (!result) {
     throw new ApiError(httpStatus.NOT_FOUND, "Terms and Conditions not found");
   }
 
-  // terms and condition updated
-  const updatedTerms = await prisma.terms_Condition.update({
-    where: { id: termId },
-    data: payload,
-    select: {
-      id: true,
-      title: true,
-      acceptance_terms: true,
-      app_purpose: true,
-      user_responsibilities: true,
-      data_usage: true,
-      intellectual_property: true,
-      limitation: true,
-      updates: true,
-      contactUS: true,
-      createdAt: true,
-      updatedAt: true,
-    },
-  });
-
-  return updatedTerms!;
+  return result;
 };
 
 export const TermsServices = {
-  createTerms,
+  createOrUpdateTerms,
   getTerms,
-  getSingleTerms,
-  updateTermsByAdminId,
 };

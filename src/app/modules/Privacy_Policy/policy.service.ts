@@ -37,6 +37,8 @@ const createOrUpdatePolicy = async (
       data: { description },
     });
   }
+
+  return result;
 };
 
 // get all privacy policy

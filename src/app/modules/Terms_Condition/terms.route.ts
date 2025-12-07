@@ -14,36 +14,18 @@ router.get(
     UserRole.ADMIN,
     UserRole.SUPER_ADMIN,
     UserRole.USER,
-    UserRole.BUSINESS_PARTNER
+    UserRole.PROPERTY_OWNER,
+    UserRole.SERVICE_PROVIDER
   ),
   TermsController.getTerms
 );
 
-// create terms and conditions
+// create or update terms and conditions
 router.post(
   "/",
   auth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
   validateRequest(termsConditionValidation.termsConditionSchema),
-  TermsController.createTerms
-);
-
-// get single terms and conditions
-router.get(
-  "/:id",
-    auth(
-    UserRole.ADMIN,
-    UserRole.SUPER_ADMIN,
-    UserRole.USER,
-    UserRole.BUSINESS_PARTNER
-  ),
-  TermsController.getSingleTerms
-);
-
-router.patch(
-  "/update/:id",
-  auth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
-  validateRequest(termsConditionValidation.updateTermsConditionSchema),
-  TermsController.updateTerms
+  TermsController.createOrUpdateTerms
 );
 
 export const termsConditionRoute = router;
