@@ -23,7 +23,26 @@ const createHotelReview = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+// create service review
+const createServiceReview = catchAsync(async (req: Request, res: Response) => {
+  const userId = req.user?.id;
+  const { serviceId, rating, comment } = req.body;
+
+  const result = await ReviewService.createServiceReview(
+    userId,
+    serviceId,
+    rating,
+    comment
+  );
+  sendResponse(res, {
+    statusCode: httpStatus.CREATED,
+    success: true,
+    message: "Review created successfully",
+    data: result,
+  });
+});
 
 export const ReviewController = {
   createHotelReview,
+  createServiceReview,
 };
