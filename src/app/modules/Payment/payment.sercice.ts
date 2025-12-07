@@ -10,10 +10,7 @@ import {
 } from "@prisma/client";
 import config from "../../../config";
 import Stripe from "stripe";
-import {
-  mapStripeStatusToPaymentStatus,
-  ServiceType,
-} from "./Stripe/stripe";
+import { mapStripeStatusToPaymentStatus, ServiceType } from "./Stripe/stripe";
 import axios from "axios";
 import {
   BookingNotificationService,
@@ -276,7 +273,7 @@ const createStripeCheckoutSession = async (
       status: PaymentStatus.UNPAID,
       provider: "STRIPE",
       serviceType: "SERVICE",
-      // providerId: provider?.id,
+      providerId: provider?.id,
       userId,
       service_bookingId: booking.id,
     },
