@@ -19,7 +19,7 @@ export const mapStripeStatusToPaymentStatus = (
   }
 };
 
-export type ServiceType = "HOTEL";
+export type ServiceType = "HOTEL" | "SERVICE";
 
 // https://243102737055.signin.aws.amazon.com/console
 // Raju

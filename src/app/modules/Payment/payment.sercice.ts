@@ -11,6 +11,24 @@ import {
 import config from "../../../config";
 import Stripe from "stripe";
 import { mapStripeStatusToPaymentStatus, ServiceType } from "./Stripe/stripe";
+
+// Service configuration for different booking types
+const serviceConfig = {
+  SERVICE: {
+    bookingModel: prisma.service_booking,
+    serviceModel: prisma.service,
+    serviceTypeField: "serviceId",
+    bookingToServiceField: "serviceId",
+    nameField: "serviceName",
+  },
+  HOTEL: {
+    bookingModel: prisma.hotel_Booking,
+    serviceModel: prisma.hotel,
+    serviceTypeField: "hotelId",
+    bookingToServiceField: "hotelId",
+    nameField: "propertyName",
+  },
+} as const;
 import axios from "axios";
 import {
   BookingNotificationService,
@@ -288,7 +306,7 @@ const createStripeCheckoutSession = async (
 // stripe webhook payment
 const stripeHandleWebhook = async (event: Stripe.Event) => {
   switch (event.type) {
-    // case 1: checkout session completed (Website)
+    // case 1:checkout session completed
     case "checkout.session.completed": {
       const session = event.data.object as Stripe.Checkout.Session;
       const sessionId = session.id;
@@ -306,14 +324,6 @@ const stripeHandleWebhook = async (event: Stripe.Event) => {
         );
       }
 
-      // calculate provider received
-      let providerReceived = 0;
-      if (paymentIntent.transfer_data?.destination) {
-        const amountReceived = paymentIntent.amount_received ?? 0;
-        const applicationFee = paymentIntent.application_fee_amount ?? 0;
-        providerReceived = amountReceived - applicationFee; // not USD
-      }
-
       // find Payment
       const payment = await prisma.payment.findFirst({
         where: { sessionId },
@@ -329,8 +339,6 @@ const stripeHandleWebhook = async (event: Stripe.Event) => {
         where: { id: payment.id },
         data: {
           status: PaymentStatus.PAID,
-          payment_intent: paymentIntentId,
-          service_fee: providerReceived / 100,
         },
       });
 
@@ -341,7 +349,7 @@ const stripeHandleWebhook = async (event: Stripe.Event) => {
       const bookingId = (payment as any)[config.serviceTypeField];
 
       // update booking totalPrice = paid amount (amount includes 5% VAT)
-      await config.bookingModel.update({
+      await (config.bookingModel as any).update({
         where: { id: bookingId },
         data: { totalPrice: payment.amount },
       });
@@ -351,29 +359,35 @@ const stripeHandleWebhook = async (event: Stripe.Event) => {
       // if (!config) return;
 
       // const bookingId = (payment as any)[config.serviceTypeField];
-      const booking = await config.bookingModel.findUnique({
+      const booking = await (config.bookingModel as any).findUnique({
         where: { id: bookingId },
       });
       if (!booking) return;
 
       // update booking status → CONFIRMED
-      await config.bookingModel.update({
+      await (config.bookingModel as any).update({
         where: { id: booking.id },
         data: { bookingStatus: BookingStatus.CONFIRMED },
       });
 
-      // update service status → BOOKED
-      const serviceId = (booking as any)[config.bookingToServiceField];
-      if (serviceId) {
-        await config.serviceModel.update({
-          where: { id: serviceId },
-          data: { isBooked: EveryServiceStatus.BOOKED },
-        });
+      // For service bookings, we don't update service status since services don't have isBooked field
+      // Only update hotel/service status for hotel bookings
+      if (payment.serviceType === "HOTEL") {
+        const serviceId = (booking as any)[config.bookingToServiceField];
+        if (serviceId) {
+          await (config.serviceModel as any).update({
+            where: { id: serviceId },
+            data: { isBooked: EveryServiceStatus.BOOKED },
+          });
+        }
       }
 
       // ---------- send notification ----------
-      const service = await config.serviceModel.findUnique({
-        where: { id: serviceId },
+      const notificationServiceId = (booking as any)[
+        config.bookingToServiceField
+      ];
+      const service = await (config.serviceModel as any).findUnique({
+        where: { id: notificationServiceId },
       });
       if (!service) return;
 
@@ -431,108 +445,6 @@ const stripeHandleWebhook = async (event: Stripe.Event) => {
       break;
     }
 
-    // case 2: payment intent succeeded (App)
-    case "payment_intent.succeeded": {
-      const paymentIntent = event.data.object as Stripe.PaymentIntent;
-
-      const paymentIntentId = paymentIntent.id;
-
-      // find payment
-      const payment = await prisma.payment.findFirst({
-        where: { sessionId: paymentIntentId },
-      });
-      if (!payment) {
-        // console.log(`No payment found for payment intent: ${paymentIntentId}`);
-        break;
-      }
-
-      let providerReceived = 0;
-      if (paymentIntent.transfer_data?.destination) {
-        const amountReceived = paymentIntent.amount_received ?? 0;
-        const applicationFee = paymentIntent.application_fee_amount ?? 0;
-        providerReceived = amountReceived - applicationFee;
-      }
-
-      // update payment to PAID
-      await prisma.payment.update({
-        where: { id: payment.id },
-        data: {
-          status:
-            paymentIntent.status === "succeeded"
-              ? PaymentStatus.PAID
-              : PaymentStatus.UNPAID,
-          payment_intent: paymentIntentId,
-          service_fee: providerReceived,
-        },
-      });
-
-      // update booking & service status
-      const config = serviceConfig[payment.serviceType as ServiceType];
-      if (!config) return;
-
-      const bookingId = (payment as any)[config.serviceTypeField];
-      const booking = await config.bookingModel.findUnique({
-        where: { id: bookingId },
-      });
-      if (!booking) return;
-
-      // update booking status → CONFIRMED
-      await config.bookingModel.update({
-        where: { id: booking.id },
-        data: { bookingStatus: BookingStatus.CONFIRMED },
-      });
-
-      // update service status → BOOKED
-      const serviceId = (booking as any)[
-        `${payment.serviceType.toLowerCase()}Id`
-      ];
-      if (serviceId) {
-        await config.serviceModel.update({
-          where: { id: serviceId },
-          data: { isBooked: EveryServiceStatus.BOOKED },
-        });
-      }
-
-      // if booking service type SECURITY hoy tahole security protocol ar id dore hiredCount +1 hobe and payment status jodi paid hoy
-      if (
-        payment.serviceType === "SECURITY" &&
-        payment.status === PaymentStatus.PAID
-      ) {
-        await config.serviceModel.update({
-          where: { id: serviceId },
-          data: { hiredCount: { increment: 1 } },
-        });
-      }
-
-      // ---------- send notification ----------
-      const service = await config.serviceModel.findUnique({
-        where: { id: serviceId },
-      });
-      if (!service) return;
-
-      const notificationData: IBookingNotificationData = {
-        bookingId: booking.id,
-        userId: booking.userId,
-        partnerId: booking.partnerId,
-        serviceTypes: payment.serviceType as ServiceTypes,
-        serviceName: service[config.nameField],
-        totalPrice: booking.totalPrice,
-        // bookedFromDate:
-        //   (booking as any).bookedFromDate || (booking as any).date,
-        // bookedToDate: (booking as any).bookedToDate,
-        // quantity:
-        //   (booking as any).rooms ||
-        //   (booking as any).adults ||
-        //   (booking as any).number_of_security ||
-        //   1,
-      };
-
-      await BookingNotificationService.sendBookingNotifications(
-        notificationData
-      );
-      break;
-    }
-
     default:
       // ignore other events
       break;
@@ -556,7 +468,7 @@ const cancelStripeBooking = async (
   const serviceModel = serviceCfg.serviceModel;
 
   // Fetch booking with payment and user
-  const booking = await bookingModel.findUnique({
+  const booking = await (bookingModel as any).findUnique({
     where: { id: bookingId, userId },
     include: { payment: true, user: true },
   });
@@ -604,7 +516,7 @@ const cancelStripeBooking = async (
   });
 
   // Update booking status → CANCELLED
-  await bookingModel.update({
+  await (bookingModel as any).update({
     where: { id: bookingId },
     data: { bookingStatus: BookingStatus.CANCELLED },
   });
@@ -612,7 +524,7 @@ const cancelStripeBooking = async (
   // update service status → AVAILABLE
   const serviceId = (booking as any)[serviceCfg.bookingToServiceField];
   if (serviceId) {
-    await serviceModel.update({
+    await (serviceModel as any).update({
       where: { id: serviceId },
       data: { isBooked: EveryServiceStatus.AVAILABLE },
     });
@@ -620,7 +532,7 @@ const cancelStripeBooking = async (
 
   // Send cancellation notification
   const service = serviceId
-    ? await serviceModel.findUnique({ where: { id: serviceId } })
+    ? await (serviceModel as any).findUnique({ where: { id: serviceId } })
     : null;
 
   const notificationData: IBookingNotificationData = {
