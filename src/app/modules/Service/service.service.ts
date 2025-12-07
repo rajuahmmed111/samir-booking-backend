@@ -95,9 +95,11 @@ const createService = async (
 const updateService = async (
   serviceId: string,
   payload: IServiceUpdate,
-  coverImageFile?: Express.Multer.File
+  coverImageFile?: Express.Multer.File,
+  videoStartingFiles?: Express.Multer.File[],
+  videoEndingFiles?: Express.Multer.File[]
 ) => {
-  // Check if service exists
+  // check if service exists
   const existingService = await prisma.service.findUnique({
     where: { id: serviceId },
     include: {
@@ -115,7 +117,7 @@ const updateService = async (
 
   const { availability, ...serviceData } = payload;
 
-  // Handle cover image upload
+  // cover image upload
   let coverImagePath = serviceData.coverImage;
   if (coverImageFile) {
     const uploaded = await uploadFile.uploadToCloudinary(coverImageFile);
@@ -125,29 +127,55 @@ const updateService = async (
     coverImagePath = uploaded.secure_url;
   }
 
-  // Prepare update data
+  // video starting upload
+  let videoStartingPaths: string[] = [];
+  if (videoStartingFiles && videoStartingFiles.length > 0) {
+    for (const file of videoStartingFiles) {
+      const uploaded = await uploadFile.uploadToCloudinary(file);
+      if (!uploaded?.secure_url) {
+        throw new Error("Cloudinary upload failed for starting video");
+      }
+      videoStartingPaths.push(uploaded.secure_url);
+    }
+  }
+
+  // video ending upload
+  let videoEndingPaths: string[] = [];
+  if (videoEndingFiles && videoEndingFiles.length > 0) {
+    for (const file of videoEndingFiles) {
+      const uploaded = await uploadFile.uploadToCloudinary(file);
+      if (!uploaded?.secure_url) {
+        throw new Error("Cloudinary upload failed for ending video");
+      }
+      videoEndingPaths.push(uploaded.secure_url);
+    }
+  }
+
+  // prepare update data
   const updateData: any = {};
 
   if (serviceData.serviceName) updateData.serviceName = serviceData.serviceName;
   if (serviceData.serviceType) updateData.serviceType = serviceData.serviceType;
   if (serviceData.description) updateData.description = serviceData.description;
   if (serviceData.price !== undefined) updateData.price = serviceData.price;
-  if (serviceData.recordProofVideo)
-    updateData.recordProofVideo = serviceData.recordProofVideo;
+  if (videoStartingPaths.length > 0)
+    updateData.recordProofVideoStarting = videoStartingPaths.join(",");
+  if (videoEndingPaths.length > 0)
+    updateData.recordProofVideoEnding = videoEndingPaths.join(",");
   if (serviceData.addRemark) updateData.addRemark = serviceData.addRemark;
   if (coverImagePath) updateData.coverImage = coverImagePath;
   if (serviceData.serviceStatus)
     updateData.serviceStatus = serviceData.serviceStatus as ServiceStatus;
 
-  // Update service basic info
+  // update service basic info
   const updatedService = await prisma.service.update({
     where: { id: serviceId },
     data: updateData,
   });
 
-  // Update availability if provided
+  // update availability if provided
   if (availability && availability.length > 0) {
-    // Delete existing availability and slots
+    // delete existing availability and slots
     await prisma.scheduleSlot.deleteMany({
       where: { serviceId: serviceId },
     });
@@ -156,7 +184,7 @@ const updateService = async (
       where: { serviceId: serviceId },
     });
 
-    // Create new availability with slots
+    // create new availability with slots
     for (const avail of availability) {
       const createdAvailability = await prisma.availability.create({
         data: {
@@ -165,7 +193,7 @@ const updateService = async (
         },
       });
 
-      // Create slots for availability
+      // create slots for availability
       for (const slot of avail.slots) {
         const formatTime = (time: string) => {
           return time
@@ -186,7 +214,6 @@ const updateService = async (
     }
   }
 
-  // Fetch and return complete updated service
   const completeService = await prisma.service.findUnique({
     where: { id: serviceId },
     include: {

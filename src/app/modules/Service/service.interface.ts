@@ -28,7 +28,7 @@ export interface IServiceCreate {
   price: number;
   coverImage: string;
   serviceStatus: string;
-  recordProofVideo?: string;
+  recordProofVideoStarting?: string;
   addRemark?: string;
   availability: ServiceAvailability[];
 }
@@ -41,7 +41,8 @@ export interface IServiceUpdate {
   price?: number;
   coverImage?: string;
   serviceStatus?: string;
-  recordProofVideo?: string;
+  recordProofVideoStarting?: string;
+  recordProofVideoEnding?: string;
   addRemark?: string;
   availability?: ServiceAvailability[];
 }
@@ -54,7 +55,8 @@ export interface IServiceResponse {
   price: number;
   coverImage: string;
   serviceStatus: string;
-  recordProofVideo: string;
+  recordProofVideoStarting?: string;
+  recordProofVideoEnding?: string;
   addRemark?: string;
   createdAt: Date;
   updatedAt: Date;

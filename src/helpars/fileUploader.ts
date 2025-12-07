@@ -93,11 +93,12 @@ const upload = multer({ storage, fileFilter });
 
 const profileImage = upload.single("profileImage");
 
-const uploadPhotosOrVideos = upload.array("uploadPhotosOrVideos", 40);
+const recordProofVideoStarting = upload.array("recordProofVideoStarting", 40);
+const recordProofVideoEnding = upload.array("recordProofVideoEnding", 40);
 const houseRules = upload.single("houseRules");
 const guardPhoto = upload.single("guardPhoto");
 
-const coverImage = upload.single("coverImage")
+const coverImage = upload.single("coverImage");
 
 const uploadMessageImages = upload.array("messageImages", 40);
 
@@ -157,7 +158,8 @@ export const uploadFile = {
   upload,
   profileImage,
 
-  uploadPhotosOrVideos,
+  recordProofVideoStarting,
+  recordProofVideoEnding,
   houseRules,
   guardPhoto,
 

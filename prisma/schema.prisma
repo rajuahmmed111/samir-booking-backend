@@ -309,21 +309,22 @@ model Hotel_Booking {
 }
 
 model Service {
-  id                 String        @id @default(auto()) @map("_id") @db.ObjectId
-  serviceName        String
-  serviceType        String
-  description        String
-  experience         Float
-  price              Float
+  id                       String        @id @default(auto()) @map("_id") @db.ObjectId
+  serviceName              String
+  serviceType              String
+  description              String
+  experience               Float
+  price                    Float
   // estimatedDuration String
-  coverImage         String
-  serviceStatus      ServiceStatus
-  recordProofVideo   String?
-  addRemark          String?
-  serviceRating      String?
-  serviceReviewCount Int           @default(0)
-  createdAt          DateTime      @default(now())
-  updatedAt          DateTime      @updatedAt
+  coverImage               String
+  serviceStatus            ServiceStatus
+  recordProofVideoStarting String?
+  recordProofVideoEnding   String?
+  addRemark                String?
+  serviceRating            String?
+  serviceReviewCount       Int           @default(0)
+  createdAt                DateTime      @default(now())
+  updatedAt                DateTime      @updatedAt
 
   // relationships
   availability    Availability[]

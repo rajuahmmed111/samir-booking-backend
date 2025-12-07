@@ -22,8 +22,12 @@ router.post(
 // update service
 router.patch(
   "/:serviceId",
-  auth(UserRole.SERVICE_PROVIDER),
-  uploadFile.coverImage,
+  auth(UserRole.SERVICE_PROVIDER, UserRole.PROPERTY_OWNER),
+  uploadFile.upload.fields([
+    { name: "coverImage", maxCount: 1 },
+    { name: "recordProofVideoStarting", maxCount: 40 },
+    { name: "recordProofVideoEnding", maxCount: 40 }
+  ]),
   parseBodyData,
   validateRequest(ServiceValidation.updateServiceSchema),
   ServiceController.updateService

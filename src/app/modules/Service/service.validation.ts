@@ -24,7 +24,7 @@ export const createServiceSchema = z.object({
       ServiceStatus.INACTIVE,
       ServiceStatus.PENDING,
     ]),
-    recordProofVideo: z.string().optional(),
+    recordProofVideoStarting: z.string().optional(),
     addRemark: z.string().optional(),
     availability: z
       .array(ServiceAvailabilitySchema)
@@ -49,7 +49,8 @@ export const updateServiceSchema = z.object({
         ServiceStatus.PENDING,
       ])
       .optional(),
-    recordProofVideo: z.string().optional(),
+    recordProofVideoStarting: z.string().optional(),
+    recordProofVideoEnding: z.string().optional(),
     addRemark: z.string().optional(),
     availability: z
       .array(ServiceAvailabilitySchema)
