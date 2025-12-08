@@ -204,6 +204,32 @@ const createStripeCheckoutSessionForHotel = async (
     },
   });
 
+  // update DB with checkoutSessionId
+  await prisma.hotel_Booking.update({
+    where: { id: bookingId },
+    data: {
+      checkoutSessionId: checkoutSession.id,
+    },
+  });
+
+  // create payment record
+  await prisma.payment.create({
+    data: {
+      amount: booking.totalPrice,
+      description,
+      currency: "usd",
+      sessionId: checkoutSession.id,
+      paymentIntentId: checkoutSession.payment_method_types.join(","),
+      status: PaymentStatus.UNPAID,
+      provider: "STRIPE",
+      serviceType: "SERVICE",
+      providerId: provider?.id,
+      userId,
+      service_bookingId: booking?.id,
+      hotelId: booking?.hotelId,
+    },
+  });
+
   return {
     id: checkoutSession.id,
     url: checkoutSession.url,
@@ -292,7 +318,7 @@ const createStripeCheckoutSessionForService = async (
       description,
       currency: "usd",
       sessionId: checkoutSession.id,
-      // paymentMethod: checkoutSession.payment_method_types.join(","),
+      paymentIntentId: checkoutSession.payment_method_types.join(","),
       status: PaymentStatus.UNPAID,
       provider: "STRIPE",
       serviceType: "SERVICE",
