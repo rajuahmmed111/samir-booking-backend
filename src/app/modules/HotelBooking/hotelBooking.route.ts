@@ -32,8 +32,6 @@ router.get(
 router.post(
   "/:hotelId",
   auth(UserRole.USER, UserRole.PROPERTY_OWNER, UserRole.SERVICE_PROVIDER),
-  // uploadFile.passportImageUrl,
-  // parseBodyData,
   HotelBookingController.createHotelRoomBooking
 );
 
@@ -45,10 +43,9 @@ router.post(
     UserRole.PROPERTY_OWNER,
     UserRole.SERVICE_PROVIDER,
     UserRole.ADMIN,
-    UserRole.SUPER_ADMIN,
-    UserRole.USER
+    UserRole.SUPER_ADMIN
   ),
-  uploadFile.passportImageUrl,
+  uploadFile.passportImages,
   parseBodyData,
   HotelBookingController.createTravelers
 );
