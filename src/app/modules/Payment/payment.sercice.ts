@@ -223,7 +223,7 @@ const createStripeCheckoutSessionForHotel = async (
       status: PaymentStatus.UNPAID,
       provider: "STRIPE",
       serviceType: "HOTEL",
-      providerId: provider?.id,
+      partnerId: provider?.id,
       userId,
       hotel_bookingId: booking?.id,
       hotelId: booking?.hotelId,
@@ -385,7 +385,7 @@ const stripeHandleWebhook = async (event: Stripe.Event) => {
       if (payment.serviceType === "SERVICE") {
         bookingId = payment.service_bookingId || undefined;
       } else if (payment.serviceType === "HOTEL") {
-        bookingId = payment.service_bookingId || undefined;
+        bookingId = payment.hotel_bookingId || undefined;
       }
 
       const booking = await (configs.bookingModel as any).findUnique({
@@ -433,7 +433,7 @@ const stripeHandleWebhook = async (event: Stripe.Event) => {
         });
       }
 
-      // update hotel/service status
+      // update hotel status
       if (payment.serviceType === "HOTEL") {
         if (!booking.hotelId) {
           console.error("Missing hotelId in booking:", booking);

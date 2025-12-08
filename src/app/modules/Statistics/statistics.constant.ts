@@ -1,3 +1,3 @@
-export const filterField: string[] = ["searchTerm","timeRange", "country", "age", "gender", "profession"];
+export const filterField: string[] = ["searchTerm","timeRange", "country"];
 
 export const searchableFields: string[] = ["fullName", "email"];

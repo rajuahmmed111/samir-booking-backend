@@ -277,7 +277,7 @@ const paymentWithUserAnalysis = async (params: IFilterRequest) => {
 
 // user demographics
 const userDemographics = async (params: IFilterRequest) => {
-  const { searchTerm, timeRange, country, age, gender, profession } = params;
+  const { searchTerm, timeRange, country } = params;
 
   // date range filter
   const dateRange = getDateRange(timeRange);
@@ -982,8 +982,11 @@ const sendReportToServiceProviderThroughEmail = async (id: string) => {
   // return partner
 };
 
-// partner total earings hotel
-const getPartnerTotalEarningsHotel = async (partnerId: string) => {
+// property owner total earnings hotel
+const getPartnerTotalEarningsHotel = async (
+  partnerId: string,
+  timeRange?: string
+) => {
   // find partner
   const partner = await prisma.user.findUnique({
     where: {
@@ -994,54 +997,105 @@ const getPartnerTotalEarningsHotel = async (partnerId: string) => {
     throw new ApiError(httpStatus.NOT_FOUND, "Partner not found");
   }
 
+  // date range filter
+  const dateRange = getDateRange(timeRange);
+
   // total earnings
   const earnings = await prisma.payment.aggregate({
     where: {
       partnerId: partnerId,
       status: PaymentStatus.PAID,
-      // serviceType: "HOTEL",
+      serviceType: "HOTEL",
+      ...(dateRange && { createdAt: dateRange }),
+    },
+    _sum: {
+      amount: true,
+    },
+    _count: {
+      id: true,
     },
   });
 
-  // monthly earnings (group by month)
+  // total bookings
+  const totalBookings = await prisma.hotel_Booking.count({
+    where: {
+      partnerId: partnerId,
+      bookingStatus: BookingStatus.CONFIRMED,
+      ...(dateRange && { createdAt: dateRange }),
+    },
+  });
+
+  // earnings trend - monthly data
   const monthlyPayments = await prisma.payment.findMany({
     where: {
       partnerId,
       status: PaymentStatus.PAID,
+      serviceType: "HOTEL",
+      ...(dateRange && { createdAt: dateRange }),
+    },
+    select: {
+      amount: true,
+      createdAt: true,
+    },
+    orderBy: {
+      createdAt: "asc",
+    },
+  });
+
+  // bookings trend - monthly data
+  const monthlyBookings = await prisma.hotel_Booking.findMany({
+    where: {
+      partnerId,
+      bookingStatus: BookingStatus.CONFIRMED,
+      ...(dateRange && { createdAt: dateRange }),
     },
     select: {
       createdAt: true,
+      totalPrice: true,
+    },
+    orderBy: {
+      createdAt: "asc",
     },
   });
 
-  const months = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-  ];
+  // Group earnings by month
+  const earningsByMonth = monthlyPayments.reduce((acc: any, payment) => {
+    const monthKey = payment.createdAt.toISOString().slice(0, 7); // YYYY-MM
+    if (!acc[monthKey]) {
+      acc[monthKey] = { month: monthKey, earnings: 0, count: 0 };
+    }
+    acc[monthKey].earnings += payment.amount;
+    acc[monthKey].count += 1;
+    return acc;
+  }, {});
 
-  const paymentMonthsData = months.map((name, index) => {
-    // sum earnings for this month (regardless of year)
-    const monthlyData = monthlyPayments.filter(
-      (p) => p.createdAt.getUTCMonth() === index
-    );
+  // Group bookings by month
+  const bookingsByMonth = monthlyBookings.reduce((acc: any, booking) => {
+    const monthKey = booking.createdAt.toISOString().slice(0, 7); // YYYY-MM
+    if (!acc[monthKey]) {
+      acc[monthKey] = { month: monthKey, bookings: 0, revenue: 0 };
+    }
+    acc[monthKey].bookings += 1;
+    acc[monthKey].revenue += booking.totalPrice;
+    return acc;
+  }, {});
 
-    return {
-      month: name,
-    };
-  });
+  // Convert to arrays and sort by month
+  const earningsTrend = Object.values(earningsByMonth).sort((a: any, b: any) =>
+    a.month.localeCompare(b.month)
+  );
+
+  const bookingsTrend = Object.values(bookingsByMonth).sort((a: any, b: any) =>
+    a.month.localeCompare(b.month)
+  );
 
   return {
-    paymentMonthsData,
+    totalEarnings: earnings._sum.amount || 0,
+    // totalPayments: earnings._count.id || 0,
+    totalBookings,
+    earningsTrend,
+    bookingsTrend,
+    timeRange: timeRange || "ALL_TIME",
   };
 };
 

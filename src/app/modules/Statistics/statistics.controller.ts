@@ -125,18 +125,21 @@ const sendReportToServiceProviderThroughEmail = catchAsync(
   }
 );
 
-// partner total earings hotel
+// property owner total earings hotel
 const getPartnerTotalEarningsHotel = catchAsync(
   async (req: Request, res: Response) => {
     const partnerId = req.user?.id;
+    const { timeRange } = req.query;
+    
     const result = await StatisticsService.getPartnerTotalEarningsHotel(
-      partnerId
+      partnerId,
+      timeRange as string
     );
 
     sendResponse(res, {
       statusCode: httpStatus.OK,
       success: true,
-      message: "Statistics fetched successfully",
+      message: "Property owner earnings fetched successfully",
       data: result,
     });
   }
