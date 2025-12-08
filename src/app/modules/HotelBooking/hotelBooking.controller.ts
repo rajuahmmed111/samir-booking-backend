@@ -14,7 +14,7 @@ const createHotelRoomBooking = catchAsync(
     const result = await HotelBookingService.createHotelRoomBooking(
       userId,
       hotelId,
-      req.body,
+      req.body
       // passportFiles
     );
     sendResponse(res, {
@@ -38,11 +38,43 @@ const getAllHotelBookings = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+// get single hotel booking for owner
+const getSingleHotelBookingForOwner = catchAsync(
+  async (req: Request, res: Response) => {
+    const partnerId = req.user?.id;
+    const result = await HotelBookingService.getSingleHotelBookingForOwner(partnerId);
+    sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: "Hotel bookings fetched successfully",
+      data: result,
+    });
+  }
+);
+
 // get all my hotel bookings
 const getAllMyHotelBookings = catchAsync(
   async (req: Request, res: Response) => {
     const userId = req.user?.id;
-    const result = await HotelBookingService.getAllMyHotelBookings(userId);
+    const result = await HotelBookingService.getSingleHotelBookingForOwner(
+      userId
+    );
+    sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: "My hotel bookings fetched successfully",
+      data: result,
+    });
+  }
+);
+
+// get single my hotel booking
+const getSingleMyHotelBookingForUser = catchAsync(
+  async (req: Request, res: Response) => {
+    const userId = req.user?.id;
+    const result = await HotelBookingService.getSingleMyHotelBookingForUser(
+      userId
+    );
     sendResponse(res, {
       statusCode: httpStatus.OK,
       success: true,
@@ -68,8 +100,6 @@ const getHotelBookingById = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-
-
 // create travelers with passport images
 const createTravelers = catchAsync(async (req: Request, res: Response) => {
   const bookingId = req.params.bookingId;
@@ -93,7 +123,9 @@ const createTravelers = catchAsync(async (req: Request, res: Response) => {
 export const HotelBookingController = {
   createHotelRoomBooking,
   getAllHotelBookings,
+  getSingleHotelBookingForOwner,
   getAllMyHotelBookings,
+  getSingleMyHotelBookingForUser,
   getHotelBookingById,
   createTravelers,
 };

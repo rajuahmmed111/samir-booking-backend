@@ -139,6 +139,52 @@ const getAllHotelBookings = async (partnerId: string) => {
   return result;
 };
 
+// get single hotel booking for owner
+const getSingleHotelBookingForOwner = async (partnerId: string) => {
+  // find partner
+  const partner = await prisma.user.findUnique({ where: { id: partnerId } });
+  if (!partner) {
+    throw new ApiError(httpStatus.NOT_FOUND, "Partner not found");
+  }
+
+  const result = await prisma.hotel_Booking.findFirst({
+    where: { partnerId: partner.id, bookingStatus: BookingStatus.CONFIRMED },
+    include: {
+      hotel: true,
+      payment: true,
+    },
+  });
+
+  if (!result) {
+    throw new ApiError(httpStatus.NOT_FOUND, "No bookings found");
+  }
+
+  return result;
+};
+
+// get single my hotel booking
+const getSingleMyHotelBookingForUser = async (userId: string) => {
+  // find user
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) {
+    throw new ApiError(httpStatus.NOT_FOUND, "User not found");
+  }
+
+  const result = await prisma.hotel_Booking.findFirst({
+    where: { userId, bookingStatus: BookingStatus.CONFIRMED },
+    include: {
+      hotel: true,
+      payment: true,
+    },
+  });
+
+  if (!result) {
+    throw new ApiError(httpStatus.NOT_FOUND, "No bookings found");
+  }
+
+  return result;
+};
+
 // get all my hotel bookings
 const getAllMyHotelBookings = async (userId: string) => {
   // find user
@@ -221,7 +267,9 @@ const createTravelers = async (
 export const HotelBookingService = {
   createHotelRoomBooking,
   getAllHotelBookings,
+  getSingleHotelBookingForOwner,
   getAllMyHotelBookings,
+  getSingleMyHotelBookingForUser,
   getHotelBookingById,
   createTravelers,
 };

@@ -14,11 +14,25 @@ router.get(
   HotelBookingController.getAllHotelBookings
 );
 
+// get single hotel booking for owner
+router.get(
+  "/owner/single",
+  auth(UserRole.PROPERTY_OWNER),
+  HotelBookingController.getSingleHotelBookingForOwner
+);
+
 // get all my hotel bookings
 router.get(
   "/my-bookings",
   auth(UserRole.USER),
   HotelBookingController.getAllMyHotelBookings
+);
+
+// get single my hotel booking
+router.get(
+  "/my-bookings/user/single",
+  auth(UserRole.USER),
+  HotelBookingController.getSingleMyHotelBookingForUser
 );
 
 // get hotel booking by id
