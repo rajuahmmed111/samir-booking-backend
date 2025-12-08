@@ -1080,14 +1080,68 @@ const getPartnerTotalEarningsHotel = async (
     return acc;
   }, {});
 
-  // Convert to arrays and sort by month
-  const earningsTrend = Object.values(earningsByMonth).sort((a: any, b: any) =>
-    a.month.localeCompare(b.month)
-  );
+  // Debug: Log the grouped data
+  console.log("Earnings by month:", earningsByMonth);
+  console.log("Bookings by month:", bookingsByMonth);
 
-  const bookingsTrend = Object.values(bookingsByMonth).sort((a: any, b: any) =>
-    a.month.localeCompare(b.month)
-  );
+  // Get current year
+  const currentYear = new Date().getFullYear();
+  
+  // Create proper month mapping
+  const monthNames = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
+  
+  // Generate all months from January to December for current year
+  const allMonths = [];
+  for (let i = 0; i < 12; i++) {
+    const monthKey = `${currentYear}-${String(i + 1).padStart(2, '0')}`; // YYYY-MM format
+    const monthName = monthNames[i];
+    
+    allMonths.push({
+      month: monthKey,
+      monthName: monthName,
+      earnings: earningsByMonth[monthKey]?.earnings || 0,
+      count: earningsByMonth[monthKey]?.count || 0,
+      bookings: bookingsByMonth[monthKey]?.bookings || 0,
+      revenue: bookingsByMonth[monthKey]?.revenue || 0,
+    });
+  }
+
+  // Check if we have data for previous December and add it if needed
+  const prevDecemberKey = `${currentYear - 1}-12`;
+  console.log("Previous December key:", prevDecemberKey);
+  console.log("Has previous December data:", earningsByMonth[prevDecemberKey] || bookingsByMonth[prevDecemberKey]);
+  
+  if (earningsByMonth[prevDecemberKey] || bookingsByMonth[prevDecemberKey]) {
+    // Replace December (index 11) with previous December data
+    allMonths[11] = {
+      month: prevDecemberKey,
+      monthName: "December",
+      earnings: earningsByMonth[prevDecemberKey]?.earnings || 0,
+      count: earningsByMonth[prevDecemberKey]?.count || 0,
+      bookings: bookingsByMonth[prevDecemberKey]?.bookings || 0,
+      revenue: bookingsByMonth[prevDecemberKey]?.revenue || 0,
+    };
+  }
+
+  console.log("Final allMonths:", allMonths);
+
+  // Separate earnings and bookings trends
+  const earningsTrend = allMonths.map(({ month, monthName, earnings, count }) => ({
+    month,
+    monthName,
+    earnings,
+    count,
+  }));
+
+  const bookingsTrend = allMonths.map(({ month, monthName, bookings, revenue }) => ({
+    month,
+    monthName,
+    bookings,
+    revenue,
+  }));
 
   return {
     totalEarnings: earnings._sum.amount || 0,
