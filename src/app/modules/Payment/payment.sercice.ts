@@ -225,7 +225,7 @@ const createStripeCheckoutSessionForHotel = async (
       serviceType: "HOTEL",
       providerId: provider?.id,
       userId,
-      service_bookingId: booking?.id,
+      hotel_bookingId: booking?.id,
       hotelId: booking?.hotelId,
     },
   });

@@ -125,7 +125,11 @@ const getAllHotelBookings = async (partnerId: string) => {
   }
 
   const result = await prisma.hotel_Booking.findMany({
-    where: { id: partner.id },
+    where: { partnerId: partner.id, bookingStatus: BookingStatus.CONFIRMED },
+    include: {
+      hotel: true,
+      payment: true,
+    },
   });
 
   if (result.length === 0) {
@@ -145,6 +149,10 @@ const getAllMyHotelBookings = async (userId: string) => {
 
   const result = await prisma.hotel_Booking.findMany({
     where: { userId, bookingStatus: BookingStatus.CONFIRMED },
+    include: {
+      hotel: true,
+      payment: true,
+    },
   });
 
   return result;
@@ -183,7 +191,6 @@ const createTravelers = async (
   }
 
   const travelers: any = [];
-
 
   for (let i = 0; i < travelersData.length; i++) {
     const traveler = travelersData[i];
