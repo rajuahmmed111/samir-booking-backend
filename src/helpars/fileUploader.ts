@@ -92,6 +92,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage, fileFilter });
 
 const profileImage = upload.single("profileImage");
+const passportOrNID = upload.array("passportOrNID") // user create time
 
 const recordProofVideoStarting = upload.array("recordProofVideoStarting", 40);
 const recordProofVideoEnding = upload.array("recordProofVideoEnding", 40);
@@ -161,6 +162,7 @@ const uploadToCloudinary = async (
 export const uploadFile = {
   upload,
   profileImage,
+  passportOrNID, // user create time
 
   recordProofVideoStarting,
   recordProofVideoEnding,

@@ -35,36 +35,15 @@ const createUser = async (payload: any) => {
   // hash password
   const hashedPassword = await bcrypt.hash(payload.password, 12);
 
-  // create user with inactive status
+  // create user
   const user = await prisma.user.create({
     data: {
       ...payload,
       password: hashedPassword,
-      status: UserStatus.INACTIVE,
     },
   });
 
-  // generate OTP
-  const randomOtp = Math.floor(1000 + Math.random() * 9000).toString();
-  // 5 minutes
-  const otpExpiry = new Date(Date.now() + 5 * 60 * 1000);
-
-  // prepare email html
-  const html = createOtpEmailTemplate(randomOtp);
-
-  // send email
-  await emailSender("OTP Verification", user.email, html);
-
-  // update user with OTP + expiry
-  await prisma.user.update({
-    where: { id: user.id },
-    data: { otp: randomOtp, otpExpiry },
-  });
-
-  return {
-    message: "OTP sent to your email",
-    email: user.email,
-  };
+  return user;
 };
 
 // create role for supper admin
