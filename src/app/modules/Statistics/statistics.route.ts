@@ -68,6 +68,13 @@ router.get(
   StatisticsController.getPartnerTotalEarningsHotel
 );
 
+// service provider total earnings service
+router.get(
+  "/earnings-service",
+  auth(UserRole.SERVICE_PROVIDER),
+  StatisticsController.getServiceProviderTotalEarningsService
+);
+
 // user support tickets
 router.get(
   "/user-support-tickets",
