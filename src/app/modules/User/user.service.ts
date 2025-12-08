@@ -484,24 +484,12 @@ const getAllBusinessPartners = async (
         in: businessPartnerIds,
       },
       isDeleted: false,
-      service_fee: {
-        not: null,
-      },
     },
-    _sum: {
-      service_fee: true,
-    },
-  });
-
-  const serviceFeeMap = new Map();
-  serviceFeeByPartner.forEach((item) => {
-    serviceFeeMap.set(item.partnerId, item._sum.service_fee || 0);
   });
 
   // add totalServiceFee
   const usersWithServiceFee = result.map((user) => ({
     ...user,
-    totalServiceFee: serviceFeeMap.get(user.id) || 0,
   }));
 
   const total = await prisma.user.count({ where });
