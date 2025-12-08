@@ -80,6 +80,9 @@ const loginUser = async (payload: ILoginRequest): Promise<ILoginResponse> => {
     refreshToken,
     user: {
       fcmToken: updatedFcmToken.fcmToken,
+      isHotel: userData.isHotel,
+      isSubscribed: userData.isSubscribed,
+      isService: userData.isService,
     },
   };
 
@@ -153,14 +156,13 @@ const socialLogin = async (payload: any) => {
     user: {
       fcmToken: user.fcmToken,
       isHotel: user.isHotel,
-      isSecurity: user.isSecurity,
-      isCar: user.isCar,
-      isAttraction: user.isAttraction,
+      isSubscribed: user.isSubscribed,
+      isService: user.isService,
     },
   };
 };
 
-// website login after booking
+// website login before booking
 const loginWebsite = async (payload: ISignupRequest) => {
   const { fullName, email, password, contactNumber, country, fcmToken, role } =
     payload;
@@ -231,9 +233,8 @@ const loginWebsite = async (payload: ISignupRequest) => {
       role: newUser.role,
       fcmToken: newUser.fcmToken,
       isHotel: newUser.isHotel,
-      isSecurity: newUser.isSecurity,
-      isCar: newUser.isCar,
-      isAttraction: newUser.isAttraction,
+      isSubscribed: newUser.isSubscribed,
+      isService: newUser.isService,
     },
   };
 

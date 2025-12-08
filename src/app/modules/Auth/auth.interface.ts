@@ -4,9 +4,8 @@ export type ILoginResponse = {
   user?: {
     fcmToken?: string | null;
     isHotel?: boolean | null;
-    isSecurity?: boolean | null;
-    isCar?: boolean | null;
-    isAttraction?: boolean | null;
+    isSubscribed?: boolean | null;
+    isService?: boolean | null;
   };
 };
 
@@ -40,8 +39,7 @@ export interface ISignupResponse {
     role: string;
     fcmToken?: string | null;
     isHotel?: boolean | null;
-    isSecurity?: boolean | null;
-    isCar?: boolean | null;
-    isAttraction?: boolean | null;
+    isSubscribed?: boolean | null;
+    isService?: boolean | null;
   };
 }
