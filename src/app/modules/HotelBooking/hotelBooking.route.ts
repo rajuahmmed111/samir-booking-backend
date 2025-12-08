@@ -47,7 +47,14 @@ router.patch(
 // create travelers with passport images
 router.post(
   "/travelers/:bookingId",
-auth(UserRole.USER, UserRole.PROPERTY_OWNER, UserRole.SERVICE_PROVIDER),
+  auth(
+    UserRole.USER,
+    UserRole.PROPERTY_OWNER,
+    UserRole.SERVICE_PROVIDER,
+    UserRole.ADMIN,
+    UserRole.SUPER_ADMIN,
+    UserRole.USER
+  ),
   uploadFile.passportImageUrl,
   parseBodyData,
   HotelBookingController.createTravelers

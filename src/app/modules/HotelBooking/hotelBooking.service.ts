@@ -51,7 +51,7 @@ const createHotelRoomBooking = async (
   }
 
   const numberOfNights = differenceInDays(toDate, fromDate);
-  console.log(numberOfNights)
+  console.log(numberOfNights);
 
   if (numberOfNights <= 0) {
     throw new ApiError(httpStatus.BAD_REQUEST, "Invalid booking date range");
@@ -208,7 +208,7 @@ const updateBookingStatus = async (
   return updatedBooking;
 };
 
-// create travelers with passport images
+// create travelers with passport images for booking
 const createTravelers = async (
   bookingId: string,
   travelersData: { fullName: string }[],
