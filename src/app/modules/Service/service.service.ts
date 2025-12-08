@@ -88,6 +88,16 @@ const createService = async (
     },
   });
 
+  // update user status as service provider
+  await prisma.user.update({
+    where: {
+      id: providerId,
+    },
+    data: {
+      isService: true,
+    },
+  });
+
   return completeService;
 };
 
