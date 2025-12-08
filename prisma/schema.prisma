@@ -300,7 +300,7 @@ model Traveler {
 }
 
 model Service {
-  id                       String        @id @default(auto()) @map("_id") @db.ObjectId
+  id                       String             @id @default(auto()) @map("_id") @db.ObjectId
   serviceName              String
   serviceType              String
   description              String
@@ -313,9 +313,10 @@ model Service {
   recordProofVideoEnding   String?
   addRemark                String?
   serviceRating            String?
-  serviceReviewCount       Int           @default(0)
-  createdAt                DateTime      @default(now())
-  updatedAt                DateTime      @updatedAt
+  serviceReviewCount       Int                @default(0)
+  isBooked                 EveryServiceStatus @default(AVAILABLE)
+  createdAt                DateTime           @default(now())
+  updatedAt                DateTime           @updatedAt
 
   // relationships
   availability    Availability[]

@@ -310,15 +310,20 @@ const stripeHandleWebhook = async (event: Stripe.Event) => {
         data: { bookingStatus: BookingStatus.CONFIRMED },
       });
 
+      // update service EveryServiceStatus
+      if (payment.serviceType === "SERVICE") {
+        await (configs.serviceModel as any).update({
+          where: { id: booking.serviceId },
+          data: { isBooked: EveryServiceStatus.BOOKED },
+        });
+      }
+
       // update hotel/service status
       if (payment.serviceType === "HOTEL") {
-        const serviceId = (booking as any)[configs.bookingToServiceField];
-        if (serviceId) {
-          await (configs.serviceModel as any).update({
-            where: { id: serviceId },
-            data: { isBooked: EveryServiceStatus.BOOKED },
-          });
-        }
+        await (configs.serviceModel as any).update({
+          where: { id: booking.hotelId },
+          data: { availableForBooking: EveryServiceStatus.BOOKED },
+        });
       }
 
       // ---------- send notification ----------

@@ -142,57 +142,6 @@ const getPartnerTotalEarningsHotel = catchAsync(
   }
 );
 
-// partner total earings security
-const getPartnerTotalEarningsSecurity = catchAsync(
-  async (req: Request, res: Response) => {
-    const partnerId = req.user?.id;
-    const result = await StatisticsService.getPartnerTotalEarningsSecurity(
-      partnerId
-    );
-
-    sendResponse(res, {
-      statusCode: httpStatus.OK,
-      success: true,
-      message: "Statistics fetched successfully",
-      data: result,
-    });
-  }
-);
-
-// partner total earings car
-const getPartnerTotalEarningsCar = catchAsync(
-  async (req: Request, res: Response) => {
-    const partnerId = req.user?.id;
-    const result = await StatisticsService.getPartnerTotalEarningsCar(
-      partnerId
-    );
-
-    sendResponse(res, {
-      statusCode: httpStatus.OK,
-      success: true,
-      message: "Statistics fetched successfully",
-      data: result,
-    });
-  }
-);
-
-// partner total earings attraction
-const getPartnerTotalEarningsAttraction = catchAsync(
-  async (req: Request, res: Response) => {
-    const partnerId = req.user?.id;
-    const result = await StatisticsService.getPartnerTotalEarningsAttraction(
-      partnerId
-    );
-
-    sendResponse(res, {
-      statusCode: httpStatus.OK,
-      success: true,
-      message: "Statistics fetched successfully",
-      data: result,
-    });
-  }
-);
-
 // user support tickets
 const getUserSupportTickets = catchAsync(
   async (req: Request, res: Response) => {
@@ -218,8 +167,5 @@ export const StatisticsController = {
   getSingleServiceProvider,
   sendReportToServiceProviderThroughEmail,
   getPartnerTotalEarningsHotel,
-  getPartnerTotalEarningsSecurity,
-  getPartnerTotalEarningsCar,
-  getPartnerTotalEarningsAttraction,
   getUserSupportTickets,
 };

@@ -677,7 +677,6 @@ const getUserById = async (id: string): Promise<SafeUser> => {
       fcmToken: true,
       status: true,
       isStripeConnected: true,
-      isPayStackConnected: true,
       createdAt: true,
       updatedAt: true,
     },

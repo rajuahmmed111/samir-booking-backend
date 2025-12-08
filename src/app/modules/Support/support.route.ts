@@ -15,14 +15,26 @@ router.get(
 // create support
 router.post(
   "/",
-  auth(UserRole.USER, UserRole.BUSINESS_PARTNER),
+  auth(
+    UserRole.USER,
+    UserRole.PROPERTY_OWNER,
+    UserRole.SERVICE_PROVIDER,
+    UserRole.ADMIN,
+    UserRole.SUPER_ADMIN
+  ),
   SupportController.createSupport
 );
 
 // get my support
 router.get(
   "/my-support",
-  auth(UserRole.USER, UserRole.BUSINESS_PARTNER),
+  auth(
+    UserRole.USER,
+    UserRole.PROPERTY_OWNER,
+    UserRole.SERVICE_PROVIDER,
+    UserRole.ADMIN,
+    UserRole.SUPER_ADMIN
+  ),
   SupportController.getMySupport
 );
 
@@ -30,10 +42,11 @@ router.get(
 router.get(
   "/:id",
   auth(
-    UserRole.ADMIN,
-    UserRole.SUPER_ADMIN,
     UserRole.USER,
-    UserRole.BUSINESS_PARTNER
+    UserRole.PROPERTY_OWNER,
+    UserRole.SERVICE_PROVIDER,
+    UserRole.ADMIN,
+    UserRole.SUPER_ADMIN
   ),
   SupportController.getSupportById
 );
@@ -41,14 +54,26 @@ router.get(
 // update my support
 router.patch(
   "/update-my-support/:supportId",
-  auth(UserRole.USER, UserRole.BUSINESS_PARTNER),
+  auth(
+    UserRole.USER,
+    UserRole.PROPERTY_OWNER,
+    UserRole.SERVICE_PROVIDER,
+    UserRole.ADMIN,
+    UserRole.SUPER_ADMIN
+  ),
   SupportController.updateMySupport
 );
 
 // delete my support
 router.delete(
   "/delete-my-support/:supportId",
-  auth(UserRole.USER, UserRole.BUSINESS_PARTNER),
+  auth(
+    UserRole.USER,
+    UserRole.PROPERTY_OWNER,
+    UserRole.SERVICE_PROVIDER,
+    UserRole.ADMIN,
+    UserRole.SUPER_ADMIN
+  ),
   SupportController.deleteMySupport
 );
 

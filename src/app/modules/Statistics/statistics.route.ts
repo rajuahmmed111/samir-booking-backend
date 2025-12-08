@@ -61,29 +61,11 @@ router.post(
   StatisticsController.sendReportToServiceProviderThroughEmail
 );
 
-  // partner total earings hotel
+// partner total earings hotel
 router.get(
   "/partner-total-earnings-hotel",
   auth(UserRole.PROPERTY_OWNER),
   StatisticsController.getPartnerTotalEarningsHotel
-);
-  // partner total earings
-router.get(
-  "/partner-total-earnings-security",
-  auth(UserRole.PROPERTY_OWNER),
-  StatisticsController.getPartnerTotalEarningsSecurity
-);
-  // partner total earings car
-router.get(
-  "/partner-total-earnings-car",
-  auth(UserRole.PROPERTY_OWNER),
-  StatisticsController.getPartnerTotalEarningsCar
-);
-  // partner total earings attraction
-router.get(
-  "/partner-total-earnings-attraction",
-  auth(UserRole.PROPERTY_OWNER),
-  StatisticsController.getPartnerTotalEarningsAttraction
 );
 
 // user support tickets

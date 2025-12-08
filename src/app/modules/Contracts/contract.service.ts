@@ -88,8 +88,6 @@ const getSingleContract = async (id: string, type: string) => {
           hotel: {
             select: {
               id: true,
-              hotelName: true,
-              // hotelRoomDescription: true,
             },
           },
           user: {

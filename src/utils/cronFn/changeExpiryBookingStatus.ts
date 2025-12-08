@@ -40,6 +40,7 @@ export const changeExpiryBookingStatus = () => {
     }
   });
 
+  // for hotel
   cron.schedule("0 * * * *", async () => {
     console.log("⏰ Booking status update job running...");
 
@@ -55,12 +56,33 @@ export const changeExpiryBookingStatus = () => {
           data: { bookingStatus: BookingStatus.COMPLETED },
         });
 
-        if (booking.roomId) {
-          await prisma.room.update({
-            where: { id: booking.roomId },
-            data: { isBooked: EveryServiceStatus.AVAILABLE },
+        if (booking?.hotelId) {
+          await prisma.hotel.update({
+            where: { id: booking.hotelId },
+            data: { availableForBooking: EveryServiceStatus.AVAILABLE },
           });
         }
+      }
+    }
+
+    console.log("All expired bookings marked as COMPLETED");
+  });
+
+  // for service
+  cron.schedule("0 * * * *", async () => {
+    console.log("⏰ Booking status update job running...");
+
+    // service bookings
+    const expiredServices = await prisma.service_booking.findMany({
+      where: { bookingStatus: BookingStatus.CONFIRMED },
+    });
+
+    for (const booking of expiredServices) {
+      if (isPastDate(booking.date)) {
+        await prisma.service_booking.update({
+          where: { id: booking.id },
+          data: { bookingStatus: BookingStatus.COMPLETED },
+        });
       }
     }
 

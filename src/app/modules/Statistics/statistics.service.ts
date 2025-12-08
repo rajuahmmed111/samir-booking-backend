@@ -285,11 +285,6 @@ const userDemographics = async (params: IFilterRequest) => {
   const userWhere: any = {
     role: "USER",
     ...(country && { country: { equals: country, mode: "insensitive" } }),
-    ...(age && !isNaN(Number(age)) && { age: Number(age) }),
-    ...(gender && { gender: { equals: gender, mode: "insensitive" } }),
-    ...(profession && {
-      profession: { equals: profession, mode: "insensitive" },
-    }),
     ...(searchTerm && {
       OR: [
         { fullName: { contains: searchTerm, mode: "insensitive" } },
@@ -381,11 +376,6 @@ const financialMetrics = async () => {
     where: {
       status: PaymentStatus.PAID,
     },
-    select: {
-      createdAt: true,
-      admin_commission: true,
-      service_fee: true,
-    },
   });
 
   const months = [
@@ -409,20 +399,8 @@ const financialMetrics = async () => {
       (p) => p.createdAt.getUTCMonth() === index
     );
 
-    const adminEarnings = monthlyData.reduce(
-      (sum, p) => sum + (p.admin_commission ?? 0),
-      0
-    );
-
-    const serviceEarnings = monthlyData.reduce(
-      (sum, p) => sum + (p.service_fee ?? 0),
-      0
-    );
-
     return {
       month: name,
-      adminEarnings,
-      serviceEarnings,
     };
   });
 
@@ -658,7 +636,7 @@ const sendReportToServiceProviderThroughEmail = async (id: string) => {
   const updatedDate = format(new Date(partner.updatedAt), "MMMM d, yyyy");
   const reportDate = format(new Date(), "MMMM yyyy");
 
-  // Prepare email HTML (dynamic)
+  // prepare email HTML (dynamic)
   const html = `
 <!DOCTYPE html>
 <html lang="en">
@@ -1033,7 +1011,6 @@ const getPartnerTotalEarningsHotel = async (partnerId: string) => {
     },
     select: {
       createdAt: true,
-      service_fee: true,
     },
   });
 
@@ -1058,224 +1035,8 @@ const getPartnerTotalEarningsHotel = async (partnerId: string) => {
       (p) => p.createdAt.getUTCMonth() === index
     );
 
-    const serviceEarnings = monthlyData.reduce(
-      (sum, p) => sum + (p.service_fee ?? 0),
-      0
-    );
-
     return {
       month: name,
-      serviceEarnings,
-    };
-  });
-
-  return {
-    paymentMonthsData,
-  };
-};
-
-// partner total earings security
-const getPartnerTotalEarningsSecurity = async (partnerId: string) => {
-  // find partner
-  const partner = await prisma.user.findUnique({
-    where: {
-      id: partnerId,
-    },
-  });
-  if (!partner) {
-    throw new ApiError(httpStatus.NOT_FOUND, "Partner not found");
-  }
-
-  // total earnings
-  const earnings = await prisma.payment.aggregate({
-    where: {
-      partnerId: partnerId,
-      status: PaymentStatus.PAID,
-      serviceType: "SECURITY",
-    },
-  });
-
-  // monthly earnings (group by month)
-  const monthlyPayments = await prisma.payment.findMany({
-    where: {
-      partnerId,
-      status: PaymentStatus.PAID,
-    },
-    select: {
-      createdAt: true,
-      service_fee: true,
-    },
-  });
-
-  const months = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-  ];
-
-  const paymentMonthsData = months.map((name, index) => {
-    // sum earnings for this month (regardless of year)
-    const monthlyData = monthlyPayments.filter(
-      (p) => p.createdAt.getUTCMonth() === index
-    );
-
-    const serviceEarnings = monthlyData.reduce(
-      (sum, p) => sum + (p.service_fee ?? 0),
-      0
-    );
-
-    return {
-      month: name,
-      serviceEarnings,
-    };
-  });
-
-  return {
-    paymentMonthsData,
-  };
-};
-
-// partner total earings car
-const getPartnerTotalEarningsCar = async (partnerId: string) => {
-  // find partner
-  const partner = await prisma.user.findUnique({
-    where: {
-      id: partnerId,
-    },
-  });
-  if (!partner) {
-    throw new ApiError(httpStatus.NOT_FOUND, "Partner not found");
-  }
-
-  // total earnings
-  const earnings = await prisma.payment.aggregate({
-    where: {
-      partnerId: partnerId,
-      status: PaymentStatus.PAID,
-      serviceType: "CAR",
-    },
-  });
-
-  // monthly earnings (group by month)
-  const monthlyPayments = await prisma.payment.findMany({
-    where: {
-      partnerId,
-      status: PaymentStatus.PAID,
-    },
-    select: {
-      createdAt: true,
-      service_fee: true,
-    },
-  });
-
-  const months = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-  ];
-
-  const paymentMonthsData = months.map((name, index) => {
-    // sum earnings for this month (regardless of year)
-    const monthlyData = monthlyPayments.filter(
-      (p) => p.createdAt.getUTCMonth() === index
-    );
-
-    const serviceEarnings = monthlyData.reduce(
-      (sum, p) => sum + (p.service_fee ?? 0),
-      0
-    );
-
-    return {
-      month: name,
-      serviceEarnings,
-    };
-  });
-
-  return {
-    paymentMonthsData,
-  };
-};
-
-// partner total earings attraction
-const getPartnerTotalEarningsAttraction = async (partnerId: string) => {
-  // find partner
-  const partner = await prisma.user.findUnique({
-    where: {
-      id: partnerId,
-    },
-  });
-  if (!partner) {
-    throw new ApiError(httpStatus.NOT_FOUND, "Partner not found");
-  }
-
-  // total earnings
-  const earnings = await prisma.payment.aggregate({
-    where: {
-      partnerId: partnerId,
-      status: PaymentStatus.PAID,
-      serviceType: "ATTRACTION",
-    },
-  });
-
-  // monthly earnings (group by month)
-  const monthlyPayments = await prisma.payment.findMany({
-    where: {
-      partnerId,
-      status: PaymentStatus.PAID,
-    },
-    select: {
-      createdAt: true,
-      service_fee: true,
-    },
-  });
-
-  const months = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-  ];
-
-  const paymentMonthsData = months.map((name, index) => {
-    // sum earnings for this month (regardless of year)
-    const monthlyData = monthlyPayments.filter(
-      (p) => p.createdAt.getUTCMonth() === index
-    );
-
-    const serviceEarnings = monthlyData.reduce(
-      (sum, p) => sum + (p.service_fee ?? 0),
-      0
-    );
-
-    return {
-      month: name,
-      serviceEarnings,
     };
   });
 
@@ -1352,8 +1113,5 @@ export const StatisticsService = {
   getSingleServiceProvider,
   sendReportToServiceProviderThroughEmail,
   getPartnerTotalEarningsHotel,
-  getPartnerTotalEarningsSecurity,
-  getPartnerTotalEarningsCar,
-  getPartnerTotalEarningsAttraction,
   getUserSupportTickets,
 };
