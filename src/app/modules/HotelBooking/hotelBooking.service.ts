@@ -117,24 +117,44 @@ const createHotelRoomBooking = async (
 };
 
 // get all hotel  bookings
-const getAllHotelBookings = async (partnerId: string) => {
+const getAllHotelBookings = async (partnerId: string, filter?: string) => {
   // find partner
   const partner = await prisma.user.findUnique({ where: { id: partnerId } });
   if (!partner) {
     throw new ApiError(httpStatus.NOT_FOUND, "Partner not found");
   }
 
+  let whereClause: any = { partnerId };
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const todayString = today.toISOString().split("T")[0];
+
+  if (filter === "new-requests") {
+    // New Requests: Bookings created today with CONFIRMED status
+    whereClause.bookingStatus = BookingStatus.CONFIRMED;
+    whereClause.createdAt = {
+      gte: today,
+    };
+  } else if (filter === "ongoing") {
+    // Ongoing: All CONFIRMED bookings (regardless of date)
+    whereClause.bookingStatus = BookingStatus.CONFIRMED;
+  } else if (filter === "completed") {
+    // Completed: All COMPLETED bookings
+    whereClause.bookingStatus = BookingStatus.COMPLETED;
+  }
+  // if no filter return all
+
   const result = await prisma.hotel_Booking.findMany({
-    where: { partnerId: partner.id, bookingStatus: BookingStatus.CONFIRMED },
+    where: whereClause,
     include: {
       hotel: true,
       payment: true,
     },
+    orderBy: {
+      createdAt: "desc",
+    },
   });
-
-  if (result.length === 0) {
-    throw new ApiError(httpStatus.NOT_FOUND, "No bookings found");
-  }
 
   return result;
 };

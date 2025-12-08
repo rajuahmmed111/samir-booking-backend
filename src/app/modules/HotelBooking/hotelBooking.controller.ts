@@ -29,7 +29,12 @@ const createHotelRoomBooking = catchAsync(
 // get all hotel bookings
 const getAllHotelBookings = catchAsync(async (req: Request, res: Response) => {
   const partnerId = req.user?.id;
-  const result = await HotelBookingService.getAllHotelBookings(partnerId);
+  const filter = req.query.filter as string;
+
+  const result = await HotelBookingService.getAllHotelBookings(
+    partnerId,
+    filter
+  );
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
@@ -42,7 +47,9 @@ const getAllHotelBookings = catchAsync(async (req: Request, res: Response) => {
 const getSingleHotelBookingForOwner = catchAsync(
   async (req: Request, res: Response) => {
     const partnerId = req.user?.id;
-    const result = await HotelBookingService.getSingleHotelBookingForOwner(partnerId);
+    const result = await HotelBookingService.getSingleHotelBookingForOwner(
+      partnerId
+    );
     sendResponse(res, {
       statusCode: httpStatus.OK,
       success: true,
