@@ -23,54 +23,26 @@ import { IPaginationOptions } from "../../../interfaces/paginations";
 import { searchableFields } from "./statistics.constant";
 import { paginationHelpers } from "../../../helpars/paginationHelper";
 
-// get overview total user, total partner,total contracts , admin earnings
+// get overview total clients, total providers,total revenue
 const getOverview = async (params: IFilterRequest) => {
   const { timeRange } = params;
   const dateRange = getDateRange(timeRange);
-  const prevRange = getPreviousDateRange(timeRange);
 
   // total users
   const totalUsers = await prisma.user.count({
     where: {
       role: UserRole.USER,
-      ...(dateRange ? { createdAt: dateRange } : {}),
+      // ...(dateRange ? { createdAt: dateRange } : {}),
     },
   });
-
-  // previous users
-  const prevTotalUsers = await prisma.user.count({
-    where: {
-      role: UserRole.USER,
-      ...(prevRange ? { createdAt: prevRange } : {}),
-    },
-  });
-  const userGrowth = calculateGrowth(totalUsers, prevTotalUsers);
 
   // total partners
   const totalPartners = await prisma.user.count({
     where: {
       role: UserRole.PROPERTY_OWNER,
-      ...(dateRange ? { createdAt: dateRange } : {}),
+      // ...(dateRange ? { createdAt: dateRange } : {}),
     },
   });
-
-  // current contracts
-  const [hotelCount] = await Promise.all([
-    prisma.hotel_Booking.count({
-      where: dateRange ? { createdAt: dateRange } : {},
-    }),
-  ]);
-  const totalContracts = hotelCount;
-
-  // previous contracts
-  const [prevHotelCount] = await Promise.all([
-    prisma.hotel_Booking.count({
-      where: prevRange ? { createdAt: prevRange } : {},
-    }),
-  ]);
-  const prevTotalContracts = prevHotelCount;
-
-  const contractGrowth = calculateGrowth(totalContracts, prevTotalContracts);
 
   // admin earnings (only PAID payments)
   const adminEarnings = await prisma.payment.aggregate({
@@ -78,85 +50,11 @@ const getOverview = async (params: IFilterRequest) => {
       status: PaymentStatus.PAID,
     },
   });
-  if (!adminEarnings) {
-    throw new ApiError(httpStatus.NOT_FOUND, "Admin earnings not found");
-  }
-  // total pending partner requests
-  const totalPendingPartners = await prisma.user.count({
-    where: { role: UserRole.PROPERTY_OWNER, status: UserStatus.INACTIVE },
-  });
 
-  // total completed partner requests
-  const totalCompletedPartners = await prisma.user.count({
-    where: { role: UserRole.PROPERTY_OWNER, status: UserStatus.ACTIVE },
-  });
-
-  // total supports
-  const totalSupports = await prisma.support.count({
-    where: {
-      ...(dateRange ? { createdAt: dateRange } : {}),
-    },
-  });
-
-  // total pending support
-  const totalPendingSupport = await prisma.support.count({
-    where: {
-      status: SupportStatus.Pending,
-      ...(dateRange ? { createdAt: dateRange } : {}),
-    },
-  });
-
-  // total Critical support
-  const totalCriticalSupport = await prisma.support.count({
-    where: {
-      supportType: SupportType.Critical,
-      ...(dateRange ? { createdAt: dateRange } : {}),
-    },
-  });
-
-  // total High support
-  const totalHighSupport = await prisma.support.count({
-    where: {
-      supportType: SupportType.High,
-      ...(dateRange ? { createdAt: dateRange } : {}),
-    },
-  });
-
-  // total Medium support
-  const totalMediumSupport = await prisma.support.count({
-    where: {
-      supportType: SupportType.Medium,
-      ...(dateRange ? { createdAt: dateRange } : {}),
-    },
-  });
-
-  // total Low support
-  const totalLowSupport = await prisma.support.count({
-    where: {
-      supportType: SupportType.Low,
-      ...(dateRange ? { createdAt: dateRange } : {}),
-    },
-  });
   return {
-    totalUsers: {
-      count: totalUsers,
-      growth: userGrowth,
-    },
+    totalUsers,
     totalPartners,
-    totalContracts: {
-      count: totalContracts,
-      growth: contractGrowth,
-    },
-    totalPendingPartners,
-    totalCompletedPartners,
-    Supports: {
-      totalSupports: totalSupports,
-      totalPendingSupport: totalPendingSupport,
-      Critical: totalCriticalSupport,
-      High: totalHighSupport,
-      Medium: totalMediumSupport,
-      Low: totalLowSupport,
-    },
+    adminEarnings,
   };
 };
 

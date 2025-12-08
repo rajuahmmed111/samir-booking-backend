@@ -5,7 +5,7 @@ import auth from "../../middlewares/auth";
 
 const router = express.Router();
 
-// get overview total user, total partner,total contracts , admin earnings
+// get overview total clients, total providers,total revenue
 router.get(
   "/overview",
   auth(UserRole.SUPER_ADMIN, UserRole.ADMIN),

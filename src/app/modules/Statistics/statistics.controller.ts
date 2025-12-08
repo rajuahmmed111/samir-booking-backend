@@ -7,7 +7,7 @@ import { pick } from "../../../shared/pick";
 import { filterField } from "./statistics.constant";
 import { paginationFields } from "../../../constants/pagination";
 
-// get overview total user, total partner,total contracts , admin earnings
+// get overview total clients, total providers,total revenue
 const getOverview = catchAsync(async (req: Request, res: Response) => {
   const filter = pick(req.query, filterField);
   const result = await StatisticsService.getOverview(filter);
