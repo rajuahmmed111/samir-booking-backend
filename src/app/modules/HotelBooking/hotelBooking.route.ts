@@ -37,13 +37,6 @@ router.post(
   HotelBookingController.createHotelRoomBooking
 );
 
-// update hotel booking status
-router.patch(
-  "/status/:bookingId",
-  auth(UserRole.PROPERTY_OWNER),
-  HotelBookingController.updateBookingStatus
-);
-
 // create travelers with passport images
 router.post(
   "/travelers/:bookingId",

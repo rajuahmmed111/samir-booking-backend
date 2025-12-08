@@ -168,46 +168,6 @@ const getHotelBookingById = async (partnerId: string, bookingId: string) => {
   return booking;
 };
 
-// update booking status
-const updateBookingStatus = async (
-  partnerId: string,
-  bookingId: string,
-  bookingStatus: "CONFIRMED" | "CANCELLED"
-) => {
-  const findPartner = await prisma.user.findUnique({
-    where: { id: partnerId },
-  });
-  if (!findPartner) {
-    throw new ApiError(httpStatus.NOT_FOUND, "Partner not found");
-  }
-
-  const booking = await prisma.hotel_Booking.findUnique({
-    where: { id: bookingId, partnerId },
-    include: {
-      hotel: true,
-    },
-  });
-  if (!booking) {
-    throw new ApiError(httpStatus.NOT_FOUND, "Booking not found");
-  }
-
-  if (booking.partnerId !== partnerId) {
-    throw new ApiError(
-      httpStatus.FORBIDDEN,
-      "You are not authorized to update this booking"
-    );
-  }
-
-  const updatedBooking = await prisma.hotel_Booking.update({
-    where: { id: bookingId },
-    data: {
-      bookingStatus,
-    },
-  });
-
-  return updatedBooking;
-};
-
 // create travelers with passport images for booking
 const createTravelers = async (
   bookingId: string,
@@ -255,6 +215,5 @@ export const HotelBookingService = {
   getAllHotelBookings,
   getAllMyHotelBookings,
   getHotelBookingById,
-  updateBookingStatus,
   createTravelers,
 };

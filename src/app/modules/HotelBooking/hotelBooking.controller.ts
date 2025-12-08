@@ -68,25 +68,7 @@ const getHotelBookingById = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-// update hotel booking status
-const updateBookingStatus = catchAsync(async (req: Request, res: Response) => {
-  const partnerId = req.user?.id;
-  const bookingId = req.params.bookingId;
-  const { bookingStatus } = req.body;
 
-  const result = await HotelBookingService.updateBookingStatus(
-    partnerId,
-    bookingId,
-    bookingStatus
-  );
-
-  sendResponse(res, {
-    statusCode: httpStatus.OK,
-    success: true,
-    message: "Booking status updated successfully",
-    data: result,
-  });
-});
 
 // create travelers with passport images
 const createTravelers = catchAsync(async (req: Request, res: Response) => {
@@ -113,6 +95,5 @@ export const HotelBookingController = {
   getAllHotelBookings,
   getAllMyHotelBookings,
   getHotelBookingById,
-  updateBookingStatus,
   createTravelers,
 };
