@@ -102,7 +102,6 @@ const guardPhoto = upload.single("guardPhoto");
 const coverImage = upload.single("coverImage");
 
 // hotel booking
-const passportImageUrl = upload.single("passportImageUrl");
 const passportImages = upload.array("passportImages", 40);
 
 const uploadMessageImages = upload.array("messageImages", 40);
@@ -172,7 +171,6 @@ export const uploadFile = {
   coverImage,
 
   // hotel booking
-  passportImageUrl,
   passportImages,
 
   uploadMessageImages,

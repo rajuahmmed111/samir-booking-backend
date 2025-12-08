@@ -4,6 +4,4 @@ export interface IHotelBookingData {
   bookedToDate: string;
   weeklyDiscount?: number;
   monthlyDiscount?: number;
-  // travelers?: { fullName: string; passportImageUrl?: string }[];
-  // specialRequests?: string | "";
 }
