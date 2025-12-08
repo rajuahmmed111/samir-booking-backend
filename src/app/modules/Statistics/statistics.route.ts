@@ -64,25 +64,25 @@ router.post(
   // partner total earings hotel
 router.get(
   "/partner-total-earnings-hotel",
-  auth(UserRole.BUSINESS_PARTNER),
+  auth(UserRole.PROPERTY_OWNER),
   StatisticsController.getPartnerTotalEarningsHotel
 );
   // partner total earings
 router.get(
   "/partner-total-earnings-security",
-  auth(UserRole.BUSINESS_PARTNER),
+  auth(UserRole.PROPERTY_OWNER),
   StatisticsController.getPartnerTotalEarningsSecurity
 );
   // partner total earings car
 router.get(
   "/partner-total-earnings-car",
-  auth(UserRole.BUSINESS_PARTNER),
+  auth(UserRole.PROPERTY_OWNER),
   StatisticsController.getPartnerTotalEarningsCar
 );
   // partner total earings attraction
 router.get(
   "/partner-total-earnings-attraction",
-  auth(UserRole.BUSINESS_PARTNER),
+  auth(UserRole.PROPERTY_OWNER),
   StatisticsController.getPartnerTotalEarningsAttraction
 );
 

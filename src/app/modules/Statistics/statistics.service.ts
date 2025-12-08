@@ -49,7 +49,7 @@ const getOverview = async (params: IFilterRequest) => {
   // total partners
   const totalPartners = await prisma.user.count({
     where: {
-      role: UserRole.BUSINESS_PARTNER,
+      role: UserRole.PROPERTY_OWNER,
       ...(dateRange ? { createdAt: dateRange } : {}),
     },
   });
@@ -77,21 +77,18 @@ const getOverview = async (params: IFilterRequest) => {
     where: {
       status: PaymentStatus.PAID,
     },
-    _sum: {
-      admin_commission: true,
-    },
   });
   if (!adminEarnings) {
     throw new ApiError(httpStatus.NOT_FOUND, "Admin earnings not found");
   }
   // total pending partner requests
   const totalPendingPartners = await prisma.user.count({
-    where: { role: UserRole.BUSINESS_PARTNER, status: UserStatus.INACTIVE },
+    where: { role: UserRole.PROPERTY_OWNER, status: UserStatus.INACTIVE },
   });
 
   // total completed partner requests
   const totalCompletedPartners = await prisma.user.count({
-    where: { role: UserRole.BUSINESS_PARTNER, status: UserStatus.ACTIVE },
+    where: { role: UserRole.PROPERTY_OWNER, status: UserStatus.ACTIVE },
   });
 
   // total supports
@@ -150,7 +147,6 @@ const getOverview = async (params: IFilterRequest) => {
       count: totalContracts,
       growth: contractGrowth,
     },
-    adminEarnings: adminEarnings._sum.admin_commission,
     totalPendingPartners,
     totalCompletedPartners,
     Supports: {
@@ -179,7 +175,7 @@ const paymentWithUserAnalysis = async (params: IFilterRequest) => {
   // Total partners
   const totalPartners = await prisma.user.count({
     where: {
-      role: UserRole.BUSINESS_PARTNER,
+      role: UserRole.PROPERTY_OWNER,
       ...(dateRange ? { createdAt: dateRange } : {}),
     },
   });
@@ -265,7 +261,7 @@ const paymentWithUserAnalysis = async (params: IFilterRequest) => {
     if (monthIndex >= 0 && monthIndex < 12) {
       if (r._id.role === UserRole.USER) {
         userMonthsData[monthIndex].userCount = r.count;
-      } else if (r._id.role === UserRole.BUSINESS_PARTNER) {
+      } else if (r._id.role === UserRole.PROPERTY_OWNER) {
         userMonthsData[monthIndex].partnerCount = r.count;
       }
     }
@@ -374,10 +370,6 @@ const financialMetrics = async () => {
     where: {
       status: PaymentStatus.PAID,
     },
-    _sum: {
-      admin_commission: true,
-      service_fee: true,
-    },
   });
 
   if (!earnings) {
@@ -435,8 +427,6 @@ const financialMetrics = async () => {
   });
 
   return {
-    adminEarnings: earnings._sum.admin_commission ?? 0,
-    serviceEarnings: earnings._sum.service_fee ?? 0,
     paymentMonthsData,
   };
 };
@@ -478,22 +468,16 @@ const cancelRefundAndContracts = async (params: IFilterRequest) => {
     totalPayments > 0 ? (canceledCount / totalPayments) * 100 : 0;
 
   // Booking counts
-  const [hotelCount] =
-    await Promise.all([
-      prisma.hotel_Booking.count({
-        where: dateRange ? { createdAt: dateRange } : {},
-      }),
+  const [hotelCount] = await Promise.all([
+    prisma.hotel_Booking.count({
+      where: dateRange ? { createdAt: dateRange } : {},
+    }),
+  ]);
 
-    ]);
-
-  const totalContracts =
-    hotelCount ;
+  const totalContracts = hotelCount;
 
   // Pending/Confirmed counts
-  const [
-    pendingHotel,
-    confirmedHotel,
-  ] = await Promise.all([
+  const [pendingHotel, confirmedHotel] = await Promise.all([
     prisma.hotel_Booking.count({
       where: {
         bookingStatus: BookingStatus.PENDING,
@@ -506,13 +490,10 @@ const cancelRefundAndContracts = async (params: IFilterRequest) => {
         ...(dateRange ? { createdAt: dateRange } : {}),
       },
     }),
-
   ]);
 
-  const totalPending =
-    pendingHotel
-  const totalConfirmed =
-    confirmedHotel
+  const totalPending = pendingHotel;
+  const totalConfirmed = confirmedHotel;
 
   const pendingRate =
     totalContracts > 0 ? (totalPending / totalContracts) * 100 : 0;
@@ -570,7 +551,7 @@ const getAllServiceProviders = async (
 
   // only active business partners
   filters.push({
-    role: UserRole.BUSINESS_PARTNER,
+    role: UserRole.PROPERTY_OWNER,
     status: UserStatus.ACTIVE,
   });
 
@@ -610,14 +591,10 @@ const getAllServiceProviders = async (
           status: PaymentStatus.PAID,
           ...(timeRange ? { createdAt: getDateRange(timeRange) } : {}),
         },
-        _sum: {
-          service_fee: true,
-        },
       });
 
       return {
         ...partner,
-        service_fee: earnings._sum.service_fee ?? 0,
       };
     })
   );
@@ -660,14 +637,10 @@ const getSingleServiceProvider = async (id: string) => {
       partnerId: id,
       status: PaymentStatus.PAID,
     },
-    _sum: {
-      service_fee: true,
-    },
   });
 
   return {
     ...partner,
-    service_fee: earnings._sum.service_fee ?? 0,
   };
 };
 
@@ -982,7 +955,6 @@ const sendReportToServiceProviderThroughEmail = async (id: string) => {
       <!-- Earnings Display -->
       <div class="earnings-section">
         <div class="earnings-title">🎉 Your Total Service Fee Earnings</div>
-        <div class="earnings-amount">$${partner.service_fee.toFixed(0)}</div>
         <div class="earnings-period">📅 Since joining: ${joinDate}</div>
       </div>
       
@@ -1051,9 +1023,6 @@ const getPartnerTotalEarningsHotel = async (partnerId: string) => {
       status: PaymentStatus.PAID,
       // serviceType: "HOTEL",
     },
-    _sum: {
-      service_fee: true,
-    },
   });
 
   // monthly earnings (group by month)
@@ -1101,7 +1070,6 @@ const getPartnerTotalEarningsHotel = async (partnerId: string) => {
   });
 
   return {
-    serviceEarnings: earnings._sum.service_fee ?? 0,
     paymentMonthsData,
   };
 };
@@ -1125,9 +1093,6 @@ const getPartnerTotalEarningsSecurity = async (partnerId: string) => {
       status: PaymentStatus.PAID,
       serviceType: "SECURITY",
     },
-    _sum: {
-      service_fee: true,
-    },
   });
 
   // monthly earnings (group by month)
@@ -1175,7 +1140,6 @@ const getPartnerTotalEarningsSecurity = async (partnerId: string) => {
   });
 
   return {
-    serviceEarnings: earnings._sum.service_fee ?? 0,
     paymentMonthsData,
   };
 };
@@ -1199,9 +1163,6 @@ const getPartnerTotalEarningsCar = async (partnerId: string) => {
       status: PaymentStatus.PAID,
       serviceType: "CAR",
     },
-    _sum: {
-      service_fee: true,
-    },
   });
 
   // monthly earnings (group by month)
@@ -1249,7 +1210,6 @@ const getPartnerTotalEarningsCar = async (partnerId: string) => {
   });
 
   return {
-    serviceEarnings: earnings._sum.service_fee ?? 0,
     paymentMonthsData,
   };
 };
@@ -1273,9 +1233,6 @@ const getPartnerTotalEarningsAttraction = async (partnerId: string) => {
       status: PaymentStatus.PAID,
       serviceType: "ATTRACTION",
     },
-    _sum: {
-      service_fee: true,
-    },
   });
 
   // monthly earnings (group by month)
@@ -1323,7 +1280,6 @@ const getPartnerTotalEarningsAttraction = async (partnerId: string) => {
   });
 
   return {
-    serviceEarnings: earnings._sum.service_fee ?? 0,
     paymentMonthsData,
   };
 };
