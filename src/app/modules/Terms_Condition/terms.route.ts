@@ -3,7 +3,6 @@ import auth from "../../middlewares/auth";
 import { UserRole } from "@prisma/client";
 import validateRequest from "../../middlewares/validateRequest";
 import { TermsController } from "./terms.controller";
-import { termsConditionValidation } from "./terms.validation";
 
 const router = express.Router();
 
@@ -24,7 +23,7 @@ router.get(
 router.post(
   "/",
   auth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
-  validateRequest(termsConditionValidation.termsConditionSchema),
+  // validateRequest(termsConditionValidation.termsConditionSchema),
   TermsController.createOrUpdateTerms
 );
 
