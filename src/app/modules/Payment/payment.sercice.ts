@@ -139,8 +139,79 @@ const stripeAccountOnboarding = async (userId: string) => {
   };
 };
 
-// checkout session on stripe
-const createStripeCheckoutSession = async (
+// checkout session on stripe for hotel
+const createStripeCheckoutSessionForHotel = async (
+  userId: string,
+  bookingId: string,
+  description: string
+) => {
+  // find user
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) throw new ApiError(httpStatus.NOT_FOUND, "User not found");
+
+  // find booking
+  const booking = await prisma.hotel_Booking.findUnique({
+    where: { id: bookingId, userId: userId },
+  });
+
+  if (!booking) throw new ApiError(httpStatus.NOT_FOUND, "Booking not found");
+
+  // find provider
+  const provider = await prisma.user.findUnique({
+    where: { id: booking.partnerId || "" },
+  });
+
+  if (!provider || !provider.stripeAccountId) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      "Provider not onboarded with Stripe"
+    );
+  }
+
+  // amount (convert USD → cents)
+  const amount = Math.round(booking.totalPrice * 100);
+
+  // create Stripe checkout session
+  const checkoutSession = await stripe.checkout.sessions.create({
+    payment_method_types: ["card"],
+    line_items: [
+      {
+        price_data: {
+          currency: "usd",
+          product_data: {
+            name: "Hotel Booking",
+            description: description || "Service payment",
+          },
+          unit_amount: amount,
+        },
+        quantity: 1,
+      },
+    ],
+    mode: "payment",
+    success_url: config.stripe.checkout_success_url,
+    cancel_url: config.stripe.checkout_cancel_url,
+    // full amount goes to property owner
+    payment_intent_data: {
+      transfer_data: {
+        destination: provider.stripeAccountId, // property owner gets full amount
+      },
+      description,
+    },
+    metadata: {
+      userId,
+      bookingId,
+      partnerId: provider.id,
+    },
+  });
+
+  return {
+    id: checkoutSession.id,
+    url: checkoutSession.url,
+  };
+};
+
+// checkout session on stripe for service
+const createStripeCheckoutSessionForService = async (
   userId: string,
   bookingId: string,
   description: string
@@ -192,7 +263,7 @@ const createStripeCheckoutSession = async (
     success_url: config.stripe.checkout_success_url,
     cancel_url: config.stripe.checkout_cancel_url,
 
-    // *** FULL AMOUNT GOES TO PROVIDER ***
+    // full amount goes to provider
     payment_intent_data: {
       transfer_data: {
         destination: provider.stripeAccountId, // provider gets full amount
@@ -511,5 +582,6 @@ export const PaymentService = {
   stripeHandleWebhook,
   cancelStripeBooking,
   getMyTransactions,
-  createStripeCheckoutSession,
+  createStripeCheckoutSessionForHotel,
+  createStripeCheckoutSessionForService,
 };

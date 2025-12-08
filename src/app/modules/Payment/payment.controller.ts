@@ -23,14 +23,36 @@ const stripeAccountOnboarding = catchAsync(
   }
 );
 
-// checkout session on stripe
-const createStripeCheckoutSession = catchAsync(
+// checkout session on stripe for hotel
+const createStripeCheckoutSessionForHotel = catchAsync(
   async (req: Request, res: Response) => {
     const userId = req.user?.id;
     const { bookingId } = req.params;
     const { description } = req.body;
 
-    const result = await PaymentService.createStripeCheckoutSession(
+    const result = await PaymentService.createStripeCheckoutSessionForHotel(
+      userId,
+      bookingId,
+      description
+    );
+
+    sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: "Checkout session created successfully",
+      data: result,
+    });
+  }
+);
+
+// checkout session on stripe for service
+const createStripeCheckoutSessionForService = catchAsync(
+  async (req: Request, res: Response) => {
+    const userId = req.user?.id;
+    const { bookingId } = req.params;
+    const { description } = req.body;
+
+    const result = await PaymentService.createStripeCheckoutSessionForService(
       userId,
       bookingId,
       description
@@ -117,5 +139,6 @@ export const PaymentController = {
   stripeHandleWebhook,
   cancelStripeBooking,
   getMyTransactions,
-  createStripeCheckoutSession,
+  createStripeCheckoutSessionForHotel,
+  createStripeCheckoutSessionForService,
 };

@@ -13,11 +13,18 @@ router.post(
   PaymentController.stripeAccountOnboarding
 );
 
-// checkout session on stripe
+// checkout session on stripe for hotel
 router.post(
-  "/create-stripe-checkout-session/:bookingId",
+  "/create-stripe-checkout-session-hotel/:bookingId",
   auth(UserRole.USER, UserRole.PROPERTY_OWNER, UserRole.SERVICE_PROVIDER),
-  PaymentController.createStripeCheckoutSession
+  PaymentController.createStripeCheckoutSessionForHotel
+)
+
+// checkout session on stripe for service
+router.post(
+  "/create-stripe-checkout-session-service/:bookingId",
+  auth(UserRole.USER, UserRole.PROPERTY_OWNER, UserRole.SERVICE_PROVIDER),
+  PaymentController.createStripeCheckoutSessionForService
 );
 
 // stripe webhook payment
