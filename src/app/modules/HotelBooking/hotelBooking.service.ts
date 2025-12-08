@@ -4,8 +4,9 @@ import prisma from "../../../shared/prisma";
 import { differenceInDays, parse, startOfDay } from "date-fns";
 import { BookingStatus, PaymentStatus } from "@prisma/client";
 import { IHotelBookingData } from "./hotelBooking.interface";
+import { uploadFile } from "../../../helpars/fileUploader";
 
-// create Hotel room Booking service
+// create Hotel Booking service
 const createHotelRoomBooking = async (
   userId: string,
   hotelId: string,
@@ -13,6 +14,7 @@ const createHotelRoomBooking = async (
 ) => {
   const { basePrice, bookedFromDate, bookedToDate } = data;
 
+  // find user
   const user = await prisma.user.findUnique({
     where: { id: userId },
   });
@@ -20,12 +22,15 @@ const createHotelRoomBooking = async (
     throw new ApiError(httpStatus.NOT_FOUND, "User not found");
   }
 
+  // find hotel
   const hotel = await prisma.hotel.findUnique({
     where: { id: hotelId },
     select: {
       id: true,
       basePrice: true,
       partnerId: true,
+      weeklyOffers: true,
+      monthlyOffers: true,
     },
   });
   if (!hotel) {
@@ -46,6 +51,7 @@ const createHotelRoomBooking = async (
   }
 
   const numberOfNights = differenceInDays(toDate, fromDate);
+  console.log(numberOfNights)
 
   if (numberOfNights <= 0) {
     throw new ApiError(httpStatus.BAD_REQUEST, "Invalid booking date range");
@@ -58,10 +64,18 @@ const createHotelRoomBooking = async (
     throw new ApiError(httpStatus.BAD_REQUEST, "Invalid hotel base price");
   }
 
-  // apply discount if available
-  // if (hotel.discount && hotel.discount > 0) {
-  //   totalPrice -= (totalPrice * hotel.discount) / 100;
-  // }
+  let totalPrice = hotelPrice * numberOfNights;
+
+  // apply weekly discount (7 days or more)
+  if (numberOfNights >= 7 && numberOfNights < 30 && hotel.weeklyOffers) {
+    const weeklyDiscount = (totalPrice * hotel.weeklyOffers) / 100;
+    totalPrice -= weeklyDiscount;
+  }
+  // apply monthly discount (30 days or more)
+  else if (numberOfNights >= 30 && hotel.monthlyOffers) {
+    const monthlyDiscount = (totalPrice * hotel.monthlyOffers) / 100;
+    totalPrice -= monthlyDiscount;
+  }
 
   // check for overlapping bookings
   const overlappingBooking = await prisma.hotel_Booking.findFirst({
@@ -87,13 +101,11 @@ const createHotelRoomBooking = async (
     );
   }
 
-  // create booking
   const result = await prisma.hotel_Booking.create({
     data: {
-      ...data,
-
       totalPrice: Number(totalPrice.toFixed(2)),
-
+      bookedFromDate,
+      bookedToDate,
       userId,
       hotelId: hotel?.id,
       partnerId: hotel.partnerId!,
@@ -196,10 +208,53 @@ const updateBookingStatus = async (
   return updatedBooking;
 };
 
+// create travelers with passport images
+const createTravelers = async (
+  bookingId: string,
+  travelersData: { fullName: string }[],
+  passportFiles?: Express.Multer.File[]
+) => {
+  const booking = await prisma.hotel_Booking.findUnique({
+    where: { id: bookingId },
+  });
+
+  if (!booking) {
+    throw new ApiError(httpStatus.NOT_FOUND, "Booking not found");
+  }
+
+  const travelers = [];
+
+  for (let i = 0; i < travelersData.length; i++) {
+    const traveler = travelersData[i];
+    let passportImageUrl: string | undefined;
+
+    // upload passport image if available
+    if (passportFiles && passportFiles[i]) {
+      const uploaded = await uploadFile.uploadToCloudinary(passportFiles[i]);
+      if (uploaded?.secure_url) {
+        passportImageUrl = uploaded.secure_url;
+      }
+    }
+
+    const createdTraveler = await prisma.traveler.create({
+      data: {
+        fullName: traveler.fullName,
+        passportImageUrl: passportImageUrl || "",
+        bookingId: bookingId,
+      },
+    });
+
+    travelers.push(createdTraveler);
+  }
+
+  return travelers;
+};
+
 export const HotelBookingService = {
   createHotelRoomBooking,
   getAllHotelBookings,
   getAllMyHotelBookings,
   getHotelBookingById,
   updateBookingStatus,
+  createTravelers,
 };

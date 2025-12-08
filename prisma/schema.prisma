@@ -206,7 +206,7 @@ model Hotel {
   addLocalTips         String? // todo
   basePrice            Float
   customPrices         CustomPrice[]
-  weeklyOffers         Float? // 100% off
+  weeklyOffers         Float? // 10% off
   monthlyOffers        Float? // 15% off
   // availability
   availableForBooking  EveryServiceStatus @default(AVAILABLE)

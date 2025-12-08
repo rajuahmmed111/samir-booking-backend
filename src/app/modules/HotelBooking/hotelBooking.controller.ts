@@ -4,15 +4,18 @@ import { HotelBookingService } from "./hotelBooking.service";
 import sendResponse from "../../../shared/sendResponse";
 import httpStatus from "http-status";
 
-// create hotel room booking
+// create hotel booking
 const createHotelRoomBooking = catchAsync(
   async (req: Request, res: Response) => {
     const userId = req.user?.id;
     const hotelId = req.params.hotelId;
+    // const passportFiles = req.files as Express.Multer.File[];
+
     const result = await HotelBookingService.createHotelRoomBooking(
       userId,
       hotelId,
-      req.body
+      req.body,
+      // passportFiles
     );
     sendResponse(res, {
       statusCode: httpStatus.OK,
@@ -85,10 +88,31 @@ const updateBookingStatus = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+// create travelers with passport images
+const createTravelers = catchAsync(async (req: Request, res: Response) => {
+  const bookingId = req.params.bookingId;
+  const travelersData = req.body.travelers || [];
+  const passportFiles = req.files as Express.Multer.File[];
+
+  const result = await HotelBookingService.createTravelers(
+    bookingId,
+    travelersData,
+    passportFiles
+  );
+
+  sendResponse(res, {
+    statusCode: httpStatus.CREATED,
+    success: true,
+    message: "Travelers created successfully",
+    data: result,
+  });
+});
+
 export const HotelBookingController = {
   createHotelRoomBooking,
   getAllHotelBookings,
   getAllMyHotelBookings,
   getHotelBookingById,
   updateBookingStatus,
+  createTravelers,
 };

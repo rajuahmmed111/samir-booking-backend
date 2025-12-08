@@ -2,6 +2,8 @@ import express from "express";
 import { HotelBookingController } from "./hotelBooking.controller";
 import auth from "../../middlewares/auth";
 import { UserRole } from "@prisma/client";
+import { uploadFile } from "../../../helpars/fileUploader";
+import { parseBodyData } from "../../middlewares/parseNestedJson";
 
 const router = express.Router();
 
@@ -30,6 +32,8 @@ router.get(
 router.post(
   "/:hotelId",
   auth(UserRole.USER, UserRole.PROPERTY_OWNER, UserRole.SERVICE_PROVIDER),
+  uploadFile.passportImageUrl,
+  parseBodyData,
   HotelBookingController.createHotelRoomBooking
 );
 
@@ -38,6 +42,15 @@ router.patch(
   "/status/:bookingId",
   auth(UserRole.PROPERTY_OWNER),
   HotelBookingController.updateBookingStatus
+);
+
+// create travelers with passport images
+router.post(
+  "/travelers/:bookingId",
+  auth(UserRole.USER, UserRole.PROPERTY_OWNER),
+  uploadFile.passportImageUrl,
+  parseBodyData,
+  HotelBookingController.createTravelers
 );
 
 export const hotelBookingRoute = router;
