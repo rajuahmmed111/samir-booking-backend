@@ -183,7 +183,6 @@ const createTravelers = async (
   }
 
   const travelers: any = [];
-  console.log(travelers, "bbb")
 
 
   for (let i = 0; i < travelersData.length; i++) {
