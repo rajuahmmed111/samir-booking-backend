@@ -22,7 +22,10 @@ import emailSender from "../../../helpars/emailSender";
 import { createOtpEmailTemplate } from "../../../utils/createOtpEmailTemplate";
 
 // create user
-const createUser = async (payload: any) => {
+const createUser = async (
+  payload: any,
+  passportFiles?: Express.Multer.File[]
+) => {
   // check if email exists
   const existingUser = await prisma.user.findUnique({
     where: { email: payload.email },
@@ -35,12 +38,35 @@ const createUser = async (payload: any) => {
   // hash password
   const hashedPassword = await bcrypt.hash(payload.password, 12);
 
+  // upload passport/NID files to cloudinary
+  const passportOrNIDUrls: string[] = [];
+  if (passportFiles && passportFiles.length > 0) {
+    for (const file of passportFiles) {
+      const uploaded = await uploadFile.uploadToCloudinary(file);
+      if (uploaded?.secure_url) {
+        passportOrNIDUrls.push(uploaded.secure_url);
+      }
+    }
+  }
+
+  // handle location field - map to address if provided
+  const userData = {
+    ...payload,
+    password: hashedPassword,
+    passportOrNID: passportOrNIDUrls,
+  };
+
+  // If location is provided, use it as address, otherwise keep address field
+  if (payload.location && !payload.address) {
+    userData.address = payload.location;
+    delete userData.location; // Remove location field as it doesn't exist in schema
+  } else if (payload.location) {
+    delete userData.location; // Remove location field to avoid Prisma error
+  }
+
   // create user
   const user = await prisma.user.create({
-    data: {
-      ...payload,
-      password: hashedPassword,
-    },
+    data: userData,
   });
 
   return user;

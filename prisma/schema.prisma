@@ -106,7 +106,7 @@ model User {
   email           String     @unique
   password        String     @default("123456")
   profileImage    String     @default("https://i.ibb.co/Ps9gZ8DD/Profile-image.png")
-  passportOrNID   String // upload passport or NID
+  passportOrNID   String[] // upload passport or NID
   contactNumber   String?
   address         String?
   country         String?

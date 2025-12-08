@@ -73,6 +73,8 @@ router.get(
 // create user
 router.post(
   "/",
+  uploadFile.passportOrNID,
+  parseBodyData,
   validateRequest(userValidation.createUserZodSchema),
   UserController.createUser
 );

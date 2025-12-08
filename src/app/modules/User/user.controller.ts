@@ -13,12 +13,14 @@ import { IUploadedFile } from "../../../interfaces/file";
 // create user
 const createUser = catchAsync(async (req: Request, res: Response) => {
   const userData = req.body;
-  const result = await UserService.createUser(userData);
+  const passportFiles = req.files as Express.Multer.File[];
+  
+  const result = await UserService.createUser(userData, passportFiles);
 
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
     success: true,
-    message: "OTP generated and sent to email successfully",
+    message: "User created successfully",
     data: result,
   });
 });
