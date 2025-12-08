@@ -200,7 +200,7 @@ const createStripeCheckoutSessionForHotel = async (
     metadata: {
       userId,
       bookingId,
-      partnerId: provider.id,
+      // partnerId: provider.id,
     },
   });
 
@@ -222,7 +222,7 @@ const createStripeCheckoutSessionForHotel = async (
       paymentIntentId: checkoutSession.payment_method_types.join(","),
       status: PaymentStatus.UNPAID,
       provider: "STRIPE",
-      serviceType: "SERVICE",
+      serviceType: "HOTEL",
       providerId: provider?.id,
       userId,
       service_bookingId: booking?.id,
@@ -376,39 +376,57 @@ const stripeHandleWebhook = async (event: Stripe.Event) => {
 
       // update booking & service status
       const configs = serviceConfig[payment.serviceType as ServiceType];
-      if (!configs) return;
+      if (!configs) {
+        return;
+      }
 
       // get bookingId from payment based on service type
       let bookingId: string | undefined;
       if (payment.serviceType === "SERVICE") {
         bookingId = payment.service_bookingId || undefined;
       } else if (payment.serviceType === "HOTEL") {
-        bookingId = (payment as any).hotel_BookingId || undefined;
+        bookingId = payment.service_bookingId || undefined;
       }
 
       const booking = await (configs.bookingModel as any).findUnique({
         where: { id: bookingId },
       });
-      if (!booking) return;
+
+      if (!booking) {
+        return;
+      }
 
       // validate required fields before proceeding
-      if (!booking.userId || !booking.partnerId) {
+      const userId = booking.userId;
+      const partnerId =
+        payment.serviceType === "SERVICE"
+          ? booking.providerId
+          : booking.partnerId;
+
+      if (!userId || !partnerId) {
         console.error("Missing required fields in booking:", {
           bookingId,
-          userId: booking.userId,
-          partnerId: booking.partnerId,
+          userId,
+          partnerId,
+          serviceType: payment.serviceType,
+          providerId: booking.providerId,
+          hotelPartnerId: booking.partnerId,
         });
         return;
       }
 
       // update booking status → CONFIRMED
-      await (configs.bookingModel as any).update({
+      const updateResult = await (configs.bookingModel as any).update({
         where: { id: booking.id },
         data: { bookingStatus: BookingStatus.CONFIRMED },
       });
 
       // update service EveryServiceStatus
       if (payment.serviceType === "SERVICE") {
+        if (!booking.serviceId) {
+          console.error("Missing serviceId in booking:", booking);
+          return;
+        }
         await (configs.serviceModel as any).update({
           where: { id: booking.serviceId },
           data: { isBooked: EveryServiceStatus.BOOKED },
@@ -417,6 +435,10 @@ const stripeHandleWebhook = async (event: Stripe.Event) => {
 
       // update hotel/service status
       if (payment.serviceType === "HOTEL") {
+        if (!booking.hotelId) {
+          console.error("Missing hotelId in booking:", booking);
+          return;
+        }
         await (configs.serviceModel as any).update({
           where: { id: booking.hotelId },
           data: { availableForBooking: EveryServiceStatus.BOOKED },
@@ -435,7 +457,7 @@ const stripeHandleWebhook = async (event: Stripe.Event) => {
       const notificationData: IBookingNotificationData = {
         bookingId: booking.id,
         userId: booking.userId,
-        partnerId: booking.partnerId,
+        partnerId: partnerId,
         serviceTypes: payment.serviceType as ServiceTypes,
         serviceName: service[configs.nameField],
         totalPrice: booking.totalPrice,
