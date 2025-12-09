@@ -27,7 +27,7 @@ router.post(
 
 // get my support
 router.get(
-  "/my-support",
+  "/my-report",
   auth(
     UserRole.USER,
     UserRole.PROPERTY_OWNER,
