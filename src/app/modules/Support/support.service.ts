@@ -250,10 +250,9 @@ const getSupportById = async (id: string) => {
 
   return {
     ...result,
-    reportedUser, 
+    reportedUser,
   };
 };
-
 
 // update my support
 const updateMySupport = async (
