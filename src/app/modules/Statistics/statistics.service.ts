@@ -1,16 +1,12 @@
 import {
   BookingStatus,
   PaymentStatus,
-  Prisma,
   SupportStatus,
-  SupportType,
   UserRole,
-  UserStatus,
 } from "@prisma/client";
 import prisma from "../../../shared/prisma";
 import { IFilterRequest } from "./statistics.interface";
 import {
-  calculateGrowth,
   calculatePercentageChange,
   getDateRange,
   getPreviousDateRange,
@@ -53,7 +49,7 @@ const getOverview = async (params: IFilterRequest) => {
   const filterYear = year ? parseInt(year) : new Date().getFullYear();
   const startOfYear = new Date(filterYear, 0, 1); // january 1st of selected year
   const endOfYear = new Date(filterYear, 11, 31, 23, 59, 59); // december 31st of selected year
-  
+
   const userChartData = await prisma.user.findMany({
     where: {
       role: UserRole.USER,
@@ -66,18 +62,33 @@ const getOverview = async (params: IFilterRequest) => {
       createdAt: true,
     },
     orderBy: {
-      createdAt: 'asc',
+      createdAt: "asc",
     },
   });
 
   // group users by month for chart (all 12 months)
-  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const monthNames = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
   const userChart = monthNames.map((month, index) => {
-    const monthUsers = userChartData.filter(user => {
+    const monthUsers = userChartData.filter((user) => {
       const userDate = new Date(user.createdAt);
-      return userDate.getMonth() === index && userDate.getFullYear() === filterYear;
+      return (
+        userDate.getMonth() === index && userDate.getFullYear() === filterYear
+      );
     });
-    
+
     return {
       month,
       count: monthUsers.length,
@@ -98,7 +109,7 @@ const getOverview = async (params: IFilterRequest) => {
       status: true,
     },
     orderBy: {
-      createdAt: 'desc',
+      createdAt: "desc",
     },
     take: 5,
   });
