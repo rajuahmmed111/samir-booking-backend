@@ -20,7 +20,7 @@ import httpStatus from "http-status";
 
 // get overview total clients, total providers,total revenue
 const getOverview = async (params: IFilterRequest) => {
-  const { timeRange } = params;
+  const { timeRange, year } = params;
   const dateRange = getDateRange(timeRange);
 
   // total users
@@ -31,8 +31,8 @@ const getOverview = async (params: IFilterRequest) => {
     },
   });
 
-  // total partners
-  const totalPartners = await prisma.user.count({
+  // total providers
+  const totalProviders = await prisma.user.count({
     where: {
       role: UserRole.PROPERTY_OWNER,
       // ...(dateRange ? { createdAt: dateRange } : {}),
@@ -44,12 +44,72 @@ const getOverview = async (params: IFilterRequest) => {
     where: {
       status: PaymentStatus.PAID,
     },
+    _sum: {
+      amount: true,
+    },
+  });
+
+  // user chart data - monthly user registration with year filter
+  const filterYear = year ? parseInt(year) : new Date().getFullYear();
+  const startOfYear = new Date(filterYear, 0, 1); // january 1st of selected year
+  const endOfYear = new Date(filterYear, 11, 31, 23, 59, 59); // december 31st of selected year
+  
+  const userChartData = await prisma.user.findMany({
+    where: {
+      role: UserRole.USER,
+      createdAt: {
+        gte: startOfYear,
+        lte: endOfYear,
+      },
+    },
+    select: {
+      createdAt: true,
+    },
+    orderBy: {
+      createdAt: 'asc',
+    },
+  });
+
+  // group users by month for chart (all 12 months)
+  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const userChart = monthNames.map((month, index) => {
+    const monthUsers = userChartData.filter(user => {
+      const userDate = new Date(user.createdAt);
+      return userDate.getMonth() === index && userDate.getFullYear() === filterYear;
+    });
+    
+    return {
+      month,
+      count: monthUsers.length,
+    };
+  });
+
+  // recent users - last 5 users
+  const recentUsers = await prisma.user.findMany({
+    where: {
+      role: UserRole.USER,
+    },
+    select: {
+      id: true,
+      fullName: true,
+      email: true,
+      profileImage: true,
+      createdAt: true,
+      status: true,
+    },
+    orderBy: {
+      createdAt: 'desc',
+    },
+    take: 5,
   });
 
   return {
     totalUsers,
-    totalPartners,
-    adminEarnings,
+    totalProviders,
+    adminEarnings: adminEarnings._sum.amount || 0,
+    userChart,
+    recentUsers,
+    filterYear,
   };
 };
 
@@ -426,7 +486,7 @@ const getUserSupportTickets = async (params: IFilterRequest) => {
     previousWhere.createdAt = previousDateRange;
   }
 
-  // Current period data
+  // current period data
   const [totalSupport, pendingSupport] = await Promise.all([
     prisma.support.count({ where: currentWhere }),
     prisma.support.count({
@@ -437,7 +497,7 @@ const getUserSupportTickets = async (params: IFilterRequest) => {
     }),
   ]);
 
-  // Previous period data
+  // previous period data
   const [previousTotalSupport, previousPendingSupport] = await Promise.all([
     prisma.support.count({ where: previousWhere }),
     prisma.support.count({
@@ -448,7 +508,7 @@ const getUserSupportTickets = async (params: IFilterRequest) => {
     }),
   ]);
 
-  // Calculate percentage changes
+  // calculate percentage changes
   const totalSupportChange = calculatePercentageChange(
     previousTotalSupport,
     totalSupport
