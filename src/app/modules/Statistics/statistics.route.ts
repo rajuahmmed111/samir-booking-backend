@@ -26,11 +26,11 @@ router.get(
   StatisticsController.getServiceProviderTotalEarningsService
 );
 
-// user support tickets
+// admin total earnings
 router.get(
-  "/user-support-tickets",
+  "/admin-earnings",
   auth(UserRole.SUPER_ADMIN, UserRole.ADMIN),
-  StatisticsController.getUserSupportTickets
+  StatisticsController.getAdminTotalEarnings
 );
 
 export const statisticsRoutes = router;

@@ -38,7 +38,9 @@ const getOverview = async (params: IFilterRequest) => {
   // admin earnings (only PAID payments)
   const adminEarnings = await prisma.payment.aggregate({
     where: {
-      status: PaymentStatus.PAID,
+      status: {
+        in: [PaymentStatus.PAID, PaymentStatus.SUCCESS],
+      },
     },
     _sum: {
       amount: true,
@@ -479,61 +481,168 @@ const getServiceProviderTotalEarningsService = async (
   };
 };
 
-// user support tickets
-const getUserSupportTickets = async (params: IFilterRequest) => {
-  const { timeRange } = params;
+// admin earns
+const getAdminTotalEarnings = async (timeRange?: string) => {
+  const dateRange = getDateRange(timeRange);
 
-  const currentDateRange = getDateRange(timeRange);
-  const previousDateRange = getPreviousDateRange(timeRange);
-
-  const currentWhere: any = {};
-  const previousWhere: any = {};
-
-  if (currentDateRange) {
-    currentWhere.createdAt = currentDateRange;
-  }
-
-  if (previousDateRange) {
-    previousWhere.createdAt = previousDateRange;
-  }
-
-  // current period data
-  const [totalSupport, pendingSupport] = await Promise.all([
-    prisma.support.count({ where: currentWhere }),
-    prisma.support.count({
-      where: {
-        ...currentWhere,
-        status: SupportStatus.Pending,
+  // all payments with date filtering
+  const payments = await prisma.payment.findMany({
+    where: {
+      status: {
+        in: [PaymentStatus.PAID, PaymentStatus.SUCCESS],
       },
-    }),
-  ]);
+      ...(dateRange && { createdAt: dateRange }),
+    },
+    select: {
+      amount: true,
+      createdAt: true,
+      status: true,
+    },
+    orderBy: {
+      createdAt: "asc",
+    },
+  });
 
-  // previous period data
-  const [previousTotalSupport, previousPendingSupport] = await Promise.all([
-    prisma.support.count({ where: previousWhere }),
-    prisma.support.count({
-      where: {
-        ...previousWhere,
-        status: SupportStatus.Pending,
-      },
-    }),
-  ]);
+  // all hotel bookings bookingStatus COMPLETED with date filtering
+  const hotelBookings = await prisma.hotel_Booking.count({
+    where: {
+      bookingStatus: "COMPLETED",
+      ...(dateRange && { createdAt: dateRange }),
+    },
+  });
 
-  // calculate percentage changes
-  const totalSupportChange = calculatePercentageChange(
-    previousTotalSupport,
-    totalSupport
+  // all service bookings bookingStatus COMPLETED with date filtering
+  const serviceBookings = await prisma.service_booking.count({
+    where: {
+      bookingStatus: "COMPLETED",
+      ...(dateRange && { createdAt: dateRange }),
+    },
+  });
+
+  // total COMPLETED bookings
+  const totalBookings = hotelBookings + serviceBookings;
+
+  // average per booking amount from PAID payments only
+  const paidPayments = payments.filter(
+    (payment) => payment.status === PaymentStatus.PAID
   );
-  const pendingSupportChange = calculatePercentageChange(
-    previousPendingSupport,
-    pendingSupport
+  const averageEarnings =
+    totalBookings > 0 && paidPayments.length > 0
+      ? paidPayments.reduce((sum, payment) => sum + payment.amount, 0) /
+        paidPayments.length
+      : 0;
+
+  // get all hotel bookings
+  const allHotelBookings = await prisma.hotel_Booking.findMany({
+    where: {
+      bookingStatus: {
+        in: [
+          BookingStatus.CONFIRMED,
+          BookingStatus.CANCELLED,
+          BookingStatus.COMPLETED,
+        ],
+      },
+    },
+    include: {
+      user: {
+        select: {
+          id: true,
+          fullName: true,
+          email: true,
+        },
+      },
+    },
+  });
+  // get all service bookings
+  const allServiceBookings = await prisma.service_booking.findMany({
+    where: {
+      bookingStatus: {
+        in: [
+          BookingStatus.CONFIRMED,
+          BookingStatus.CANCELLED,
+          BookingStatus.COMPLETED,
+        ],
+      },
+    },
+    include: {
+      user: {
+        select: {
+          id: true,
+          fullName: true,
+          email: true,
+        },
+      },
+    },
+  });
+
+  // combine all bookings
+  const recentBookings = [
+    ...allHotelBookings.map(booking => ({
+      ...booking,
+      type: 'HOTEL'
+    })),
+    ...allServiceBookings.map(booking => ({
+      ...booking,
+      type: 'SERVICE'
+    }))
+  ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+  // group by month
+  const monthNames = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
+
+  const currentYear = new Date().getFullYear();
+
+  // all months with zero
+  const monthlyEarnings = monthNames.map((month, index) => {
+    const monthKey = `${currentYear}-${String(index + 1).padStart(2, "0")}`;
+
+    const monthPayments = payments.filter((payment) => {
+      const paymentDate = new Date(payment.createdAt);
+      return (
+        paymentDate.getMonth() === index &&
+        paymentDate.getFullYear() === currentYear
+      );
+    });
+
+    const totalEarnings = monthPayments.reduce(
+      (sum, payment) => sum + payment.amount,
+      0
+    );
+
+    return {
+      month,
+      monthKey,
+      earnings: totalEarnings,
+      count: monthPayments.length,
+    };
+  });
+
+  // calculate total earnings
+  const totalEarnings = payments.reduce(
+    (sum, payment) => sum + payment.amount,
+    0
   );
 
   return {
-    totalSupport,
-    totalSupportChange,
-    pendingSupport,
-    pendingSupportChange,
+    totalEarnings,
+    totalBookings,
+    averageEarnings,
+    monthlyEarnings,
+    recentBookings,
+    timeRange: timeRange || "ALL_TIME",
   };
 };
 
@@ -544,5 +653,6 @@ export const StatisticsService = {
   getPartnerTotalEarningsHotel,
   getServiceProviderTotalEarningsService,
 
-  getUserSupportTickets,
+  // admin earns
+  getAdminTotalEarnings,
 };

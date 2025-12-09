@@ -61,27 +61,22 @@ const getServiceProviderTotalEarningsService = catchAsync(
   }
 );
 
-// user support tickets
-const getUserSupportTickets = catchAsync(
-  async (req: Request, res: Response) => {
-    const filter = pick(req.query, filterField);
-    const result = await StatisticsService.getUserSupportTickets(filter);
-
-    sendResponse(res, {
-      statusCode: httpStatus.OK,
-      success: true,
-      message: "Statistics fetched successfully",
-      data: result,
-    });
-  }
-);
+// admin total earnings
+const getAdminTotalEarnings = catchAsync(async (req: Request, res: Response) => {
+  const { timeRange } = req.query;
+  const result = await StatisticsService.getAdminTotalEarnings(timeRange as string);
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Admin earnings fetched successfully",
+    data: result,
+  });
+});
 
 export const StatisticsController = {
   getOverview,
-
   // sales
   getPartnerTotalEarningsHotel,
   getServiceProviderTotalEarningsService,
-
-  getUserSupportTickets,
+  getAdminTotalEarnings,
 };
