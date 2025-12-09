@@ -456,50 +456,6 @@ model CustomerContact {
   @@map("customer_contacts")
 }
 
-model Newsroom {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  tagline     String
-  title       String
-  summary     String
-  category    String
-  country     String
-  image       String[]
-  publishedAt DateTime @default(now())
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  author      String?
-  isPublished Boolean  @default(true)
-
-  @@map("newsrooms")
-}
-
-model Human_Rights {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  description String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@map("human_rights")
-}
-
-model Cancel_Reservation {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  description String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@map("cancel_reservations")
-}
-
-model Refund_Policy {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  description String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@map("refund_policies")
-}
-
 model About_App {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   description String
@@ -525,33 +481,6 @@ model Privacy_Policy {
   updatedAt   DateTime @updatedAt
 
   @@map("privacy_policies")
-}
-
-model Advertise {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  title       String
-  description String
-  videoUrl    String?
-  adminId     String?  @db.ObjectId
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@map("advertisements")
-}
-
-model Investor_Relations {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  title       String
-  description String
-  imageUrl    String?
-  revenue     Float?
-  profit      Float?
-  growth      Float?
-  adminId     String?  @db.ObjectId
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@map("investor_relations")
 }
 
 model Channel {

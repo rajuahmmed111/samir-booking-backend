@@ -10,20 +10,12 @@ import { hotelBookingRoute } from "../modules/HotelBooking/hotelBooking.route";
 import { notificationsRoute } from "../modules/Notification/notification.route";
 import { settingRoute } from "../modules/Setting/setting.route";
 import { termsConditionRoute } from "../modules/Terms_Condition/terms.route";
-import { contractRoutes } from "../modules/Contracts/contract.route";
 import { messageRoutes } from "../modules/Message/message.route";
 import { phoneRoute } from "../modules/Setting/PhoneNumberVerify/phone.route";
 import { paymentRoutes } from "../modules/Payment/payment.route";
-import { financeRoutes } from "../modules/Finances/finance.route";
 import { statisticsRoutes } from "../modules/Statistics/statistics.route";
 import { supportRoutes } from "../modules/Support/support.route";
 import { faqRoutes } from "../modules/Faq/faq.routre";
-import { humanRightRoute } from "../modules/Human_Rights/humanRight.route";
-import { cancelReservationRoute } from "../modules/Cancel_Reservation/cancel_reservation.route";
-import { refundPolicyRoute } from "../modules/Refund_Policy/refund_policy.route";
-import { newsRoomRoute } from "../modules/NewsRoom/news_room.route";
-import { advertisingRoutes } from "../modules/Advertise/advertising.route";
-import { investorRelationsRoutes } from "../modules/Investor_Relations/investor.route";
 import { subscriptionRoutes } from "../modules/Subscriptioin/subscription.route";
 import { serviceRoutes } from "../modules/Service/service.route";
 import { serviceBookingRoute } from "../modules/Service_Booking/serviceBooking.route";
@@ -64,10 +56,6 @@ const moduleRoutes = [
   },
 
   {
-    path: "/contracts",
-    route: contractRoutes,
-  },
-  {
     path: "/notifications",
     route: notificationsRoute,
   },
@@ -75,22 +63,7 @@ const moduleRoutes = [
     path: "/faqs",
     route: faqRoutes,
   },
-  {
-    path: "/news-rooms",
-    route: newsRoomRoute,
-  },
-  {
-    path: "/human-rights",
-    route: humanRightRoute,
-  },
-  {
-    path: "/cancel-reservations",
-    route: cancelReservationRoute,
-  },
-  {
-    path: "/refund-policies",
-    route: refundPolicyRoute,
-  },
+
   {
     path: "/terms-conditions",
     route: termsConditionRoute,
@@ -99,14 +72,7 @@ const moduleRoutes = [
     path: "/policy",
     route: privacyPolicyRoute,
   },
-  {
-    path: "/investor-relations",
-    route: investorRelationsRoutes,
-  },
-  {
-    path: "/advertises",
-    route: advertisingRoutes,
-  },
+
   {
     path: "/settings",
     route: settingRoute,
@@ -126,10 +92,6 @@ const moduleRoutes = [
   {
     path: "/payments",
     route: paymentRoutes,
-  },
-  {
-    path: "/finances",
-    route: financeRoutes,
   },
   {
     path: "/statistics",

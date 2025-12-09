@@ -12,55 +12,6 @@ router.get(
   StatisticsController.getOverview
 );
 
-// get payment with user analysis
-router.get(
-  "/payment-user-analysis",
-  auth(UserRole.SUPER_ADMIN, UserRole.ADMIN),
-  StatisticsController.paymentWithUserAnalysis
-);
-
-//  user demographics
-router.get(
-  "/user-demographics",
-  auth(UserRole.SUPER_ADMIN, UserRole.ADMIN),
-  StatisticsController.userDemographics
-);
-
-// financial metrics
-router.get(
-  "/financial-metrics",
-  auth(UserRole.SUPER_ADMIN, UserRole.ADMIN),
-  StatisticsController.financialMetrics
-);
-
-// cancel refund and contracts
-router.get(
-  "/cancel-refund-contracts",
-  auth(UserRole.SUPER_ADMIN, UserRole.ADMIN),
-  StatisticsController.cancelRefundAndContracts
-);
-
-// get all service provider for send report
-router.get(
-  "/service-providers",
-  auth(UserRole.SUPER_ADMIN, UserRole.ADMIN),
-  StatisticsController.getAllServiceProviders
-);
-
-// get single service provider
-router.get(
-  "/service-provider/:id",
-  auth(UserRole.SUPER_ADMIN, UserRole.ADMIN),
-  StatisticsController.getSingleServiceProvider
-);
-
-// send report to service provider through email
-router.post(
-  "/send-report-service-provider/:id",
-  auth(UserRole.SUPER_ADMIN, UserRole.ADMIN),
-  StatisticsController.sendReportToServiceProviderThroughEmail
-);
-
 // partner total earings hotel
 router.get(
   "/earnings-hotel",

@@ -1,8 +1,6 @@
-import { Terms_Condition } from "@prisma/client";
 import prisma from "../../../shared/prisma";
 import ApiError from "../../../errors/ApiErrors";
 import httpStatus from "http-status";
-import { ICreateTermsCondition } from "./terms.interface";
 
 // create or update terms & conditions
 const createOrUpdateTerms = async (adminId: string, description: string) => {
