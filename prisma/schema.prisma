@@ -173,7 +173,7 @@ model Admin {
 model Hotel {
   id                   String             @id @default(auto()) @map("_id") @db.ObjectId
   // propertyName         String
-  uploadPhotosOrVideos String[]
+  uploadPhotosOrVideos String // image
   propertyTitle        String
   propertyAddress      String
   propertyDescription  String

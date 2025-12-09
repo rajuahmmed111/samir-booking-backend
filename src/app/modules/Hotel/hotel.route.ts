@@ -71,8 +71,8 @@ router.patch(
   "/:hotelId",
   auth(UserRole.PROPERTY_OWNER),
   uploadFile.upload.fields([
-    { name: "businessLogo", maxCount: 1 },
-    { name: "hotelDocs", maxCount: 5 },
+    { name: "uploadPhotosOrVideos", maxCount: 5 },
+    { name: "houseRules", maxCount: 5 },
   ]),
   parseBodyData,
   HotelController.updateHotel

@@ -28,7 +28,19 @@ const createHotel = async (req: Request) => {
   };
 
   const hotelRule = files?.houseRules?.[0];
-  const hotelImagesOrV = files?.uploadPhotosOrVideos || [];
+  const hotelImagesOrV = files?.uploadPhotosOrVideos?.[0];
+  // const hotelImagesOrV = files?.uploadPhotosOrVideos || [];
+
+  if (!hotelImagesOrV) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      "uploadPhotosOrVideos field is required"
+    );
+  }
+
+  if (!hotelRule) {
+    throw new ApiError(httpStatus.BAD_REQUEST, "houseRules field is required");
+  }
 
   // upload house rules
   let uploadedHouseRules: string | undefined;
@@ -41,17 +53,23 @@ const createHotel = async (req: Request) => {
   }
 
   // upload photos & videos
-  let uploadedMedia: string[] = [];
-  if (hotelImagesOrV?.length > 0) {
-    const uploads = await Promise.all(
-      hotelImagesOrV.map((file) => uploadFile.uploadToCloudinary(file))
-    );
-    uploadedMedia = uploads.map((f) => {
-      if (!f?.secure_url) {
-        throw new Error("Cloudinary upload failed");
-      }
-      return f.secure_url;
-    });
+  // let uploadedMedia: string[] = [];
+  let uploadedMedia: string | undefined;
+  if (hotelImagesOrV) {
+    const uploads = await uploadFile.uploadToCloudinary(hotelImagesOrV);
+    if (!uploads?.secure_url) {
+      throw new Error("Cloudinary upload failed");
+    }
+    uploadedMedia = uploads.secure_url;
+    // const uploads = await Promise.all(
+    //   hotelImagesOrV.map((file) => uploadFile.uploadToCloudinary(file))
+    // );
+    // uploadedMedia = uploads.map((f) => {
+    //   if (!f?.secure_url) {
+    //     throw new Error("Cloudinary upload failed");
+    //   }
+    //   return f.secure_url;
+    // });
   }
 
   const {
@@ -90,7 +108,7 @@ const createHotel = async (req: Request) => {
   const result = await prisma.hotel.create({
     data: {
       // propertyName,
-      uploadPhotosOrVideos: uploadedMedia,
+      uploadPhotosOrVideos: uploadedMedia as string,
       propertyTitle,
       propertyAddress,
       propertyDescription,
@@ -501,17 +519,29 @@ const updateHotel = async (req: Request) => {
     [fieldname: string]: Express.Multer.File[];
   };
 
-  const hotelLogoFile = files?.uploadPhotosOrVideos?.[0];
+  const hotelRule = files?.houseRules?.[0];
+  const hotelImagesOrV = files?.uploadPhotosOrVideos?.[0];
 
-  // Upload new photos if exists
-  let uploadedMedia = hotelExists.uploadPhotosOrVideos || [];
-  if (hotelLogoFile) {
-    const logoResult = await uploadFile.uploadToCloudinary(hotelLogoFile);
-    if (logoResult?.secure_url) {
-      uploadedMedia = [...uploadedMedia, logoResult.secure_url];
+  // upload house rules
+  let uploadedHouseRules: string | undefined;
+  if (hotelRule) {
+    const uploaded = await uploadFile.uploadToCloudinary(hotelRule);
+    if (!uploaded?.secure_url) {
+      throw new Error("Cloudinary upload failed");
     }
+    uploadedHouseRules = uploaded.secure_url;
   }
 
+  // upload photos & videos
+  let uploadedMedia: string | undefined;
+  if (hotelImagesOrV) {
+    const uploads = await uploadFile.uploadToCloudinary(hotelImagesOrV);
+
+    if (!uploads?.secure_url) {
+      throw new Error("Cloudinary upload failed");
+    }
+    uploadedMedia = uploads.secure_url;
+  }
   const {
     // propertyName,
     propertyTitle,
@@ -530,6 +560,7 @@ const updateHotel = async (req: Request) => {
     basePrice,
     weeklyOffers,
     monthlyOffers,
+    customPrices, // [{startDate, endDate, price}]
   } = req.body;
 
   // Update hotel
@@ -549,11 +580,28 @@ const updateHotel = async (req: Request) => {
       smartLockCode,
       keyBoxPin,
       amenities: amenities ? JSON.parse(amenities) : undefined,
+      houseRules: uploadedHouseRules as string,
       addSecurityKeys,
       addLocalTips,
       basePrice: basePrice ? parseFloat(basePrice) : undefined,
       weeklyOffers: weeklyOffers ? parseFloat(weeklyOffers) : undefined,
       monthlyOffers: monthlyOffers ? parseFloat(monthlyOffers) : undefined,
+
+      // Handle custom prices - delete existing and create new ones
+      customPrices: customPrices
+        ? {
+            deleteMany: {},
+            create: JSON.parse(customPrices).map((p: any) => ({
+              startDate: new Date(p.startDate),
+              endDate: new Date(p.endDate),
+              price: parseFloat(p.price),
+            })),
+          }
+        : undefined,
+    },
+    include: {
+      customPrices: true,
+      inventoryItems: true,
     },
   });
 
