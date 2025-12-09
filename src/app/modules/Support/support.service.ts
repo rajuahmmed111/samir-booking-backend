@@ -1,39 +1,59 @@
 import httpStatus from "http-status";
 import ApiError from "../../../errors/ApiErrors";
 import prisma from "../../../shared/prisma";
-import { Prisma, SupportStatus, UserStatus } from "@prisma/client";
+import { Prisma, SupportStatus, UserStatus, SupportType } from "@prisma/client";
 import { IFilterRequest } from "./support.interface";
 import { IPaginationOptions } from "../../../interfaces/paginations";
 import { paginationHelpers } from "../../../helpars/paginationHelper";
 import { searchableFields } from "./support.constant";
+import { getDateRange } from "../../../helpars/filterByDate";
 
-// create support
-const createSupport = async (userId: string, data: any) => {
+// create user-to-user report
+const createUserReport = async (
+  reporterId: string,
+  reportedUserId: string,
+  data: any
+) => {
   const { subject, description, supportType } = data;
   if (!subject || !description || !supportType) {
     throw new ApiError(httpStatus.BAD_REQUEST, "fields are required");
   }
 
-  // find user
-  const findUser = await prisma.user.findUnique({ where: { id: userId } });
-  if (!findUser) {
-    throw new ApiError(httpStatus.NOT_FOUND, "User not found");
+  // find reporter user
+  const reporter = await prisma.user.findUnique({ where: { id: reporterId } });
+  if (!reporter) {
+    throw new ApiError(httpStatus.NOT_FOUND, "Reporter not found");
   }
+
+  // find reported user
+  const reportedUser = await prisma.user.findUnique({
+    where: { id: reportedUserId },
+  });
+  if (!reportedUser) {
+    throw new ApiError(httpStatus.NOT_FOUND, "Reported user not found");
+  }
+
+  // create support with special data
   const support = await prisma.support.create({
     data: {
-      userId,
-      ...data,
+      userId: reporterId, // reporter creates the support
+      subject: `Report against ${reportedUser.fullName}`,
+      description,
+      supportType,
+      fullName: reporter?.fullName,
+      email: reporter?.email,
+      contactNumber: reporter?.contactNumber,
+      reportedUserId: reportedUser?.id,
     },
   });
 
-  // create notification
+  // create notification for admins
   await prisma.notifications.create({
     data: {
-      title: "New Support Ticket Created",
-      body: `A new support ticket has been created by ${findUser.fullName}`,
-      message: `Support Subject: ${subject}`,
+      title: "User Report Created",
+      body: `${reporter.fullName} has reported ${reportedUser.fullName}`,
+      message: `Report Subject: ${subject}`,
       serviceTypes: "SUPPORT",
-      partnerId: userId,
       supportId: support.id,
     },
   });
@@ -88,6 +108,16 @@ const getAllSupport = async (
     where,
     skip,
     take: limit,
+    include: {
+      user: {
+        select: {
+          id: true,
+          fullName: true,
+          email: true,
+          profileImage: true,
+        },
+      },
+    },
     orderBy:
       options.sortBy && options.sortOrder
         ? {
@@ -97,6 +127,29 @@ const getAllSupport = async (
             createdAt: "desc",
           },
   });
+
+  const finalData = await Promise.all(
+    result.map(async (item) => {
+      let reportedUser = null;
+
+      if (item.reportedUserId) {
+        reportedUser = await prisma.user.findUnique({
+          where: { id: item.reportedUserId },
+          select: {
+            id: true,
+            fullName: true,
+            email: true,
+            profileImage: true,
+          },
+        });
+      }
+
+      return {
+        ...item,
+        reportedUser,
+      };
+    })
+  );
 
   const total = await prisma.support.count({
     where,
@@ -108,7 +161,7 @@ const getAllSupport = async (
       page,
       limit,
     },
-    data: result,
+    data: finalData,
   };
 };
 
@@ -187,21 +240,11 @@ const deleteMySupport = async (userId: string, supportId: string) => {
   return result;
 };
 
-// update support status
-const updateSupportStatus = async (supportId: string) => {
-  const result = await prisma.support.update({
-    where: { id: supportId },
-    data: { status: SupportStatus.Closed },
-  });
-  return result;
-};
-
 export const SupportService = {
-  createSupport,
+  createUserReport,
   getAllSupport,
   getMySupport,
   getSupportById,
   updateMySupport,
   deleteMySupport,
-  updateSupportStatus,
 };

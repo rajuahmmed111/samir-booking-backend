@@ -12,7 +12,7 @@ router.get(
   SupportController.getAllSupport
 );
 
-// create support
+// create user report
 router.post(
   "/",
   auth(
@@ -22,7 +22,7 @@ router.post(
     UserRole.ADMIN,
     UserRole.SUPER_ADMIN
   ),
-  SupportController.createSupport
+  SupportController.createUserReport
 );
 
 // get my support
@@ -75,13 +75,6 @@ router.delete(
     UserRole.SUPER_ADMIN
   ),
   SupportController.deleteMySupport
-);
-
-// update support status
-router.patch(
-  "/update-support-status/:supportId",
-  auth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
-  SupportController.updateSupportStatus
 );
 
 export const supportRoutes = router;

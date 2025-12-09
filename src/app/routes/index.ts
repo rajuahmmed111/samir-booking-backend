@@ -14,11 +14,11 @@ import { messageRoutes } from "../modules/Message/message.route";
 import { phoneRoute } from "../modules/Setting/PhoneNumberVerify/phone.route";
 import { paymentRoutes } from "../modules/Payment/payment.route";
 import { statisticsRoutes } from "../modules/Statistics/statistics.route";
-import { supportRoutes } from "../modules/Support/support.route";
 import { faqRoutes } from "../modules/Faq/faq.routre";
 import { subscriptionRoutes } from "../modules/Subscriptioin/subscription.route";
 import { serviceRoutes } from "../modules/Service/service.route";
 import { serviceBookingRoute } from "../modules/Service_Booking/serviceBooking.route";
+import { supportRoutes } from "../modules/Support/support.route";
 
 const router = express.Router();
 
@@ -98,7 +98,7 @@ const moduleRoutes = [
     route: statisticsRoutes,
   },
   {
-    path: "/supports",
+    path: "/reports",
     route: supportRoutes,
   },
 ];
