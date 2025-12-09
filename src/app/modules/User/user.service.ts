@@ -250,158 +250,8 @@ const getAllUsers = async (
   };
 };
 
-// get all admins
-const getAllAdmins = async (
-  params: IFilterRequest,
-  options: IPaginationOptions
-): Promise<IGenericResponse<SafeUser[]>> => {
-  const { limit, page, skip } = paginationHelpers.calculatedPagination(options);
-
-  const { searchTerm, ...filterData } = params;
-
-  const filters: Prisma.UserWhereInput[] = [];
-
-  // Filter for active users and role ADMIN only
-  filters.push({
-    role: UserRole.ADMIN,
-  });
-
-  // text search
-  if (params?.searchTerm) {
-    filters.push({
-      OR: searchableFields.map((field) => ({
-        [field]: {
-          contains: params.searchTerm,
-          mode: "insensitive",
-        },
-      })),
-    });
-  }
-
-  // Exact search filter
-  if (Object.keys(filterData).length > 0) {
-    filters.push({
-      AND: Object.keys(filterData).map((key) => ({
-        [key]: {
-          equals: (filterData as any)[key],
-        },
-      })),
-    });
-  }
-
-  const where: Prisma.UserWhereInput = { AND: filters };
-
-  const result = await prisma.user.findMany({
-    where,
-    skip,
-    take: limit,
-    orderBy:
-      options.sortBy && options.sortOrder
-        ? {
-            [options.sortBy]: options.sortOrder,
-          }
-        : {
-            createdAt: "desc",
-          },
-    select: {
-      id: true,
-      fullName: true,
-      email: true,
-      profileImage: true,
-      contactNumber: true,
-      address: true,
-      country: true,
-      role: true,
-      fcmToken: true,
-      status: true,
-      createdAt: true,
-      updatedAt: true,
-    },
-  });
-
-  const total = await prisma.user.count({ where });
-
-  return {
-    meta: {
-      page,
-      limit,
-      total,
-    },
-    data: result,
-  };
-};
-
-// update admin status (inactive to active)
-const updateAdminStatusInActiveToActive = async (id: string) => {
-  // find admin
-  const admin = await prisma.user.findUnique({
-    where: { id, status: UserStatus.INACTIVE },
-  });
-  if (!admin) {
-    throw new ApiError(httpStatus.NOT_FOUND, "Admin not found");
-  }
-
-  const result = await prisma.user.update({
-    where: {
-      id,
-    },
-    data: {
-      status: UserStatus.ACTIVE,
-    },
-    select: {
-      id: true,
-      fullName: true,
-      email: true,
-      profileImage: true,
-      contactNumber: true,
-      address: true,
-      country: true,
-      role: true,
-      fcmToken: true,
-      status: true,
-      createdAt: true,
-      updatedAt: true,
-    },
-  });
-  return result;
-};
-
-// update admin status rejected
-const updateAdminStatusRejected = async (id: string) => {
-  // find admin
-  const admin = await prisma.user.findUnique({
-    where: { id, status: UserStatus.INACTIVE },
-  });
-  if (!admin) {
-    throw new ApiError(httpStatus.NOT_FOUND, "Admin not found");
-  }
-
-  const result = await prisma.user.update({
-    where: {
-      id,
-    },
-    data: {
-      status: UserStatus.REJECTED,
-    },
-    select: {
-      id: true,
-      fullName: true,
-      email: true,
-      profileImage: true,
-      contactNumber: true,
-      address: true,
-      country: true,
-      role: true,
-      status: true,
-      createdAt: true,
-      updatedAt: true,
-    },
-  });
-  return result;
-};
-
-// get all business partners
-const getAllBusinessPartners = async (
+// get all property owners
+const getAllPropertyOwners = async (
   params: IFilterRequest,
   options: IPaginationOptions
 ): Promise<IGenericResponse<SafeUser[]>> => {
@@ -411,9 +261,9 @@ const getAllBusinessPartners = async (
 
   const filters: Prisma.UserWhereInput[] = [];
 
-  // Filter for active users and role SERVICE_PROVIDER only
+  // Filter for active users and role PROPERTY_OWNER only
   filters.push({
-    role: UserRole.SERVICE_PROVIDER,
+    role: UserRole.PROPERTY_OWNER,
     status: UserStatus.ACTIVE,
   });
 
@@ -509,8 +359,8 @@ const getAllBusinessPartners = async (
   };
 };
 
-// get all needed approved partners
-const getAllNeededApprovedPartners = async (
+// get all blocked users
+const getAllBlockedUsers = async (
   params: IFilterRequest,
   options: IPaginationOptions
 ): Promise<IGenericResponse<SafeUser[]>> => {
@@ -520,9 +370,8 @@ const getAllNeededApprovedPartners = async (
 
   const filters: Prisma.UserWhereInput[] = [];
 
-  // Filter for inactive users and role SERVICE_PROVIDER only
+  // Filter for INACTIVE users
   filters.push({
-    role: UserRole.SERVICE_PROVIDER,
     status: UserStatus.INACTIVE,
   });
 
@@ -589,6 +438,23 @@ const getAllNeededApprovedPartners = async (
     },
   });
 
+  const businessPartnerIds = result.map((partner) => partner.id);
+
+  const serviceFeeByPartner = await prisma.payment.groupBy({
+    by: ["partnerId"],
+    where: {
+      partnerId: {
+        in: businessPartnerIds,
+      },
+      isDeleted: false,
+    },
+  });
+
+  // add totalServiceFee
+  const usersWithServiceFee = result.map((user) => ({
+    ...user,
+  }));
+
   const total = await prisma.user.count({ where });
 
   return {
@@ -597,24 +463,26 @@ const getAllNeededApprovedPartners = async (
       limit,
       total,
     },
-    data: result,
+    data: usersWithServiceFee,
   };
 };
 
-// update partner status (inactive to active)
-const updatePartnerStatusInActiveToActive = async (id: string) => {
-  // find partner
-  const partner = await prisma.user.findUnique({
-    where: { id, status: UserStatus.INACTIVE },
+// update  user status access admin (active to inactive)
+const updateUserStatusActiveToInActive = async (id: string) => {
+  // find user
+  const user = await prisma.user.findUnique({
+    where: { id, status: UserStatus.ACTIVE },
   });
-  if (!partner) {
-    throw new ApiError(httpStatus.NOT_FOUND, "Partner not found");
+  if (!user) {
+    throw new ApiError(httpStatus.NOT_FOUND, "Admin not found");
   }
 
   const result = await prisma.user.update({
-    where: { id },
+    where: {
+      id,
+    },
     data: {
-      status: UserStatus.ACTIVE,
+      status: UserStatus.INACTIVE,
     },
     select: {
       id: true,
@@ -634,20 +502,22 @@ const updatePartnerStatusInActiveToActive = async (id: string) => {
   return result;
 };
 
-// update partner status rejected
-const updatePartnerStatusRejected = async (id: string) => {
-  // find partner
-  const partner = await prisma.user.findUnique({
+// update  user status access admin (inactive to active)
+const updateUserStatusInActiveToActive = async (id: string) => {
+  // find user
+  const user = await prisma.user.findUnique({
     where: { id, status: UserStatus.INACTIVE },
   });
-  if (!partner) {
-    throw new ApiError(httpStatus.NOT_FOUND, "Partner not found");
+  if (!user) {
+    throw new ApiError(httpStatus.NOT_FOUND, "Admin not found");
   }
 
   const result = await prisma.user.update({
-    where: { id },
+    where: {
+      id,
+    },
     data: {
-      status: UserStatus.REJECTED,
+      status: UserStatus.ACTIVE,
     },
     select: {
       id: true,
@@ -658,6 +528,7 @@ const updatePartnerStatusRejected = async (id: string) => {
       address: true,
       country: true,
       role: true,
+      fcmToken: true,
       status: true,
       createdAt: true,
       updatedAt: true,
@@ -682,32 +553,6 @@ const getUserById = async (id: string): Promise<SafeUser> => {
       fcmToken: true,
       status: true,
       isStripeConnected: true,
-      createdAt: true,
-      updatedAt: true,
-    },
-  });
-
-  if (!user) {
-    throw new ApiError(httpStatus.NOT_FOUND, "User not found");
-  }
-  return user;
-};
-
-// get user by only partner
-const getPartnerById = async (id: string): Promise<SafeUser> => {
-  const user = await prisma.user.findUnique({
-    where: { id, role: UserRole.SERVICE_PROVIDER },
-    select: {
-      id: true,
-      fullName: true,
-      email: true,
-      profileImage: true,
-      contactNumber: true,
-      address: true,
-      country: true,
-      role: true,
-      fcmToken: true,
-      status: true,
       createdAt: true,
       updatedAt: true,
     },
@@ -841,40 +686,9 @@ const deleteMyAccount = async (userId: string) => {
   });
 };
 
-// delete user
-const deleteUser = async (
-  userId: string,
-  loggedId: string
-): Promise<User | void> => {
-  if (!ObjectId.isValid(userId)) {
-    throw new ApiError(400, "Invalid user ID format");
-  }
-
-  if (userId === loggedId) {
-    throw new ApiError(403, "You can't delete your own account!");
-  }
-
-  // Check if user exists
-  const existingUser = await prisma.user.findUnique({
-    where: { id: userId },
-  });
-
-  if (!existingUser) {
-    throw new ApiError(404, "User not found");
-  }
-
-  // Delete the user
-  await prisma.user.delete({
-    where: { id: userId },
-  });
-
-  return;
-};
-
-// delete admin
-const deleteAdmin = async (userId: string) => {
-  console.log(userId);
-  // Check if user exists
+// delete user access admin
+const deleteUserAccessAdmin = async (userId: string) => {
+  // check if user exists
   const existingUser = await prisma.user.findUnique({
     where: { id: userId },
   });
@@ -887,54 +701,19 @@ const deleteAdmin = async (userId: string) => {
   });
 };
 
-// update admin access only for super admin
-const updateAdminAccess = async (id: string, data: any) => {
-  // find admin
-  const admin = await prisma.user.findUnique({
-    where: { id },
-  });
-  if (!admin) {
-    throw new ApiError(httpStatus.NOT_FOUND, "Admin not found");
-  }
-
-  const result = await prisma.user.update({
-    where: { id: admin.id },
-    data: { ...data },
-    select: {
-      id: true,
-      fullName: true,
-      email: true,
-      profileImage: true,
-      role: true,
-      status: true,
-      address: true,
-      contactNumber: true,
-      createdAt: true,
-      updatedAt: true,
-    },
-  });
-  return result;
-};
-
 export const UserService = {
   createUser,
   createRoleSupperAdmin,
   verifyOtpAndCreateUser,
+  getAllPropertyOwners,
+  getAllBlockedUsers,
   getAllUsers,
-  getAllAdmins,
-  updateAdminStatusInActiveToActive,
-  updateAdminStatusRejected,
-  getAllBusinessPartners,
-  getAllNeededApprovedPartners,
-  updatePartnerStatusInActiveToActive,
-  updatePartnerStatusRejected,
+  updateUserStatusActiveToInActive,
+  updateUserStatusInActiveToActive,
   getUserById,
   updateUser,
   getMyProfile,
   updateUserProfileImage,
   deleteMyAccount,
-  deleteUser,
-  getPartnerById,
-  deleteAdmin,
-  updateAdminAccess,
+  deleteUserAccessAdmin,
 };

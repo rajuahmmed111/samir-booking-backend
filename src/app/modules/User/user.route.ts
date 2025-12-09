@@ -16,25 +16,18 @@ router.get(
   UserController.getAllUsers
 );
 
-// get all admins
+// get all property owners
 router.get(
-  "/admins",
-  auth(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.USER),
-  UserController.getAllAdmins
+  "/property-owners",
+  auth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
+  UserController.getAllPropertyOwners
 );
 
-// get all business partners
+// get all blocked users
 router.get(
-  "/business-partners",
+  "/blocked-users",
   auth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
-  UserController.getAllBusinessPartners
-);
-
-// get all needed approved partners
-router.get(
-  "/approved-partners",
-  auth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
-  UserController.getAllNeededApprovedPartners
+  UserController.getAllBlockedUsers
 );
 
 //get my profile
@@ -63,13 +56,6 @@ router.get(
   UserController.getUserById
 );
 
-// get user only partner
-router.get(
-  "/inactive-partner/:id",
-  auth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
-  UserController.getPartnerById
-);
-
 // create user
 router.post(
   "/",
@@ -90,32 +76,18 @@ router.post(
 // verify user
 router.post("/verify-user", UserController.verifyOtpAndCreateUser);
 
-// update partner status (inactive to active)
+// update  user status access admin (active to inactive)
 router.patch(
-  "/update-partner-status-active/:id",
-  auth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
-  UserController.updatePartnerStatusInActiveToActive
+  "/update-user-status-inactive/:id",
+  auth(UserRole.SUPER_ADMIN, UserRole.ADMIN),
+  UserController.updateUserStatusActiveToInActive
 );
 
-// update partner status rejected
+// update  user status access admin (inactive to active)
 router.patch(
-  "/update-partner-status-reject/:id",
-  auth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
-  UserController.updatePartnerStatusRejected
-);
-
-// update admin status (inactive to active)
-router.patch(
-  "/update-admin-status-active/:id",
-  auth(UserRole.SUPER_ADMIN),
-  UserController.updateAdminStatusInActiveToActive
-);
-
-// update admin status rejected
-router.patch(
-  "/update-admin-status-reject/:id",
-  auth(UserRole.SUPER_ADMIN),
-  UserController.updateAdminStatusRejected
+  "/update-user-status-active/:id",
+  auth(UserRole.SUPER_ADMIN, UserRole.ADMIN),
+  UserController.updateUserStatusInActiveToActive
 );
 
 // single update user (info + profile image)
@@ -161,25 +133,11 @@ router.patch(
   UserController.deleteMyAccount
 );
 
-// update admin access only for super admin
-router.patch(
-  "/update-super-admin-access/:id",
-  auth(UserRole.SUPER_ADMIN),
-  UserController.updateAdminAccess
-);
-
-// delete user
+// delete user access admin
 router.delete(
-  "/:id",
-  auth(UserRole.SUPER_ADMIN, UserRole.ADMIN),
-  UserController.deleteUser
-);
-
-// delete admin
-router.delete(
-  "/admin/:id",
+  "/delete-user/:id",
   auth(UserRole.SUPER_ADMIN),
-  UserController.deleteAdmin
+  UserController.deleteUserAccessAdmin
 );
 
 export const userRoute = router;

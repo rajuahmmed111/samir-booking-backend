@@ -14,7 +14,7 @@ import { IUploadedFile } from "../../../interfaces/file";
 const createUser = catchAsync(async (req: Request, res: Response) => {
   const userData = req.body;
   const passportFiles = req.files as Express.Multer.File[];
-  
+
   const result = await UserService.createUser(userData, passportFiles);
 
   sendResponse(res, {
@@ -68,25 +68,39 @@ const getAllUsers = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-// get all admins
-const getAllAdmins = catchAsync(async (req: Request, res: Response) => {
+// get all property owners
+const getAllPropertyOwners = catchAsync(async (req: Request, res: Response) => {
   const filter = pick(req.query, filterField);
   const options = pick(req.query, paginationFields);
-  const result = await UserService.getAllAdmins(filter, options);
+  const result = await UserService.getAllPropertyOwners(filter, options);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: "Admins fetched successfully",
+    message: "Business Partners fetched successfully",
     data: result,
   });
 });
 
-// update admin status (inactive to active)
-const updateAdminStatusInActiveToActive = catchAsync(
+// get all blocked users
+const getAllBlockedUsers = catchAsync(async (req: Request, res: Response) => {
+  const filter = pick(req.query, filterField);
+  const options = pick(req.query, paginationFields);
+  const result = await UserService.getAllBlockedUsers(filter, options);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Business Partners fetched successfully",
+    data: result,
+  });
+});
+
+// update  user status access admin (active to inactive)
+const updateUserStatusActiveToInActive = catchAsync(
   async (req: Request, res: Response) => {
     const id = req.params.id;
-    const result = await UserService.updateAdminStatusInActiveToActive(id);
+    const result = await UserService.updateUserStatusActiveToInActive(id);
     sendResponse(res, {
       statusCode: httpStatus.OK,
       success: true,
@@ -96,78 +110,15 @@ const updateAdminStatusInActiveToActive = catchAsync(
   }
 );
 
-// update admin status rejected
-const updateAdminStatusRejected = catchAsync(
+// update  user status access admin (inactive to active)
+const updateUserStatusInActiveToActive = catchAsync(
   async (req: Request, res: Response) => {
     const id = req.params.id;
-    const result = await UserService.updateAdminStatusRejected(id);
+    const result = await UserService.updateUserStatusInActiveToActive(id);
     sendResponse(res, {
       statusCode: httpStatus.OK,
       success: true,
       message: "Admin status updated successfully",
-      data: result,
-    });
-  }
-);
-
-// get all business partners
-const getAllBusinessPartners = catchAsync(
-  async (req: Request, res: Response) => {
-    const filter = pick(req.query, filterField);
-    const options = pick(req.query, paginationFields);
-    const result = await UserService.getAllBusinessPartners(filter, options);
-
-    sendResponse(res, {
-      statusCode: httpStatus.OK,
-      success: true,
-      message: "Business Partners fetched successfully",
-      data: result,
-    });
-  }
-);
-
-// get all needed approved partners
-const getAllNeededApprovedPartners = catchAsync(
-  async (req: Request, res: Response) => {
-    const filter = pick(req.query, filterField);
-    const options = pick(req.query, paginationFields);
-    const result = await UserService.getAllNeededApprovedPartners(
-      filter,
-      options
-    );
-
-    sendResponse(res, {
-      statusCode: httpStatus.OK,
-      success: true,
-      message: "Business Partners fetched successfully",
-      data: result,
-    });
-  }
-);
-
-// update partner status (inactive to active)
-const updatePartnerStatusInActiveToActive = catchAsync(
-  async (req: Request, res: Response) => {
-    const { id } = req.params;
-    const result = await UserService.updatePartnerStatusInActiveToActive(id);
-    sendResponse(res, {
-      statusCode: httpStatus.OK,
-      success: true,
-      message: "Partner status updated successfully",
-      data: result,
-    });
-  }
-);
-
-// update partner status rejected
-const updatePartnerStatusRejected = catchAsync(
-  async (req: Request, res: Response) => {
-    const { id } = req.params;
-    const result = await UserService.updatePartnerStatusRejected(id);
-    sendResponse(res, {
-      statusCode: httpStatus.OK,
-      success: true,
-      message: "Partner status updated successfully",
       data: result,
     });
   }
@@ -178,20 +129,6 @@ const getUserById = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
 
   const user = await UserService.getUserById(id);
-
-  sendResponse(res, {
-    statusCode: httpStatus.OK,
-    success: true,
-    message: "User fetched successfully",
-    data: { ...user, password: undefined },
-  });
-});
-
-// get user by only partner
-const getPartnerById = catchAsync(async (req: Request, res: Response) => {
-  const { id } = req.params;
-
-  const user = await UserService.getPartnerById(id);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -266,46 +203,18 @@ const deleteMyAccount = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-// delete user
-const deleteUser = catchAsync(async (req: Request, res: Response) => {
-  const userId = req.params.id;
-  const loggedId = req.user.id;
-
-  await UserService.deleteUser(userId, loggedId);
-
-  sendResponse(res, {
-    success: true,
-    statusCode: 200,
-    message: "User deleted successfully",
-    data: undefined,
-  });
-});
-
-// delete admin
-const deleteAdmin = catchAsync(async (req: Request, res: Response) => {
-  const userId = req.params.id;
-
-  await UserService.deleteAdmin(userId);
-
-  sendResponse(res, {
-    success: true,
-    statusCode: 200,
-    message: "Admin deleted successfully",
-    data: undefined,
-  });
-});
-
-// update admin access only for super admin
-const updateAdminAccess = catchAsync(
+// delete user access admin
+const deleteUserAccessAdmin = catchAsync(
   async (req: Request, res: Response) => {
-    const id = req.params.id;
-    const data = req.body;
-    const result = await UserService.updateAdminAccess(id, data);
+    const userId = req.params.id;
+
+    await UserService.deleteUserAccessAdmin(userId);
+
     sendResponse(res, {
-      statusCode: httpStatus.OK,
       success: true,
-      message: "Admin status updated successfully",
-      data: result,
+      statusCode: 200,
+      message: "Admin deleted successfully",
+      data: undefined,
     });
   }
 );
@@ -315,20 +224,14 @@ export const UserController = {
   createRoleSupperAdmin,
   verifyOtpAndCreateUser,
   getAllUsers,
-  getAllAdmins,
-  updateAdminStatusInActiveToActive,
-  updateAdminStatusRejected,
-  getAllBusinessPartners,
-  getAllNeededApprovedPartners,
-  updatePartnerStatusInActiveToActive,
-  updatePartnerStatusRejected,
+  getAllPropertyOwners,
+  getAllBlockedUsers,
+  updateUserStatusActiveToInActive,
+  updateUserStatusInActiveToActive,
   getUserById,
   updateUser,
   getMyProfile,
   updateUserProfileImage,
   deleteMyAccount,
-  deleteUser,
-  getPartnerById,
-  deleteAdmin,
-  updateAdminAccess,
+  deleteUserAccessAdmin,
 };
