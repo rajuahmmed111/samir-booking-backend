@@ -542,6 +542,7 @@ const updateHotel = async (req: Request) => {
     }
     uploadedMedia = uploads.secure_url;
   }
+
   const {
     // propertyName,
     propertyTitle,
@@ -561,6 +562,7 @@ const updateHotel = async (req: Request) => {
     weeklyOffers,
     monthlyOffers,
     customPrices, // [{startDate, endDate, price}]
+    inventoryItems, // [{name, quantity}]
   } = req.body;
 
   // Update hotel
@@ -568,7 +570,7 @@ const updateHotel = async (req: Request) => {
     where: { id: hotelId },
     data: {
       // propertyName,
-      uploadPhotosOrVideos: uploadedMedia,
+      uploadPhotosOrVideos: uploadedMedia || hotelExists.uploadPhotosOrVideos,
       propertyTitle,
       propertyAddress,
       propertyDescription,
@@ -580,7 +582,7 @@ const updateHotel = async (req: Request) => {
       smartLockCode,
       keyBoxPin,
       amenities: amenities ? JSON.parse(amenities) : undefined,
-      houseRules: uploadedHouseRules as string,
+      houseRules: uploadedHouseRules || hotelExists.houseRules,
       addSecurityKeys,
       addLocalTips,
       basePrice: basePrice ? parseFloat(basePrice) : undefined,
@@ -595,6 +597,17 @@ const updateHotel = async (req: Request) => {
               startDate: new Date(p.startDate),
               endDate: new Date(p.endDate),
               price: parseFloat(p.price),
+            })),
+          }
+        : undefined,
+
+      // Handle inventory items - delete existing and create new ones
+      inventoryItems: inventoryItems
+        ? {
+            deleteMany: {},
+            create: JSON.parse(inventoryItems).map((item: any) => ({
+              name: item.name,
+              quantity: item.quantity,
             })),
           }
         : undefined,
