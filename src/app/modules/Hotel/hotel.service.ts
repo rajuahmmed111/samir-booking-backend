@@ -269,6 +269,8 @@ const getAllHotels = async (
         ? { [options.sortBy]: options.sortOrder }
         : { createdAt: "desc" },
     include: {
+      customPrices: true,
+      inventoryItems: true,
       guards: true,
       user: {
         select: {
@@ -340,6 +342,9 @@ const getAllHotelsForPartner = async (
         ? { [options.sortBy]: options.sortOrder }
         : { createdAt: "desc" },
     include: {
+      customPrices: true,
+      inventoryItems: true,
+      guards: true,
       user: {
         select: {
           id: true,
@@ -389,6 +394,18 @@ const getAllHotelsForPartner = async (
 const getSingleHotel = async (hotelId: string) => {
   const result = await prisma.hotel.findUnique({
     where: { id: hotelId },
+    include: {
+      customPrices: true,
+      inventoryItems: true,
+      guards: true,
+      user: {
+        select: {
+          id: true,
+          fullName: true,
+          profileImage: true,
+        },
+      },
+    },
   });
 
   if (!result) {
