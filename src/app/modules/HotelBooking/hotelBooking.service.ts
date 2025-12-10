@@ -51,20 +51,18 @@ const createHotelRoomBooking = async (
   }
 
   const numberOfNights = differenceInDays(toDate, fromDate);
-  console.log(numberOfNights);
+  // console.log(numberOfNights);
 
   if (numberOfNights <= 0) {
     throw new ApiError(httpStatus.BAD_REQUEST, "Invalid booking date range");
   }
 
   // calculate base price
-  const hotelPrice = hotel.basePrice;
+  let totalPrice = basePrice * numberOfNights;
   // price not 0 or null
-  if (!hotelPrice || hotelPrice === 0) {
+  if (!totalPrice || totalPrice === 0) {
     throw new ApiError(httpStatus.BAD_REQUEST, "Invalid hotel base price");
   }
-
-  let totalPrice = hotelPrice * numberOfNights;
 
   // apply weekly discount (7 days or more)
   if (numberOfNights >= 7 && numberOfNights < 30 && hotel.weeklyOffers) {
