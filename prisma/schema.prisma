@@ -104,7 +104,7 @@ model User {
   id              String     @id @default(auto()) @map("_id") @db.ObjectId
   fullName        String?
   email           String     @unique
-  password        String     @default("123456")
+  password        String
   profileImage    String     @default("https://i.ibb.co/Ps9gZ8DD/Profile-image.png")
   passportOrNID   String[] // upload passport or NID
   contactNumber   String?
