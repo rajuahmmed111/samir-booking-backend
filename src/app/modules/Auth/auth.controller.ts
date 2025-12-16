@@ -64,7 +64,7 @@ const loginWebsite = catchAsync(async (req: Request, res: Response) => {
 
 // refresh token
 const refreshToken = catchAsync(async (req, res) => {
-  const { refreshToken } = req.cookies;
+  const refreshToken = req.headers.authorization || "";
 
   if (!refreshToken) {
     return sendResponse(res, {
@@ -156,7 +156,8 @@ const verifyOtp = catchAsync(async (req: Request, res: Response) => {
 // reset password
 const resetPassword = catchAsync(async (req: Request, res: Response) => {
   const token = req.headers.authorization || "";
-  // console.log(token)
+  // const userId = req.user?.id;
+  console.log(token);
 
   await AuthServices.resetPassword(token, req.body);
 

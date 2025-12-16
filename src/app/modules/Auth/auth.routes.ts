@@ -16,7 +16,6 @@ router.post("/social-login", AuthController.socialLogin);
 // website login after booking
 router.post("/login-website", AuthController.loginWebsite);
 
-
 // refresh token
 router.post("/refresh-token", AuthController.refreshToken);
 
@@ -56,6 +55,7 @@ router.post("/verify-otp", AuthController.verifyOtp);
 // reset password
 router.post(
   "/reset-password",
+  // auth(UserRole.SUPER_ADMIN, UserRole.ADMIN),
   validateRequest(authValidation.resetPasswordSchema),
   AuthController.resetPassword
 );

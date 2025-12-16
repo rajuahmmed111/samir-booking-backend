@@ -250,7 +250,6 @@ const refreshToken = async (token: string) => {
       token,
       config.jwt.refresh_token_secret as string
     ) as JwtPayload;
-    console.log(decodedData);
   } catch (err) {
     throw new ApiError(httpStatus.UNAUTHORIZED, "Your not authorized");
   }
@@ -509,25 +508,17 @@ const verifyOtp = async (otp: string) => {
 // reset password
 const resetPassword = async (
   token: string,
-  payload: { id: string; password: string; confirmPassword: string }
+  // userId: string,
+  payload: { password: string; confirmPassword: string }
 ) => {
-  const { id, password, confirmPassword } = payload;
+  const { password, confirmPassword } = payload;
 
-  // Step 1: Check if passwords match
+  // check if passwords match
   if (password !== confirmPassword) {
     throw new ApiError(httpStatus.BAD_REQUEST, "Passwords do not match");
   }
 
-  // Step 2: Get user
-  const userData = await prisma.user.findUnique({
-    where: { id },
-  });
-
-  if (!userData) {
-    throw new ApiError(httpStatus.NOT_FOUND, "User not found");
-  }
-
-  // Step 3: Verify token
+  // verify token
   let decodedToken;
   try {
     decodedToken = jwtHelpers.verifyToken(
@@ -538,17 +529,21 @@ const resetPassword = async (
     throw new ApiError(httpStatus.FORBIDDEN, "Invalid or expired token");
   }
 
-  // Optional: Check if token payload matches user ID
-  if (decodedToken.id !== id) {
-    throw new ApiError(httpStatus.FORBIDDEN, "Token does not match user");
+  // find user by decoded token id
+  const userData = await prisma.user.findUnique({
+    where: { id: decodedToken.id },
+  });
+
+  if (!userData) {
+    throw new ApiError(httpStatus.NOT_FOUND, "User not found");
   }
 
-  // Step 4: Hash the new password
+  // hash the new password
   const hashedPassword = await bcrypt.hash(password, 12);
 
-  // Step 5: Update the user's password
+  // update the user's password
   await prisma.user.update({
-    where: { id },
+    where: { id: userData?.id },
     data: {
       password: hashedPassword,
       otp: null,

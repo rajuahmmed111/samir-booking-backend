@@ -20,7 +20,7 @@ router.post(
 // get all subscriptions plan
 router.get(
   "/plan/retrieve/search",
-  auth(UserRole.SUPER_ADMIN, UserRole.ADMIN),
+  auth(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.PROPERTY_OWNER),
   SubscriptionController.getAllSubscriptionsPlan
 );
 

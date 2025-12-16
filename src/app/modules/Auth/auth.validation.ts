@@ -14,7 +14,7 @@ const changePasswordValidationSchema = z.object({
 const resetPasswordSchema = z.object({
   body: z
     .object({
-      id: z.string(),
+      // id: z.string(),
       password: z.string().min(6),
       confirmPassword: z.string(),
     })
