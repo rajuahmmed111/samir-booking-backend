@@ -157,7 +157,7 @@ const verifyOtp = catchAsync(async (req: Request, res: Response) => {
 const resetPassword = catchAsync(async (req: Request, res: Response) => {
   const token = req.headers.authorization || "";
   // const userId = req.user?.id;
-  console.log(token);
+  // console.log(token);
 
   await AuthServices.resetPassword(token, req.body);
 
