@@ -105,7 +105,7 @@ const getMyChannelByMyId = async (userId: string) => {
   if (
     !user ||
     user.status !== UserStatus.ACTIVE ||
-    (user.role !== UserRole.USER && user.role !== UserRole.BUSINESS_PARTNER)
+    (user.role !== UserRole.USER && user.role !== UserRole.PROPERTY_OWNER)
   ) {
     throw new ApiError(httpStatus.NOT_FOUND, "User not found or invalid role");
   }
@@ -151,7 +151,7 @@ const getMyChannelByMyId = async (userId: string) => {
       receiverUser =
         channel.person2 &&
         channel.person2.status === UserStatus.ACTIVE &&
-        ([UserRole.USER, UserRole.BUSINESS_PARTNER] as UserRole[]).includes(
+        ([UserRole.USER, UserRole.PROPERTY_OWNER] as UserRole[]).includes(
           channel.person2.role
         )
           ? channel.person2
@@ -160,7 +160,7 @@ const getMyChannelByMyId = async (userId: string) => {
       receiverUser =
         channel.person1 &&
         channel.person1.status === UserStatus.ACTIVE &&
-        ([UserRole.USER, UserRole.BUSINESS_PARTNER] as UserRole[]).includes(
+        ([UserRole.USER, UserRole.PROPERTY_OWNER] as UserRole[]).includes(
           channel.person1.role
         )
           ? channel.person1
