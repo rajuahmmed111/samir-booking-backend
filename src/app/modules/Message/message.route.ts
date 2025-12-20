@@ -56,7 +56,7 @@ router.get(
     UserRole.SUPER_ADMIN,
     UserRole.ADMIN,
     UserRole.USER,
-    UserRole.BUSINESS_PARTNER
+    UserRole.PROPERTY_OWNER
   ),
   messageControllers.getSingleChannel
 );
