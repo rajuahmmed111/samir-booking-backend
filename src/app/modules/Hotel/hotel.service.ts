@@ -9,7 +9,6 @@ import { IPaginationOptions } from "../../../interfaces/paginations";
 import { IHotelFilterRequest } from "./hotel.interface";
 import { searchableFields } from "./hotel.constant";
 import { uploadFile } from "../../../helpars/fileUploader";
-import { CurrencyHelpers } from "../../../helpars/currency";
 
 // create hotel
 const createHotel = async (req: Request) => {

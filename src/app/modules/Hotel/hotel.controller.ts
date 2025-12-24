@@ -6,7 +6,6 @@ import { HotelService } from "./hotel.service";
 import { pick } from "../../../shared/pick";
 import { paginationFields } from "../../../constants/pagination";
 import { filterField } from "./hotel.constant";
-import { getUserCurrency } from "../../../helpars/detectionLocality";
 
 // create hotel
 const createHotel = catchAsync(async (req: Request, res: Response) => {

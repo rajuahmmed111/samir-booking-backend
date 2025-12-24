@@ -535,15 +535,6 @@ model Support {
   @@map("supports")
 }
 
-model CurrencyRate {
-  id           String   @id @default(auto()) @map("_id") @db.ObjectId
-  baseCurrency String   @default("USD")
-  rates        Json // { "BDT": 110, "AED": 3.67, "NGN": 1630, ... }
-  lastUpdated  DateTime @default(now())
-
-  @@map("currency_rates")
-}
-
 enum ValidityType {
   months
   years
