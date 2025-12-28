@@ -16,9 +16,6 @@ const createOrUpdateTerms = async (adminId: string, description: string) => {
 
   // find terms & conditions
   const existTerms = await prisma.terms_Condition.findFirst();
-  if (!existTerms) {
-    throw new ApiError(httpStatus.NOT_FOUND, "Terms and Conditions not found");
-  }
 
   let result;
 

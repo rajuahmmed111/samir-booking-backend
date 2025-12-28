@@ -19,9 +19,6 @@ const createOrUpdatePolicy = async (
   }
 
   const existPolicy = await prisma.privacy_Policy.findFirst();
-  if (!existPolicy) {
-    throw new ApiError(httpStatus.NOT_FOUND, "Privacy Policy not found");
-  }
 
   let result;
 
