@@ -13,12 +13,12 @@ const createOrUpdateAbout = async (description: string) => {
     // update
     return prisma.about_App.update({
       where: { id: existing.id },
-      data: description,
+      data: { description },
     });
   } else {
     // create
     return prisma.about_App.create({
-      data: description as any,
+      data: { description },
     });
   }
 };
