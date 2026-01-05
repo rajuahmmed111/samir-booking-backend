@@ -33,6 +33,8 @@ const createOrUpdateTerms = async (adminId: string, description: string) => {
       },
     });
   }
+
+  return result;
 };
 
 // get all terms
