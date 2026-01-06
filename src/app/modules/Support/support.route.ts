@@ -77,4 +77,11 @@ router.delete(
   SupportController.deleteMySupport
 );
 
+// delete support
+router.delete(
+  "/:supportId",
+  auth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
+  SupportController.deleteSupport
+);
+
 export const supportRoutes = router;

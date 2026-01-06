@@ -90,6 +90,19 @@ const deleteMySupport = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+// delete support
+const deleteSupport = catchAsync(async (req: Request, res: Response) => {
+  const supportId = req.params.supportId;
+  const result = await SupportService.deleteSupport(supportId);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Support deleted successfully",
+    data: result,
+  });
+});
+
 export const SupportController = {
   createUserReport,
   getAllSupport,
@@ -97,4 +110,5 @@ export const SupportController = {
   getSupportById,
   updateMySupport,
   deleteMySupport,
+  deleteSupport,
 };
