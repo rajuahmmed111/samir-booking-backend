@@ -9,6 +9,9 @@ import { parseBodyData } from "../../middlewares/parseNestedJson";
 
 const router = express.Router();
 
+// get all admins
+router.get("/admins", auth(UserRole.SUPER_ADMIN), UserController.getAllAdmins);
+
 // get all users
 router.get(
   "/",
@@ -54,13 +57,6 @@ router.get(
     UserRole.USER
   ),
   UserController.getUserById
-);
-
-// get all admins
-router.get(
-  "/admins",
-  auth(UserRole.SUPER_ADMIN),
-  UserController.getAllAdmins
 );
 
 // create user
