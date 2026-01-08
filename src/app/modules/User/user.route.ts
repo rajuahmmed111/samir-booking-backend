@@ -56,6 +56,13 @@ router.get(
   UserController.getUserById
 );
 
+// get all admins
+router.get(
+  "/admins",
+  auth(UserRole.SUPER_ADMIN),
+  UserController.getAllAdmins
+);
+
 // create user
 router.post(
   "/",

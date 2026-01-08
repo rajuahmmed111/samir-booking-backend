@@ -138,6 +138,20 @@ const getUserById = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+// get all admins
+const getAllAdmins = catchAsync(async (req: Request, res: Response) => {
+  const filter = pick(req.query, filterField);
+  const options = pick(req.query, paginationFields);
+  const result = await UserService.getAllAdmins();
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Admins fetched successfully",
+    data: result,
+  });
+});
+
 // update user (info + profile image)
 const updateUser = catchAsync(async (req: Request, res: Response) => {
   const userId = req.user.id;
@@ -229,6 +243,7 @@ export const UserController = {
   updateUserStatusActiveToInActive,
   updateUserStatusInActiveToActive,
   getUserById,
+  getAllAdmins,
   updateUser,
   getMyProfile,
   updateUserProfileImage,

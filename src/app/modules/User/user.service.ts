@@ -564,6 +564,28 @@ const getUserById = async (id: string): Promise<SafeUser> => {
   return user;
 };
 
+// get all admin
+const getAllAdmins = async () => {
+  const result = await prisma.user.findMany({
+    where: { role: UserRole.ADMIN },
+    select: {
+      id: true,
+      fullName: true,
+      email: true,
+      profileImage: true,
+      contactNumber: true,
+      address: true,
+      country: true,
+      role: true,
+      fcmToken: true,
+      status: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+  });
+  return result;
+};
+
 // update user (info + profile image)
 const updateUser = async (
   id: string,
@@ -711,6 +733,7 @@ export const UserService = {
   updateUserStatusActiveToInActive,
   updateUserStatusInActiveToActive,
   getUserById,
+  getAllAdmins,
   updateUser,
   getMyProfile,
   updateUserProfileImage,
