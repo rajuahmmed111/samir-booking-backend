@@ -99,6 +99,67 @@ const deleteSpecificSubscriptionPlan = async (
 
 // ----------------------------subscription--------------------------------
 
+// get all purchase subscription
+const getAllPurchaseSubscription = async () => {
+  const subscriptions = await prisma.purchase_subscription.findMany({
+    select: {
+      id: true,
+      startDate: true,
+      endDate: true,
+      cancelAtPeriodEnd: true,
+      status: true,
+      userId: true,
+      planId: true,
+      user: {
+        select: {
+          id: true,
+          fullName: true,
+        },
+      },
+      plan: {
+        select: {
+          name: true,
+          price: true,
+          validity: true,
+        },
+      },
+    },
+  });
+
+  return subscriptions;
+};
+
+// get my purchase subscription
+const getMyPurchaseSubscription = async (userId: string) => {
+  const subscriptions = await prisma.purchase_subscription.findMany({
+    where: { userId },
+    select: {
+      id: true,
+      startDate: true,
+      endDate: true,
+      cancelAtPeriodEnd: true,
+      status: true,
+      userId: true,
+      planId: true,
+      user: {
+        select: {
+          id: true,
+          fullName: true,
+        },
+      },
+      plan: {
+        select: {
+          name: true,
+          price: true,
+          validity: true,
+        },
+      },
+    },
+  });
+
+  return subscriptions;
+};
+
 // create subscriptions
 const createSubscription = async (userId: string, planId: string) => {
   const user = await prisma.user.findUnique({ where: { id: userId } });
@@ -322,6 +383,8 @@ export const SubscriptionService = {
   updateSpecificSubscriptionPlan,
   deleteSpecificSubscriptionPlan,
 
+  getAllPurchaseSubscription,
+  getMyPurchaseSubscription,
   createSubscription,
   createCheckoutSessionForSubscription,
   handleStripeWebhook,

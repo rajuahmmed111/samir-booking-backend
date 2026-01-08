@@ -46,6 +46,21 @@ router.delete(
 );
 
 // ----------------------------subscription--------------------------------
+
+// get all purchase subscription
+router.get(
+  "/purchase-subscription",
+  auth(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.PROPERTY_OWNER),
+  SubscriptionController.getAllPurchaseSubscription
+);
+
+// get my purchase subscription
+router.get(
+  "/my-purchase-subscription",
+  auth(UserRole.PROPERTY_OWNER),
+  SubscriptionController.getMyPurchaseSubscription
+);
+
 router.post(
   "/create",
   auth(UserRole.PROPERTY_OWNER),

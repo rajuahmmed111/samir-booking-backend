@@ -116,6 +116,36 @@ const deleteSpecificSubscriptionPlan = catchAsync(
 
 // ----------------------------subscription--------------------------------
 
+// get all purchase subscription
+const getAllPurchaseSubscription = catchAsync(
+  async (req: Request, res: Response) => {
+    const subscriptions =
+      await SubscriptionService.getAllPurchaseSubscription();
+    sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: "Subscriptions retrieved successfully",
+      data: subscriptions,
+    });
+  }
+);
+
+// get my purchase subscription
+const getMyPurchaseSubscription = catchAsync(
+  async (req: Request, res: Response) => {
+    const userId = req.user?.id;
+    const subscriptions = await SubscriptionService.getMyPurchaseSubscription(
+      userId
+    );
+    sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: "Subscriptions retrieved successfully",
+      data: subscriptions,
+    });
+  }
+);
+
 // create subscription
 const createSubscription = catchAsync(async (req: Request, res: Response) => {
   const userId = req.user?.id;
@@ -191,6 +221,8 @@ export const SubscriptionController = {
   updateSpecificSubscriptionPlan,
   deleteSpecificSubscriptionPlan,
 
+  getAllPurchaseSubscription,
+  getMyPurchaseSubscription,
   createSubscription,
   createCheckoutSessionForSubscription,
   handleStripeWebhook,
