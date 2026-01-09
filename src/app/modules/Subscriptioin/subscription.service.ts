@@ -1,15 +1,21 @@
 import {
   PaymentProvider,
   PaymentStatus,
+  Prisma,
   SubscriptionPlan,
   SubscriptionStatus,
 } from "@prisma/client";
 import prisma from "../../../shared/prisma";
 import ApiError from "../../../errors/ApiErrors";
 import httpStatus from "http-status";
-import { ICreateSubscriptionPlan } from "./subscription.interface";
+import {
+  ICreateSubscriptionPlan,
+  ISubscriptionFilterRequest,
+} from "./subscription.interface";
 import stripe from "../../../helpars/stripe";
 import Stripe from "stripe";
+import { IPaginationOptions } from "../../../interfaces/paginations";
+import { paginationHelpers } from "../../../helpars/paginationHelper";
 
 // ----------------------------subscription plan--------------------------------
 
@@ -100,8 +106,39 @@ const deleteSpecificSubscriptionPlan = async (
 // ----------------------------subscription--------------------------------
 
 // get all purchase subscription
-const getAllPurchaseSubscription = async () => {
+const getAllPurchaseSubscription = async (
+  params: ISubscriptionFilterRequest,
+  options: IPaginationOptions
+) => {
+  const { limit, page, skip } = paginationHelpers.calculatedPagination(options);
+
+  const { searchTerm, ...filterData } = params;
+
+  const filters: Prisma.Purchase_subscriptionWhereInput[] = [];
+
+  // Exact search filter
+  if (Object.keys(filterData).length > 0) {
+    filters.push({
+      AND: Object.keys(filterData).map((key) => ({
+        [key]: {
+          equals: (filterData as any)[key],
+        },
+      })),
+    });
+  }
+
+  const where: Prisma.Purchase_subscriptionWhereInput = {
+    AND: filters,
+  };
+
   const subscriptions = await prisma.purchase_subscription.findMany({
+    where,
+    skip,
+    take: limit,
+    orderBy:
+      options.sortBy && options.sortOrder
+        ? { [options.sortBy]: options.sortOrder }
+        : { createdAt: "desc" },
     select: {
       id: true,
       startDate: true,
@@ -126,7 +163,16 @@ const getAllPurchaseSubscription = async () => {
     },
   });
 
-  return subscriptions;
+  const total = await prisma.purchase_subscription.count({ where });
+
+  return {
+    meta: {
+      total,
+      page,
+      limit,
+    },
+    data: subscriptions,
+  };
 };
 
 // get my purchase subscription

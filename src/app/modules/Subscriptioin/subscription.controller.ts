@@ -8,6 +8,9 @@ import { SubscriptionService } from "./subscription.service";
 import config from "../../../config";
 import stripe from "../../../helpars/stripe";
 import Stripe from "stripe";
+import { filterField } from "./subscription.constant";
+import { paginationFields } from "../../../constants/pagination";
+import { pick } from "../../../shared/pick";
 
 // ----------------------------subscription plan--------------------------------
 
@@ -119,8 +122,12 @@ const deleteSpecificSubscriptionPlan = catchAsync(
 // get all purchase subscription
 const getAllPurchaseSubscription = catchAsync(
   async (req: Request, res: Response) => {
-    const subscriptions =
-      await SubscriptionService.getAllPurchaseSubscription();
+    const filter = pick(req.query, filterField);
+    const options = pick(req.query, paginationFields);
+    const subscriptions = await SubscriptionService.getAllPurchaseSubscription(
+      filter,
+      options
+    );
     sendResponse(res, {
       statusCode: httpStatus.OK,
       success: true,
