@@ -172,7 +172,7 @@ const getAllUsers = async (
   // Filter for active users and role USER only
   filters.push({
     role: UserRole.USER,
-    status: UserStatus.ACTIVE,
+    // status: UserStatus.ACTIVE,
   });
 
   // text search
