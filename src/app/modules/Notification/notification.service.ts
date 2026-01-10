@@ -241,6 +241,14 @@ const markAsReadNotification = async (notificationId: string) => {
   });
 };
 
+// mark all as read notification
+const markAllAsReadNotification = async () => {
+  return prisma.notifications.updateMany({
+    // where: { receiverId: userId },
+    data: { read: true },
+  });
+};
+
 export const NotificationService = {
   sendSingleNotification,
   sendNotifications,
@@ -249,4 +257,5 @@ export const NotificationService = {
   getMyNotifications,
   deleteNotification,
   markAsReadNotification,
+  markAllAsReadNotification,
 };
