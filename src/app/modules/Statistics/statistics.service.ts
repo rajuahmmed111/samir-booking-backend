@@ -35,6 +35,27 @@ const getOverview = async (params: IFilterRequest) => {
     },
   });
 
+  // total hotel bookings
+  const totalHotelBookings = await prisma.hotel_Booking.count({
+    where: {
+      bookingStatus: {
+        in: [BookingStatus.CONFIRMED, BookingStatus.COMPLETED],
+      },
+    },
+  });
+
+  // total service booking
+  const totalServiceBookings = await prisma.service_booking.count({
+    where: {
+      bookingStatus: {
+        in: [BookingStatus.CONFIRMED, BookingStatus.COMPLETED],
+      },
+    },
+  });
+
+  // total booking
+  const totalBookings = totalHotelBookings + totalServiceBookings;
+
   // admin earnings (only PAID payments)
   const adminEarnings = await prisma.payment.aggregate({
     where: {
@@ -119,6 +140,7 @@ const getOverview = async (params: IFilterRequest) => {
   return {
     totalUsers,
     totalProviders,
+    totalBookings,
     adminEarnings: adminEarnings._sum.amount || 0,
     userChart,
     recentUsers,
@@ -577,15 +599,17 @@ const getAdminTotalEarnings = async (timeRange?: string) => {
 
   // combine all bookings
   const recentBookings = [
-    ...allHotelBookings.map(booking => ({
+    ...allHotelBookings.map((booking) => ({
       ...booking,
-      type: 'HOTEL'
+      type: "HOTEL",
     })),
-    ...allServiceBookings.map(booking => ({
+    ...allServiceBookings.map((booking) => ({
       ...booking,
-      type: 'SERVICE'
-    }))
-  ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      type: "SERVICE",
+    })),
+  ].sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
 
   // group by month
   const monthNames = [
