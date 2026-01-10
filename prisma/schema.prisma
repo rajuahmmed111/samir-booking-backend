@@ -29,6 +29,7 @@ enum UserStatus {
 enum EveryServiceStatus {
   AVAILABLE
   BOOKED
+  INACTIVE
 }
 
 enum PaymentStatus {

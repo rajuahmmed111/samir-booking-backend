@@ -1,4 +1,9 @@
-import { BookingStatus, PaymentStatus, UserRole } from "@prisma/client";
+import {
+  BookingStatus,
+  EveryServiceStatus,
+  PaymentStatus,
+  UserRole,
+} from "@prisma/client";
 import prisma from "../../../shared/prisma";
 import { IFilterRequest } from "./statistics.interface";
 import { getDateRange } from "../../../helpars/filterByDate";
@@ -18,11 +23,10 @@ const getOverview = async (params: IFilterRequest) => {
     },
   });
 
-  // total providers
-  const totalHosts = await prisma.user.count({
+  // total hotel
+  const totalHosts = await prisma.hotel.count({
     where: {
-      role: UserRole.PROPERTY_OWNER,
-      // ...(dateRange ? { createdAt: dateRange } : {}),
+      availableForBooking: EveryServiceStatus.AVAILABLE,
     },
   });
 
