@@ -530,7 +530,7 @@ const updateHotel = async (req: Request) => {
   };
 
   const hotelRule = files?.houseRules?.[0];
-  const hotelImagesOrV = files?.uploadPhotosOrVideos?.[0];
+  const hotelImagesOrV = files?.uploadPhotosOrVideos || [];
 
   // upload house rules
   let uploadedHouseRules: string | undefined;
@@ -542,16 +542,19 @@ const updateHotel = async (req: Request) => {
     uploadedHouseRules = uploaded.secure_url;
   }
 
-  // upload photos & videos
-  let uploadedMedia: string | undefined;
-  if (hotelImagesOrV) {
-    const uploads = await uploadFile.uploadToCloudinary(hotelImagesOrV);
+  // upload photos & videos (multiple files)
+  const uploadedMedia: string[] = [];
 
-    if (!uploads?.secure_url) {
+  const uploads = await Promise.all(
+    hotelImagesOrV.map((file) => uploadFile.uploadToCloudinary(file))
+  );
+
+  uploads.forEach((u) => {
+    if (!u?.secure_url) {
       throw new Error("Cloudinary upload failed");
     }
-    uploadedMedia = uploads.secure_url;
-  }
+    uploadedMedia.push(u.secure_url);
+  });
 
   const {
     // propertyName,
