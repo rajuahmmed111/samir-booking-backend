@@ -27,8 +27,8 @@ const createHotel = async (req: Request) => {
   };
 
   const hotelRule = files?.houseRules?.[0];
-  const hotelImagesOrV = files?.uploadPhotosOrVideos?.[0];
-  // const hotelImagesOrV = files?.uploadPhotosOrVideos || [];
+  // const hotelImagesOrV = files?.uploadPhotosOrVideos?.[0];
+  const hotelImagesOrV = files?.uploadPhotosOrVideos || [];
 
   if (!hotelImagesOrV) {
     throw new ApiError(
@@ -51,25 +51,19 @@ const createHotel = async (req: Request) => {
     uploadedHouseRules = uploaded.secure_url;
   }
 
-  // upload photos & videos
-  // let uploadedMedia: string[] = [];
-  let uploadedMedia: string | undefined;
-  if (hotelImagesOrV) {
-    const uploads = await uploadFile.uploadToCloudinary(hotelImagesOrV);
-    if (!uploads?.secure_url) {
+  // upload photos & videos (multiple files)
+  const uploadedMedia: string[] = [];
+
+  const uploads = await Promise.all(
+    hotelImagesOrV.map((file) => uploadFile.uploadToCloudinary(file))
+  );
+
+  uploads.forEach((u) => {
+    if (!u?.secure_url) {
       throw new Error("Cloudinary upload failed");
     }
-    uploadedMedia = uploads.secure_url;
-    // const uploads = await Promise.all(
-    //   hotelImagesOrV.map((file) => uploadFile.uploadToCloudinary(file))
-    // );
-    // uploadedMedia = uploads.map((f) => {
-    //   if (!f?.secure_url) {
-    //     throw new Error("Cloudinary upload failed");
-    //   }
-    //   return f.secure_url;
-    // });
-  }
+    uploadedMedia.push(u.secure_url);
+  });
 
   const {
     // propertyName,
@@ -107,7 +101,7 @@ const createHotel = async (req: Request) => {
   const result = await prisma.hotel.create({
     data: {
       // propertyName,
-      uploadPhotosOrVideos: uploadedMedia as string,
+      uploadPhotosOrVideos: uploadedMedia,
       propertyTitle,
       propertyAddress,
       propertyDescription,
