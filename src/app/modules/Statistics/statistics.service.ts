@@ -17,10 +17,9 @@ const getOverview = async (params: IFilterRequest) => {
 
   // total users
   const totalUsers = await prisma.user.count({
-    where: {
-      role: UserRole.USER,
-      // ...(dateRange ? { createdAt: dateRange } : {}),
-    },
+    // where: {
+    //   role: UserRole.USER,
+    // },
   });
 
   // total hotel
