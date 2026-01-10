@@ -34,12 +34,8 @@ const sendNotifications = catchAsync(async (req: Request, res: Response) => {
 
 // get all notifications
 const getAllNotifications = catchAsync(async (req: Request, res: Response) => {
-  const adminId = req.user?.id;
   const options = pick(req.query, paginationFields);
-  const notifications = await NotificationService.getAllNotifications(
-    adminId,
-    options
-  );
+  const notifications = await NotificationService.getAllNotifications(options);
 
   sendResponse(res, {
     statusCode: 200,

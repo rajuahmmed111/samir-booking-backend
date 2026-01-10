@@ -112,40 +112,10 @@ const sendNotifications = async (req: any) => {
 };
 
 // get all notifications
-const getAllNotifications = async (
-  adminId: string,
-  options: IPaginationOptions
-) => {
-  // find admin
-  const user = await prisma.user.findUnique({
-    where: { id: adminId },
-    select: {
-      supportNotification: true,
-      paymentNotification: true,
-      emailNotification: true,
-    },
-  });
-
+const getAllNotifications = async (options: IPaginationOptions) => {
   const { limit, page, skip } = paginationHelpers.calculatedPagination(options);
 
-  // serviceTypes dynamically excluded
-  const excludedTypes: string[] = [];
-
-  if (user?.supportNotification === false) {
-    excludedTypes.push("SUPPORT");
-  }
-  if (user?.paymentNotification === false) {
-    excludedTypes.push("ATTRACTION", "CAR", "SECURITY", "HOTEL");
-  }
-  if (user?.emailNotification === false) {
-    excludedTypes.push("EMAIL");
-  }
-
-  const where: any = {};
-  if (excludedTypes.length > 0) {
-    where.serviceTypes = { notIn: excludedTypes };
-  }
-
+  const where = {} as any;
   const result = await prisma.notifications.findMany({
     where,
     skip,
