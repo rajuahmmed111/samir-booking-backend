@@ -1,16 +1,7 @@
-import {
-  BookingStatus,
-  PaymentStatus,
-  SupportStatus,
-  UserRole,
-} from "@prisma/client";
+import { BookingStatus, PaymentStatus, UserRole } from "@prisma/client";
 import prisma from "../../../shared/prisma";
 import { IFilterRequest } from "./statistics.interface";
-import {
-  calculatePercentageChange,
-  getDateRange,
-  getPreviousDateRange,
-} from "../../../helpars/filterByDate";
+import { getDateRange } from "../../../helpars/filterByDate";
 import ApiError from "../../../errors/ApiErrors";
 import httpStatus from "http-status";
 
@@ -28,7 +19,7 @@ const getOverview = async (params: IFilterRequest) => {
   });
 
   // total providers
-  const totalProviders = await prisma.user.count({
+  const totalHosts = await prisma.user.count({
     where: {
       role: UserRole.PROPERTY_OWNER,
       // ...(dateRange ? { createdAt: dateRange } : {}),
@@ -139,7 +130,7 @@ const getOverview = async (params: IFilterRequest) => {
 
   return {
     totalUsers,
-    totalProviders,
+    totalHosts,
     totalBookings,
     adminEarnings: adminEarnings._sum.amount || 0,
     userChart,
