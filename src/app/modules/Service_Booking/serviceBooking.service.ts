@@ -274,6 +274,85 @@ const getAllServicePastBookingsOfUser = async (
   return result;
 };
 
+// get all my active and past bookings for a property owner
+const getAllServiceActiveAndPastBookings = async (
+  userId: string,
+  filters: IServiceFilterRequest
+) => {
+  const { searchTerm, bookingStatus, bookingType, date } = filters;
+  const andConditions = [];
+
+  // filter by userId (user can only see their own bookings)
+  andConditions.push({ userId });
+
+  // filter by booking type (active=CONFIRMED, past=COMPLETED)
+  if (bookingType) {
+    if (bookingType === "active") {
+      andConditions.push({ bookingStatus: BookingStatus.CONFIRMED });
+    } else if (bookingType === "past") {
+      andConditions.push({ bookingStatus: BookingStatus.COMPLETED });
+    }
+  } else {
+    // default: show both active and past bookings
+    andConditions.push({
+      bookingStatus: {
+        in: [BookingStatus.CONFIRMED, BookingStatus.COMPLETED],
+      },
+    });
+  }
+
+  // filter by specific booking status
+  if (bookingStatus) {
+    andConditions.push({ bookingStatus });
+  }
+
+  // filter by date
+  if (date) {
+    andConditions.push({ date });
+  }
+
+  // search by property name or service name
+  if (searchTerm) {
+    andConditions.push({
+      OR: [
+        { property: { contains: searchTerm } },
+        { serviceName: { contains: searchTerm } },
+      ],
+    });
+  }
+
+  const whereCondition = {
+    AND: andConditions,
+  };
+
+  const result = await prisma.service_booking.findMany({
+    where: whereCondition,
+    include: {
+      user: {
+        select: {
+          id: true,
+          fullName: true,
+          email: true,
+        },
+      },
+      service: {
+        select: {
+          id: true,
+          serviceName: true,
+          serviceType: true,
+          price: true,
+          coverImage: true,
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+
+  return result;
+};
+
 // get single service booking
 const getSingleServiceBooking = async (bookingId: string, userId: string) => {
   const bookingInfo = await prisma.service_booking.findFirst({
@@ -403,6 +482,7 @@ export const ServiceBookingService = {
   createServiceBooking,
   getAllServiceActiveBookingsOfUser,
   getAllServicePastBookingsOfUser,
+  getAllServiceActiveAndPastBookings,
   getSingleServiceBooking,
   getAllServiceBookingsOfProvider,
 };

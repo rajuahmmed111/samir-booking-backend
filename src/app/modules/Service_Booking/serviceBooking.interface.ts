@@ -43,6 +43,7 @@ export interface IServiceBookingResponse {
 export type IServiceFilterRequest = {
   searchTerm?: string;
   bookingStatus?: BookingStatus;
+  bookingType?: "active" | "past";
   userId?: string;
   providerId?: string;
   date?: string;

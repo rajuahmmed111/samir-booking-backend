@@ -29,6 +29,13 @@ router.get(
   ServiceBookingController.getAllServicePastBookingsOfUser
 );
 
+// get all my active and past bookings for a property owner
+router.get(
+  "/active-past-bookings",
+  auth(UserRole.PROPERTY_OWNER),
+  ServiceBookingController.getAllServiceActiveAndPastBookings
+);
+
 // get single service booking
 router.get(
   "/:bookingId",

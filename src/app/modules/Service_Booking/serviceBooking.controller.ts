@@ -60,6 +60,24 @@ const getAllServicePastBookingsOfUser = catchAsync(
   }
 );
 
+// get all my active and past bookings for a property owner
+const getAllServiceActiveAndPastBookings = catchAsync(
+  async (req: Request, res: Response) => {
+    const userId = req.user?.id;
+    const filters = pick(req.query, ["searchTerm", "bookingStatus", "bookingType", "date"]);
+    const result = await ServiceBookingService.getAllServiceActiveAndPastBookings(
+      userId,
+      filters as IServiceFilterRequest
+    );
+    sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: "Service bookings retrieved successfully",
+      data: result,
+    });
+  }
+);
+
 // get single service booking
 const getSingleServiceBooking = catchAsync(
   async (req: Request, res: Response) => {
@@ -100,6 +118,7 @@ export const ServiceBookingController = {
   createServiceBooking,
   getAllServiceActiveBookingsOfUser,
   getAllServicePastBookingsOfUser,
+  getAllServiceActiveAndPastBookings,
   getSingleServiceBooking,
   getAllServiceBookingsOfProvider,
 };
