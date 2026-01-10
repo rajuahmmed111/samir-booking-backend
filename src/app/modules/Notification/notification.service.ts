@@ -241,6 +241,25 @@ const markAsReadNotification = async (notificationId: string) => {
   });
 };
 
+// mark as unread notification
+const markAsUnreadNotification = async (notificationId: string) => {
+  // find notification
+  const notification = await prisma.notifications.findUnique({
+    where: {
+      id: notificationId,
+    },
+  });
+
+  if (!notification) {
+    throw new ApiError(404, "Notification not found");
+  }
+
+  return prisma.notifications.update({
+    where: { id: notificationId },
+    data: { read: false },
+  });
+};
+
 // mark all as read notification
 const markAllAsReadNotification = async () => {
   return prisma.notifications.updateMany({
@@ -257,5 +276,6 @@ export const NotificationService = {
   getMyNotifications,
   deleteNotification,
   markAsReadNotification,
+  markAsUnreadNotification,
   markAllAsReadNotification,
 };

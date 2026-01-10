@@ -109,6 +109,22 @@ const markAsReadNotification = catchAsync(
   }
 );
 
+// mark as unread notification
+const markAsUnreadNotification = catchAsync(
+  async (req: Request, res: Response) => {
+    const notificationId = req.params.notificationId;
+    const notification = await NotificationService.markAsUnreadNotification(
+      notificationId
+    );
+    sendResponse(res, {
+      success: true,
+      statusCode: 200,
+      message: "Notification marked as read successfully",
+      data: notification,
+    });
+  }
+);
+
 // mark all as read notification
 const markAllAsReadNotification = catchAsync(
   async (req: Request, res: Response) => {
@@ -131,5 +147,6 @@ export const NotificationController = {
   getMyNotifications,
   deleteNotification,
   markAsReadNotification,
+  markAsUnreadNotification,
   markAllAsReadNotification,
 };
