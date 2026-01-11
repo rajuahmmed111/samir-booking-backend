@@ -25,13 +25,6 @@ router.get(
   messageControllers.getMyChannelByMyId
 );
 
-// get my channel by my id for user support
-router.get(
-  "/support-my-channel",
-  auth(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.USER),
-  messageControllers.getMyChannelByMyIdForUserSupport
-);
-
 // get my channel through my id and receiver id
 router.get("/my-channel/:receiverId", auth(), messageControllers.getMyChannel);
 

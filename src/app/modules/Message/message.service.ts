@@ -180,105 +180,6 @@ const getMyChannelByMyId = async (userId: string) => {
   return result.filter((ch) => ch.receiverUser !== null);
 };
 
-// get my channel by my id for user support
-const getMyChannelByMyIdForUserSupport = async (
-  userId: string,
-  params: IMessageFilterRequest,
-  options: IPaginationOptions
-) => {
-  if (!ObjectId.isValid(userId)) {
-    throw new ApiError(httpStatus.BAD_REQUEST, "Invalid user id format");
-  }
-
-  const { limit, page, skip } = paginationHelpers.calculatedPagination(options);
-  const { searchTerm } = params;
-
-  const user = await prisma.user.findUnique({
-    where: { id: new ObjectId(userId).toString() },
-  });
-
-  if (!user || user.status !== UserStatus.ACTIVE) {
-    throw new ApiError(httpStatus.NOT_FOUND, "User not found or inactive");
-  }
-
-  const channels = await prisma.channel.findMany({
-    where: {
-      OR: [{ person1Id: userId }, { person2Id: userId }],
-    },
-    include: {
-      person1: {
-        select: {
-          id: true,
-          fullName: true,
-          email: true,
-          profileImage: true,
-          role: true,
-          status: true,
-        },
-      },
-      person2: {
-        select: {
-          id: true,
-          fullName: true,
-          email: true,
-          profileImage: true,
-          role: true,
-          status: true,
-        },
-      },
-    },
-    skip,
-    take: limit,
-  });
-
-  // Transform and filter
-  let result = channels
-    .map((channel) => {
-      const p1 = channel.person1;
-      const p2 = channel.person2;
-      if (!p1 || !p2) return null;
-
-      const bothActive =
-        p1.status === UserStatus.ACTIVE && p2.status === UserStatus.ACTIVE;
-
-      const isUserAdminPair =
-        bothActive &&
-        ((p1.role === UserRole.USER && p2.role === UserRole.ADMIN) ||
-          (p1.role === UserRole.ADMIN && p2.role === UserRole.USER));
-
-      if (!isUserAdminPair) return null;
-
-      const receiverUser = channel.person1Id === userId ? p2 : p1;
-
-      return {
-        id: channel.id,
-        channelName: channel.channelName,
-        createdAt: channel.createdAt,
-        updatedAt: channel.updatedAt,
-        receiverUser,
-      };
-    })
-    .filter((ch) => ch !== null);
-
-  // search fullName and email
-  if (searchTerm) {
-    result = result.filter((ch) => {
-      const nameMatch = ch!.receiverUser.fullName
-        ?.toLowerCase()
-        .includes(searchTerm.toLowerCase());
-      const emailMatch = ch!.receiverUser.email
-        ?.toLowerCase()
-        .includes(searchTerm.toLowerCase());
-      return nameMatch || emailMatch;
-    });
-  }
-
-  return {
-    meta: { page, limit },
-    data: result,
-  };
-};
-
 // get my channel through my id and receiver id
 const getMyChannel = async (userId: string, receiverId: string) => {
   // find person1 and person2
@@ -305,34 +206,34 @@ const getMessagesFromDB = async (
 ) => {
   const { limit, page, skip } = paginationHelpers.calculatedPagination(options);
 
-  const message = await prisma.channel.findMany({
+  // message fetch
+  const messages = await prisma.message.findMany({
     where: {
-      channelName: channelName,
+      channelName,
     },
     skip,
     take: limit,
     orderBy:
       options.sortBy && options.sortOrder
         ? { [options.sortBy]: options.sortOrder }
-        : {
-            createdAt: "desc",
-          },
-    select: {
-      messages: {
-        include: {
-          sender: {
-            select: {
-              id: true,
-              fullName: true,
-              profileImage: true,
-            },
-          },
+        : { createdAt: "desc" },
+    include: {
+      sender: {
+        select: {
+          id: true,
+          fullName: true,
+          profileImage: true,
         },
       },
     },
   });
 
-  const total = await prisma.channel.count();
+  // total count message based
+  const total = await prisma.message.count({
+    where: {
+      channelName,
+    },
+  });
 
   return {
     meta: {
@@ -340,7 +241,7 @@ const getMessagesFromDB = async (
       page,
       limit,
     },
-    data: message,
+    data: messages,
   };
 };
 
@@ -580,7 +481,6 @@ export const MessageServices = {
   sendMessage,
   getMyChannel,
   getMyChannelByMyId,
-  getMyChannelByMyIdForUserSupport,
   getMessagesFromDB,
   getUserChannels,
   getUserAdminChannels,
