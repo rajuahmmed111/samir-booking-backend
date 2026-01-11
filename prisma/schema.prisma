@@ -304,6 +304,7 @@ model Service {
   id                       String             @id @default(auto()) @map("_id") @db.ObjectId
   serviceName              String
   serviceType              String
+  address                  String
   description              String
   experience               Float
   price                    Float

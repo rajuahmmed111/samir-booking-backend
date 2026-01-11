@@ -23,6 +23,7 @@ export interface ServiceAvailability {
 export interface IServiceCreate {
   serviceName: string;
   serviceType: string;
+  address: string;
   description: string;
   experience: number;
   price: number;
