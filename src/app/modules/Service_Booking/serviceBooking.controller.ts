@@ -5,6 +5,7 @@ import { ServiceBookingService } from "./serviceBooking.service";
 import { Request, Response } from "express";
 import { IServiceFilterRequest } from "./serviceBooking.interface";
 import { pick } from "../../../shared/pick";
+import { paginationFields } from "../../../constants/pagination";
 
 // create service booking
 const createServiceBooking = catchAsync(async (req: Request, res: Response) => {
@@ -23,52 +24,23 @@ const createServiceBooking = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-// get all service active bookings for a user
-const getAllServiceActiveBookingsOfUser = catchAsync(
-  async (req: Request, res: Response) => {
-    const userId = req.user?.id;
-    const filters = pick(req.query, ["searchTerm", "bookingStatus", "date"]);
-    const result =
-      await ServiceBookingService.getAllServiceActiveBookingsOfUser(
-        userId,
-        filters as IServiceFilterRequest
-      );
-    sendResponse(res, {
-      statusCode: httpStatus.OK,
-      success: true,
-      message: "Service bookings retrieved successfully",
-      data: result,
-    });
-  }
-);
-
-// get all service past bookings for a user
-const getAllServicePastBookingsOfUser = catchAsync(
-  async (req: Request, res: Response) => {
-    const userId = req.user?.id;
-    const filters = pick(req.query, ["searchTerm", "bookingStatus", "date"]);
-    const result = await ServiceBookingService.getAllServicePastBookingsOfUser(
-      userId,
-      filters as IServiceFilterRequest
-    );
-    sendResponse(res, {
-      statusCode: httpStatus.OK,
-      success: true,
-      message: "Service bookings retrieved successfully",
-      data: result,
-    });
-  }
-);
-
 // get all my active and past bookings for a property owner
 const getAllServiceActiveAndPastBookings = catchAsync(
   async (req: Request, res: Response) => {
     const userId = req.user?.id;
-    const filters = pick(req.query, ["searchTerm", "bookingStatus", "bookingType", "date"]);
-    const result = await ServiceBookingService.getAllServiceActiveAndPastBookings(
-      userId,
-      filters as IServiceFilterRequest
-    );
+    const filters = pick(req.query, [
+      "searchTerm",
+      "bookingStatus",
+      "bookingType",
+      "date",
+    ]);
+    const options = pick(req.query, paginationFields);
+    const result =
+      await ServiceBookingService.getAllServiceActiveAndPastBookings(
+        userId,
+        filters as IServiceFilterRequest,
+        options
+      );
     sendResponse(res, {
       statusCode: httpStatus.OK,
       success: true,
@@ -116,8 +88,6 @@ const getAllServiceBookingsOfProvider = catchAsync(
 
 export const ServiceBookingController = {
   createServiceBooking,
-  getAllServiceActiveBookingsOfUser,
-  getAllServicePastBookingsOfUser,
   getAllServiceActiveAndPastBookings,
   getSingleServiceBooking,
   getAllServiceBookingsOfProvider,

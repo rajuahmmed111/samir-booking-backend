@@ -7,6 +7,8 @@ import {
   IUpdateServiceBooking,
   IServiceFilterRequest,
 } from "./serviceBooking.interface";
+import { IPaginationOptions } from "../../../interfaces/paginations";
+import { paginationHelpers } from "../../../helpars/paginationHelper";
 
 // create service booking
 const createServiceBooking = async (
@@ -143,142 +145,14 @@ const createServiceBooking = async (
   return result;
 };
 
-// get all service active bookings for user
-const getAllServiceActiveBookingsOfUser = async (
-  userId: string,
-  filters: IServiceFilterRequest
-) => {
-  const { searchTerm, bookingStatus, date } = filters;
-  const andConditions = [];
-
-  // filter by userId (user can only see their own bookings)
-  andConditions.push({ userId, bookingStatus: BookingStatus.CONFIRMED });
-
-  // filter by booking status
-  if (bookingStatus) {
-    andConditions.push({ bookingStatus });
-  }
-
-  // filter by date
-  if (date) {
-    andConditions.push({ date });
-  }
-
-  // search by property name or service name
-  if (searchTerm) {
-    andConditions.push({
-      OR: [
-        { property: { contains: searchTerm } },
-        { serviceName: { contains: searchTerm } },
-      ],
-    });
-  }
-
-  const whereCondition = {
-    AND: andConditions,
-  };
-
-  const result = await prisma.service_booking.findMany({
-    where: whereCondition,
-    include: {
-      user: {
-        select: {
-          id: true,
-          fullName: true,
-          email: true,
-        },
-      },
-      service: {
-        select: {
-          id: true,
-          serviceName: true,
-          serviceType: true,
-          price: true,
-          coverImage: true,
-        },
-      },
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
-  });
-
-  return result;
-};
-
-// get all service past bookings for user
-const getAllServicePastBookingsOfUser = async (
-  userId: string,
-  filters: IServiceFilterRequest
-) => {
-  const { searchTerm, bookingStatus, date } = filters;
-  const andConditions = [];
-
-  // filter by userId (user can only see their own bookings)
-  andConditions.push({
-    userId,
-    bookingStatus: {
-      in: [BookingStatus.COMPLETED, BookingStatus.CANCELLED],
-    },
-  });
-
-  // filter by booking status
-  if (bookingStatus) {
-    andConditions.push({ bookingStatus });
-  }
-
-  // filter by date
-  if (date) {
-    andConditions.push({ date });
-  }
-
-  // search by property name or service name
-  if (searchTerm) {
-    andConditions.push({
-      OR: [
-        { property: { contains: searchTerm } },
-        { serviceName: { contains: searchTerm } },
-      ],
-    });
-  }
-
-  const whereCondition = {
-    AND: andConditions,
-  };
-
-  const result = await prisma.service_booking.findMany({
-    where: whereCondition,
-    include: {
-      user: {
-        select: {
-          id: true,
-          fullName: true,
-          email: true,
-        },
-      },
-      service: {
-        select: {
-          id: true,
-          serviceName: true,
-          serviceType: true,
-          price: true,
-          coverImage: true,
-        },
-      },
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
-  });
-
-  return result;
-};
-
 // get all my active and past bookings for a property owner
 const getAllServiceActiveAndPastBookings = async (
   userId: string,
-  filters: IServiceFilterRequest
+  filters: IServiceFilterRequest,
+  options: IPaginationOptions
 ) => {
+  const { limit, page, skip } = paginationHelpers.calculatedPagination(options);
+
   const { searchTerm, bookingStatus, bookingType, date } = filters;
   const andConditions = [];
 
@@ -321,12 +195,18 @@ const getAllServiceActiveAndPastBookings = async (
     });
   }
 
-  const whereCondition = {
+  const where = {
     AND: andConditions,
   };
 
   const result = await prisma.service_booking.findMany({
-    where: whereCondition,
+    where,
+    skip,
+    take: limit,
+    orderBy:
+      options.sortBy && options.sortOrder
+        ? { [options.sortBy]: options.sortOrder }
+        : { createdAt: "desc" },
     include: {
       user: {
         select: {
@@ -344,9 +224,6 @@ const getAllServiceActiveAndPastBookings = async (
           coverImage: true,
         },
       },
-    },
-    orderBy: {
-      createdAt: "desc",
     },
   });
 
@@ -480,8 +357,6 @@ const getAllServiceBookingsOfProvider = async (
 
 export const ServiceBookingService = {
   createServiceBooking,
-  getAllServiceActiveBookingsOfUser,
-  getAllServicePastBookingsOfUser,
   getAllServiceActiveAndPastBookings,
   getSingleServiceBooking,
   getAllServiceBookingsOfProvider,
