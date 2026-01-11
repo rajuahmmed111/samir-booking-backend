@@ -263,6 +263,7 @@ const getSingleServiceBooking = async (bookingId: string, userId: string) => {
           id: true,
           serviceName: true,
           serviceType: true,
+          address: true,
           experience: true,
           description: true,
           price: true,
