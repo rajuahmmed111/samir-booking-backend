@@ -22,7 +22,7 @@ router.get(
   ServiceBookingController.getAllServiceActiveAndPastBookings
 );
 
-// get single service booking
+// get single service booking (deatiles) by bookingId
 router.get(
   "/:bookingId",
   auth(UserRole.PROPERTY_OWNER),
