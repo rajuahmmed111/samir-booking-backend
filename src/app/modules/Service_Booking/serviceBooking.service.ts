@@ -263,8 +263,10 @@ const getSingleServiceBooking = async (bookingId: string, userId: string) => {
           id: true,
           serviceName: true,
           serviceType: true,
+          experience: true,
           description: true,
           price: true,
+          serviceRating: true,
           coverImage: true,
           providerId: true,
           user: {
@@ -275,6 +277,7 @@ const getSingleServiceBooking = async (bookingId: string, userId: string) => {
               contactNumber: true,
             },
           },
+          reviews: true,
         },
       },
       payments: true,
