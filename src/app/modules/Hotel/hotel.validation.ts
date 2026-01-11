@@ -1,15 +1,44 @@
 import { z } from "zod";
 
-// custom price schema
-const customPriceSchema = z.object({
-  startDate: z.string().refine((date) => !isNaN(Date.parse(date)), {
-    message: "Invalid start date format",
-  }),
-  endDate: z.string().refine((date) => !isNaN(Date.parse(date)), {
-    message: "Invalid end date format",
-  }),
-  price: z.number().positive("Price must be positive"),
-});
+// custom price schema - supports both single date and date range
+const customPriceSchema = z
+  .object({
+    date: z
+      .string()
+      .refine((date) => !isNaN(Date.parse(date)), {
+        message: "Invalid date format",
+      })
+      .optional(),
+    startDate: z
+      .string()
+      .refine((date) => !isNaN(Date.parse(date)), {
+        message: "Invalid start date format",
+      })
+      .optional(),
+    endDate: z
+      .string()
+      .refine((date) => !isNaN(Date.parse(date)), {
+        message: "Invalid end date format",
+      })
+      .optional(),
+    price: z.number().positive("Price must be positive"),
+  })
+  .refine(
+    (data) => {
+      // Either provide single date OR both startDate and endDate
+      if (data.date) {
+        return true; // single date is valid
+      }
+      if (data.startDate && data.endDate) {
+        return true; // date range is valid
+      }
+      return false; // invalid combination
+    },
+    {
+      message:
+        "Either provide 'date' for single day pricing OR both 'startDate' and 'endDate' for date range pricing",
+    }
+  );
 
 // inventory item schema
 const inventoryItemSchema = z.object({
@@ -91,9 +120,9 @@ const updateHotelSchema = z.object({
 const createGuardSchema = z.object({
   body: z.object({
     // hotelId: z.string().min(1, "Hotel ID is required"),
-    name: z.string({required_error:"Guard name is required"}),
+    name: z.string({ required_error: "Guard name is required" }),
     phone: z.string().min(1, "Guard phone is required"),
-    whatsapp: z.string({required_error:"Guard whatsapp is required"}),
+    whatsapp: z.string({ required_error: "Guard whatsapp is required" }),
     status: z.enum(["AVAILABLE", "ON_DUTY", "OFF_DUTY"]).optional(),
   }),
 });

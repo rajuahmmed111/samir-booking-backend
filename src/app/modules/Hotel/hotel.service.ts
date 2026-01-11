@@ -131,11 +131,22 @@ const createHotel = async (req: Request) => {
       // custom Price Range
       customPrices: customPrices
         ? {
-            create: JSON.parse(customPrices).map((p: any) => ({
-              startDate: new Date(p.startDate),
-              endDate: new Date(p.endDate),
-              price: p.price,
-            })),
+            create: JSON.parse(customPrices).map((p: any) => {
+              // Handle single date case
+              if (p.date) {
+                return {
+                  startDate: new Date(p.date),
+                  endDate: new Date(p.date), // same date for single day
+                  price: p.price,
+                };
+              }
+              // Handle date range case
+              return {
+                startDate: new Date(p.startDate),
+                endDate: new Date(p.endDate),
+                price: p.price,
+              };
+            }),
           }
         : undefined,
 
