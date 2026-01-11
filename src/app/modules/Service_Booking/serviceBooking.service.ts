@@ -227,7 +227,16 @@ const getAllServiceActiveAndPastBookings = async (
     },
   });
 
-  return result;
+  const total = await prisma.service_booking.count({ where });
+
+  return {
+    meta: {
+      total,
+      page,
+      limit,
+    },
+    data: result,
+  };
 };
 
 // get single service booking
