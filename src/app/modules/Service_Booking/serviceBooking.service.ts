@@ -218,9 +218,9 @@ const getAllServiceActiveAndPastBookings = async (
       service: {
         select: {
           id: true,
-          serviceName: true,
+          // serviceName: true,
           serviceType: true,
-          price: true,
+          serviceRating: true,
           coverImage: true,
         },
       },
