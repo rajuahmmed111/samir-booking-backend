@@ -21,7 +21,7 @@ router.get(
 
 // get select my property
 router.get(
-  "/",
+  "/select-my-properties",
   auth(UserRole.PROPERTY_OWNER),
   HotelController.getSelectMyProperties
 );
