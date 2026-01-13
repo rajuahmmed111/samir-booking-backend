@@ -10,7 +10,7 @@ import { paginationFields } from "../../../constants/pagination";
 // create service
 const createService = catchAsync(async (req: Request, res: Response) => {
   const coverImageFile = req.file;
-  const providerId = req.user?.providerId;
+  const providerId = req.user?.id;
   const result = await ServiceService.createService(
     providerId,
     req.body,

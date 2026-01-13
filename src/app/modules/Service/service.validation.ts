@@ -11,13 +11,17 @@ const ServiceAvailabilitySchema = z.object({
   slots: z.array(ServiceSlotSchema).min(1, "At least one slot is required"),
 });
 
-export const createServiceSchema = z.object({
+const createServiceSchema = z.object({
   body: z.object({
     serviceName: z.string().min(1, "Service name is required"),
     serviceType: z.string().min(1, "Service type is required"),
     description: z.string().min(1, "Description is required"),
-    experience: z.number().min(0, "Experience must be a positive number"),
-    price: z.number().min(0, "Price must be a positive number"),
+    experience: z.coerce
+      .number()
+      .min(0, "Experience must be a positive number"),
+
+    price: z.coerce.number().min(0, "Price must be a positive number"),
+
     // coverImage: z.string().min(1, "Cover image is required"),
     serviceStatus: z.enum([
       ServiceStatus.ACTIVE,
@@ -32,7 +36,7 @@ export const createServiceSchema = z.object({
   }),
 });
 
-export const updateServiceSchema = z.object({
+const updateServiceSchema = z.object({
   body: z.object({
     serviceName: z.string().min(1, "Service name is required").optional(),
     serviceType: z.string().min(1, "Service type is required").optional(),
