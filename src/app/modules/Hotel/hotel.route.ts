@@ -19,12 +19,12 @@ router.get(
   HotelController.getAllHotelsForPartner
 );
 
-// generate property share link
-// router.get(
-//   "/share/:hotelId",
-//   auth(UserRole.PROPERTY_OWNER),
-//   HotelController.generatePropertyShareLink
-// );
+// get select my property
+router.get(
+  "/",
+  auth(UserRole.PROPERTY_OWNER),
+  HotelController.getSelectMyProperties
+);
 
 // get my favorites
 router.get(

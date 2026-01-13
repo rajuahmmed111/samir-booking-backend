@@ -65,20 +65,20 @@ const getAllHotelsForPartner = catchAsync(
   }
 );
 
-// generate property share link
-// const generatePropertyShareLink = catchAsync(
-//   async (req: Request, res: Response) => {
-//     const hotelId = req.params.hotelId;
-//     const partnerId = req.user?.id;
-//     const result = await HotelService.generatePropertyShareLink(hotelId, partnerId);
-//     sendResponse(res, {
-//       statusCode: httpStatus.OK,
-//       success: true,
-//       message: "Property share link generated successfully",
-//       data: result,
-//     });
-//   }
-// );
+// get select my property
+const getSelectMyProperties = catchAsync(
+  async (req: Request, res: Response) => {
+    const partnerId = req.user?.id;
+    const result = await HotelService.getSelectMyProperties(partnerId);
+
+    sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: "Retrieved selected properties successfully",
+      data: result,
+    });
+  }
+);
 
 // get single hotel
 const getSingleHotel = catchAsync(async (req: Request, res: Response) => {
@@ -152,7 +152,7 @@ export const HotelController = {
   createHotel,
   getAllHotels,
   getAllHotelsForPartner,
-  // generatePropertyShareLink,
+  getSelectMyProperties,
   getSingleHotel,
   toggleFavorite,
   getAllFavoriteHotels,

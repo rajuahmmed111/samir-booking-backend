@@ -371,28 +371,26 @@ const getAllHotelsForPartner = async (
   };
 };
 
-// generate property share link
-// const generatePropertyShareLink = async (
-//   hotelId: string,
-//   partnerId: string
-// ) => {
-//   // find hotel
-//   const partnerExists = await prisma.user.findUnique({
-//     where: { id: partnerId },
-//   });
-//   if (!partnerExists) {
-//     throw new ApiError(httpStatus.NOT_FOUND, "Partner not found");
-//   }
+// get select my property
+const getSelectMyProperties = async (partnerId: string) => {
+  // find partner
+  const partnerExists = await prisma.user.findUnique({
+    where: { id: partnerId },
+  });
+  if (!partnerExists) {
+    throw new ApiError(httpStatus.NOT_FOUND, "Partner not found");
+  }
 
-//   // find hotel
-//   const hotel = await prisma.hotel.findUnique({
-//     where: { id: hotelId },
-//   });
+  const result = await prisma.hotel.findMany({
+    where: { partnerId },
+    select: {
+      id: true,
+      propertyTitle: true,
+    },
+  });
 
-//   if (!hotel) {
-//     throw new ApiError(httpStatus.NOT_FOUND, "Hotel not found");
-//   }
-// };
+  return result;
+};
 
 // get single hotel
 const getSingleHotel = async (hotelId: string) => {
@@ -672,7 +670,7 @@ export const HotelService = {
   createHotel,
   getAllHotels,
   getAllHotelsForPartner,
-  // generatePropertyShareLink,
+  getSelectMyProperties,
   getSingleHotel,
   toggleFavorite,
   getAllFavoriteHotels,
