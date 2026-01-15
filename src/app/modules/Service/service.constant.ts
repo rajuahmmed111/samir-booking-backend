@@ -5,4 +5,4 @@ export const filterField: string[] = [
   "serviceStatus",
 ];
 
-export const searchableFields = ["serviceName", "serviceType"];
+export const searchableFields = ["serviceType"];
