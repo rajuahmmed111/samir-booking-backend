@@ -17,6 +17,16 @@ const createService = async (
 ) => {
   const { availability, ...serviceData } = payload;
 
+  // convert string values to numbers
+  const convertedServiceData = {
+    ...serviceData,
+    experience: parseFloat(serviceData.experience.toString()),
+    offered_services: serviceData.offered_services.map(service => ({
+      ...service,
+      price: parseFloat(service.price.toString())
+    }))
+  };
+
   // cover image upload
   let coverImagePath = serviceData.coverImage;
   if (coverImageFile) {
@@ -40,9 +50,9 @@ const createService = async (
   // create service
   const service = await prisma.service.create({
     data: {
-      ...serviceData,
+      ...convertedServiceData,
       coverImage: coverImagePath,
-      serviceStatus: serviceData.serviceStatus as ServiceStatus,
+      serviceStatus: convertedServiceData.serviceStatus as ServiceStatus,
       providerId: providerId,
     },
   });

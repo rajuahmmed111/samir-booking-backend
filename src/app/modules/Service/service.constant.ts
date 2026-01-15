@@ -1,6 +1,6 @@
 export const filterField: string[] = [
   "searchTerm",
-  "serviceName",
+  // "serviceName",
   "serviceType",
   "serviceStatus",
 ];
