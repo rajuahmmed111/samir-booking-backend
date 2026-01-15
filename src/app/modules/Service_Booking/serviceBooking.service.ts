@@ -4,7 +4,6 @@ import ApiError from "../../../errors/ApiErrors";
 import httpStatus from "http-status";
 import {
   ICreateServiceBooking,
-  IUpdateServiceBooking,
   IServiceFilterRequest,
 } from "./serviceBooking.interface";
 import { IPaginationOptions } from "../../../interfaces/paginations";

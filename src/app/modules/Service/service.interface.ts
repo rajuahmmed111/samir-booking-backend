@@ -8,6 +8,11 @@ export type IServiceFilterRequest = {
   serviceStatus?: string | undefined;
 };
 
+export interface OfferedService {
+  price: number;
+  serviceTypeName: string;
+}
+
 export interface ServiceSlot {
   id?: string;
   from: string;
@@ -26,7 +31,7 @@ export interface IServiceCreate {
   address: string;
   description: string;
   experience: number;
-  price: number;
+  offered_services: OfferedService[];
   coverImage: string;
   serviceStatus: string;
   recordProofVideoStarting?: string;
@@ -39,7 +44,7 @@ export interface IServiceUpdate {
   serviceType?: string;
   description?: string;
   experience?: number;
-  price?: number;
+  offered_services?: OfferedService[];
   coverImage?: string;
   serviceStatus?: string;
   recordProofVideoStarting?: string;
@@ -53,7 +58,7 @@ export interface IServiceResponse {
   serviceType: string;
   description: string;
   experience: number;
-  price: number;
+  offered_services: OfferedService[];
   coverImage: string;
   serviceStatus: string;
   recordProofVideoStarting?: string;

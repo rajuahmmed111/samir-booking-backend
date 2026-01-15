@@ -291,6 +291,7 @@ const createStripeCheckoutSessionForService = async (
 
     // full amount goes to provider
     payment_intent_data: {
+      capture_method: "manual", // hold in platform account
       transfer_data: {
         destination: provider.stripeAccountId, // provider gets full amount
       },

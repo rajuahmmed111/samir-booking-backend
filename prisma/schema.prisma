@@ -300,6 +300,11 @@ model Traveler {
   @@map("travelers")
 }
 
+type OfferedService {
+  price           Float
+  serviceTypeName String
+}
+
 model Service {
   id                       String             @id @default(auto()) @map("_id") @db.ObjectId
   serviceName              String
@@ -307,7 +312,8 @@ model Service {
   address                  String
   description              String
   experience               Float
-  price                    Float
+  // price                    Float
+  offered_services         OfferedService[]
   // estimatedDuration String
   coverImage               String
   serviceStatus            ServiceStatus

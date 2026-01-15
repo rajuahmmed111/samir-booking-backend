@@ -167,7 +167,8 @@ const updateService = async (
   if (serviceData.serviceName) updateData.serviceName = serviceData.serviceName;
   if (serviceData.serviceType) updateData.serviceType = serviceData.serviceType;
   if (serviceData.description) updateData.description = serviceData.description;
-  if (serviceData.price !== undefined) updateData.price = serviceData.price;
+  if (serviceData.offered_services)
+    updateData.offered_services = serviceData.offered_services;
   if (videoStartingPaths.length > 0)
     updateData.recordProofVideoStarting = videoStartingPaths.join(",");
   if (videoEndingPaths.length > 0)
