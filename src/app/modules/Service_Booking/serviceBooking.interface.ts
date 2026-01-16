@@ -1,5 +1,10 @@
 import { BookingStatus } from "@prisma/client";
 
+export interface OfferedService {
+  price: number;
+  serviceTypeName: string;
+}
+
 export interface ITimeSlot {
   from: string;
   to: string;
@@ -9,6 +14,8 @@ export interface ITimeSlot {
 export interface ICreateServiceBooking {
   property: string;
   serviceName: string;
+  offeredService: OfferedService[];
+  newOfferedService?: OfferedService[];
   date: string;
   day: string;
   timeSlot: ITimeSlot;
@@ -27,6 +34,8 @@ export interface IServiceBookingResponse {
   checkoutSessionId?: string;
   property: string;
   serviceName: string;
+  offeredService: OfferedService[];
+  newOfferedService?: OfferedService[];
   date: string;
   day: string;
   timeSlot: ITimeSlot;
@@ -35,6 +44,7 @@ export interface IServiceBookingResponse {
   bookingStatus: BookingStatus;
   createdAt: Date;
   updatedAt: Date;
+  hotelId?: string;
   providerId?: string;
   userId?: string;
   serviceId?: string;

@@ -365,18 +365,20 @@ model ScheduleSlot {
 }
 
 model Service_booking {
-  id                  String        @id @default(auto()) @map("_id") @db.ObjectId
+  id                  String           @id @default(auto()) @map("_id") @db.ObjectId
   checkoutSessionId   String?
   property            String // property name
   serviceName         String
+  offeredService      OfferedService[]
+  newOfferedService   OfferedService[]
   date                String
   day                 String
   timeSlot            Json // { "from": "10:00 AM", "to": "12:00 PM" }
   totalPrice          Float
   specialInstructions String?
-  bookingStatus       BookingStatus @default(PENDING)
-  createdAt           DateTime      @default(now())
-  updatedAt           DateTime      @updatedAt
+  bookingStatus       BookingStatus    @default(PENDING)
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
 
   // relationships
   hotelId    String?   @db.ObjectId
