@@ -12,7 +12,7 @@ const ServiceAvailabilitySchema = z.object({
 });
 
 const OfferedServiceSchema = z.object({
-  price: z.string().min(0, "Price is required"),
+  // price: z.string().min(0, "Price is required"),
   serviceTypeName: z.string().min(1, "Service type name is required"),
 });
 
@@ -21,7 +21,7 @@ const createServiceSchema = z.object({
     serviceName: z.string().min(1, "Service name is required"),
     serviceType: z.string().min(1, "Service type is required"),
     description: z.string().min(1, "Description is required"),
-    experience: z.string().min(0, "Experience is required"),
+    // experience: z.string().min(0, "Experience is required"),
 
     offered_services: z
       .array(OfferedServiceSchema)
@@ -50,7 +50,12 @@ const updateServiceSchema = z.object({
       .number()
       .min(0, "Experience must be a positive number")
       .optional(),
-    price: z.number().min(0, "Price must be a positive number").optional(),
+
+    offered_services: z
+      .array(OfferedServiceSchema)
+      .min(1, "At least one offered service is required")
+      .optional(),
+
     serviceStatus: z
       .enum([
         ServiceStatus.ACTIVE,

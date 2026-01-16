@@ -26,15 +26,12 @@ router.patch(
   uploadFile.upload.fields([
     { name: "coverImage", maxCount: 1 },
     { name: "recordProofVideoStarting", maxCount: 40 },
-    { name: "recordProofVideoEnding", maxCount: 40 }
+    { name: "recordProofVideoEnding", maxCount: 40 },
   ]),
   parseBodyData,
   validateRequest(ServiceValidation.updateServiceSchema),
   ServiceController.updateService
 );
-
-// get single service
-router.get("/:serviceId", ServiceController.getServiceById);
 
 // get all services
 router.get("/", ServiceController.getAllServices);
@@ -45,5 +42,8 @@ router.get(
   auth(UserRole.SERVICE_PROVIDER),
   ServiceController.getMyServices
 );
+
+// get single service
+router.get("/:serviceId", ServiceController.getServiceById);
 
 export const serviceRoutes = router;

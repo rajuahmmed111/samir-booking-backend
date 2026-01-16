@@ -21,10 +21,10 @@ const createService = async (
   const convertedServiceData = {
     ...serviceData,
     experience: parseFloat(serviceData.experience.toString()),
-    offered_services: serviceData.offered_services.map(service => ({
+    offered_services: serviceData.offered_services.map((service) => ({
       ...service,
-      price: parseFloat(service.price.toString())
-    }))
+      price: parseFloat(service.price.toString()),
+    })),
   };
 
   // cover image upload
@@ -137,6 +137,20 @@ const updateService = async (
 
   const { availability, ...serviceData } = payload;
 
+  // convert string values to numbers
+  const convertedServiceData = {
+    ...serviceData,
+    experience: serviceData.experience
+      ? parseFloat(serviceData.experience.toString())
+      : undefined,
+    offered_services: serviceData.offered_services
+      ? serviceData.offered_services.map((service) => ({
+          ...service,
+          price: parseFloat(service.price.toString()),
+        }))
+      : undefined,
+  };
+
   // cover image upload
   let coverImagePath = serviceData.coverImage;
   if (coverImageFile) {
@@ -174,19 +188,24 @@ const updateService = async (
   // prepare update data
   const updateData: any = {};
 
-  if (serviceData.serviceName) updateData.serviceName = serviceData.serviceName;
-  if (serviceData.serviceType) updateData.serviceType = serviceData.serviceType;
-  if (serviceData.description) updateData.description = serviceData.description;
-  if (serviceData.offered_services)
-    updateData.offered_services = serviceData.offered_services;
+  if (convertedServiceData.serviceName)
+    updateData.serviceName = convertedServiceData.serviceName;
+  if (convertedServiceData.serviceType)
+    updateData.serviceType = convertedServiceData.serviceType;
+  if (convertedServiceData.description)
+    updateData.description = convertedServiceData.description;
+  if (convertedServiceData.offered_services)
+    updateData.offered_services = convertedServiceData.offered_services;
   if (videoStartingPaths.length > 0)
     updateData.recordProofVideoStarting = videoStartingPaths.join(",");
   if (videoEndingPaths.length > 0)
     updateData.recordProofVideoEnding = videoEndingPaths.join(",");
-  if (serviceData.addRemark) updateData.addRemark = serviceData.addRemark;
+  if (convertedServiceData.addRemark)
+    updateData.addRemark = convertedServiceData.addRemark;
   if (coverImagePath) updateData.coverImage = coverImagePath;
-  if (serviceData.serviceStatus)
-    updateData.serviceStatus = serviceData.serviceStatus as ServiceStatus;
+  if (convertedServiceData.serviceStatus)
+    updateData.serviceStatus =
+      convertedServiceData.serviceStatus as ServiceStatus;
 
   // update service basic info
   const updatedService = await prisma.service.update({
