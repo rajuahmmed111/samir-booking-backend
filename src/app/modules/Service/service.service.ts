@@ -469,6 +469,7 @@ const deleteService = async (serviceId: string, providerId: string) => {
   const findService = await prisma.service.findUnique({
     where: {
       id: serviceId,
+      providerId,
     },
   });
   if (!findService) {
