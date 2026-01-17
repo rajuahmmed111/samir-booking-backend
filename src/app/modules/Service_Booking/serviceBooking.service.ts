@@ -1,4 +1,9 @@
-import { BookingStatus, ServiceStatus, UserStatus } from "@prisma/client";
+import {
+  BookingStatus,
+  PaymentStatus,
+  ServiceStatus,
+  UserStatus,
+} from "@prisma/client";
 import prisma from "../../../shared/prisma";
 import ApiError from "../../../errors/ApiErrors";
 import httpStatus from "http-status";
@@ -8,12 +13,13 @@ import {
 } from "./serviceBooking.interface";
 import { IPaginationOptions } from "../../../interfaces/paginations";
 import { paginationHelpers } from "../../../helpars/paginationHelper";
+import stripe from "../../../helpars/stripe";
 
 // create service booking
 const createServiceBooking = async (
   userId: string,
   serviceId: string,
-  data: ICreateServiceBooking
+  data: ICreateServiceBooking,
 ) => {
   // find user
   const findUser = await prisma.user.findUnique({
@@ -49,7 +55,7 @@ const createServiceBooking = async (
   if (findService.serviceStatus !== ServiceStatus.ACTIVE) {
     throw new ApiError(
       httpStatus.BAD_REQUEST,
-      "Service is not available for booking"
+      "Service is not available for booking",
     );
   }
 
@@ -61,18 +67,18 @@ const createServiceBooking = async (
   if (bookingDate < today) {
     throw new ApiError(
       httpStatus.BAD_REQUEST,
-      "Cannot book for past dates. Please select a future date."
+      "Cannot book for past dates. Please select a future date.",
     );
   }
 
   // check if the requested date and day is available
   const availability = findService.availability.find(
-    (avail: any) => avail.day.toLowerCase() === data.day.toLowerCase()
+    (avail: any) => avail.day.toLowerCase() === data.day.toLowerCase(),
   );
   if (!availability) {
     throw new ApiError(
       httpStatus.BAD_REQUEST,
-      `Service is not available on ${data.day}`
+      `Service is not available on ${data.day}`,
     );
   }
   // console.log("availability", availability);
@@ -83,13 +89,13 @@ const createServiceBooking = async (
       slot.from.replace(/\s+/g, " ").trim() ===
         data.timeSlot.from.replace(/\s+/g, " ").trim() &&
       slot.to.replace(/\s+/g, " ").trim() ===
-        data.timeSlot.to.replace(/\s+/g, " ").trim()
+        data.timeSlot.to.replace(/\s+/g, " ").trim(),
   );
   // console.log("isTimeSlotAvailable", isTimeSlotAvailable);
   if (!isTimeSlotAvailable) {
     throw new ApiError(
       httpStatus.BAD_REQUEST,
-      "Requested time slot is not available"
+      "Requested time slot is not available",
     );
   }
 
@@ -146,11 +152,72 @@ const createServiceBooking = async (
   return result;
 };
 
+// Provider accept
+const acceptBooking = async (providerId: string, bookingId: string) => {
+  const booking = await prisma.service_booking.findUnique({
+    where: { id: bookingId },
+  });
+
+  if (!booking || booking.providerId !== providerId) {
+    throw new ApiError(httpStatus.FORBIDDEN, "Unauthorized");
+  }
+
+  return prisma.service_booking.update({
+    where: { id: bookingId },
+    data: { bookingStatus: BookingStatus.CONFIRMED },
+  });
+};
+
+// Provider complete
+const completeBooking = async (providerId: string, bookingId: string) => {
+  const booking = await prisma.service_booking.findUnique({
+    where: { id: bookingId },
+  });
+
+  if (!booking || booking.providerId !== providerId) {
+    throw new ApiError(httpStatus.FORBIDDEN, "Unauthorized");
+  }
+
+  return prisma.service_booking.update({
+    where: { id: bookingId },
+    data: { bookingStatus: BookingStatus.COMPLETED },
+  });
+};
+
+// Owner confirm → CAPTURE payment
+const confirmBookingAndReleasePayment = async (
+  userId: string,
+  bookingId: string,
+) => {
+  const booking = await prisma.service_booking.findUnique({
+    where: { id: bookingId },
+    include: { payments: true },
+  });
+
+  if (!booking || booking.userId !== userId) {
+    throw new ApiError(httpStatus.FORBIDDEN, "Unauthorized");
+  }
+
+  const payment = booking.payments[0];
+  if (!payment?.paymentIntentId) {
+    throw new ApiError(httpStatus.BAD_REQUEST, "PaymentIntent missing");
+  }
+
+  await stripe.paymentIntents.capture(payment.paymentIntentId);
+
+  await prisma.payment.update({
+    where: { id: payment.id },
+    data: { status: PaymentStatus.SUCCESS },
+  });
+
+  return { released: true };
+};
+
 // get all my active and past bookings for a property owner
 const getAllServiceActiveAndPastBookings = async (
   userId: string,
   filters: IServiceFilterRequest,
-  options: IPaginationOptions
+  options: IPaginationOptions,
 ) => {
   const { limit, page, skip } = paginationHelpers.calculatedPagination(options);
 
@@ -312,7 +379,7 @@ const getSingleServiceBooking = async (bookingId: string, userId: string) => {
 // get all service bookings for provider by providerId
 const getAllServiceBookingsOfProvider = async (
   providerId: string,
-  filter?: string
+  filter?: string,
 ) => {
   // find provider
   const provider = await prisma.user.findUnique({
@@ -376,6 +443,9 @@ const getAllServiceBookingsOfProvider = async (
 
 export const ServiceBookingService = {
   createServiceBooking,
+  acceptBooking,
+  completeBooking,
+  confirmBookingAndReleasePayment,
   getAllServiceActiveAndPastBookings,
   getSingleServiceBooking,
   getAllServiceBookingsOfProvider,

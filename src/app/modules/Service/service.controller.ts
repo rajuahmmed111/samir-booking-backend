@@ -14,7 +14,7 @@ const createService = catchAsync(async (req: Request, res: Response) => {
   const result = await ServiceService.createService(
     providerId,
     req.body,
-    coverImageFile
+    coverImageFile,
   );
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
@@ -27,16 +27,22 @@ const createService = catchAsync(async (req: Request, res: Response) => {
 // update service
 const updateService = catchAsync(async (req: Request, res: Response) => {
   const files = req.files;
-  const coverImageFile = !Array.isArray(files) ? files?.coverImage?.[0] : undefined;
-  const videoStartingFiles = !Array.isArray(files) ? files?.recordProofVideoStarting || [] : [];
-  const videoEndingFiles = !Array.isArray(files) ? files?.recordProofVideoEnding || [] : [];
+  const coverImageFile = !Array.isArray(files)
+    ? files?.coverImage?.[0]
+    : undefined;
+  const videoStartingFiles = !Array.isArray(files)
+    ? files?.recordProofVideoStarting || []
+    : [];
+  const videoEndingFiles = !Array.isArray(files)
+    ? files?.recordProofVideoEnding || []
+    : [];
   const { serviceId } = req.params;
   const result = await ServiceService.updateService(
     serviceId,
     req.body,
     coverImageFile,
     videoStartingFiles,
-    videoEndingFiles
+    videoEndingFiles,
   );
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -81,12 +87,26 @@ const getMyServices = catchAsync(async (req: Request, res: Response) => {
   const result = await ServiceService.getMyServices(
     providerId,
     filter,
-    options
+    options,
   );
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
     message: "My services retrieved successfully",
+    data: result,
+  });
+});
+
+// delete service
+const deleteService = catchAsync(async (req: Request, res: Response) => {
+  const { serviceId } = req.params;
+  const providerId = req.user?.id;
+
+  const result = await ServiceService.deleteService(serviceId, providerId);
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Service deleted successfully",
     data: result,
   });
 });
@@ -97,4 +117,5 @@ export const ServiceController = {
   getServiceById,
   getAllServices,
   getMyServices,
+  deleteService,
 };

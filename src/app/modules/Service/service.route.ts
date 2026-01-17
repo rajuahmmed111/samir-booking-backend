@@ -46,4 +46,11 @@ router.get(
 // get single service
 router.get("/:serviceId", ServiceController.getServiceById);
 
+// delete service
+router.delete(
+  "/:serviceId",
+  auth(UserRole.SERVICE_PROVIDER),
+  ServiceController.deleteService
+);
+
 export const serviceRoutes = router;

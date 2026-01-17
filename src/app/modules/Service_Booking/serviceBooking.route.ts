@@ -12,28 +12,49 @@ router.post(
   "/:serviceId",
   auth(UserRole.PROPERTY_OWNER),
   validateRequest(ServiceBookingValidation.createServiceBookingSchema),
-  ServiceBookingController.createServiceBooking
+  ServiceBookingController.createServiceBooking,
+);
+
+// provider accept booking
+router.post(
+  "/:bookingId/accept",
+  auth(UserRole.SERVICE_PROVIDER),
+  ServiceBookingController.acceptBooking,
+);
+
+// provider complete service
+router.post(
+  "/:bookingId/complete",
+  auth(UserRole.SERVICE_PROVIDER),
+  ServiceBookingController.completeBooking,
+);
+
+// owner confirm & release payment
+router.post(
+  "/:bookingId/confirm",
+  auth(UserRole.PROPERTY_OWNER),
+  ServiceBookingController.confirmBookingAndReleasePayment,
 );
 
 // get all my active and past bookings for a property owner
 router.get(
   "/active-past-bookings",
   auth(UserRole.PROPERTY_OWNER),
-  ServiceBookingController.getAllServiceActiveAndPastBookings
+  ServiceBookingController.getAllServiceActiveAndPastBookings,
 );
 
 // get single service booking (deatiles) by bookingId
 router.get(
   "/:bookingId",
   auth(UserRole.PROPERTY_OWNER),
-  ServiceBookingController.getSingleServiceBooking
+  ServiceBookingController.getSingleServiceBooking,
 );
 
 // get all service bookings for provider by providerId
 router.get(
   "/provider/bookings",
   auth(UserRole.SERVICE_PROVIDER),
-  ServiceBookingController.getAllServiceBookingsOfProvider
+  ServiceBookingController.getAllServiceBookingsOfProvider,
 );
 
 export const serviceBookingRoute = router;

@@ -13,7 +13,7 @@ import { paginationHelpers } from "../../../helpars/paginationHelper";
 const createService = async (
   providerId: string,
   payload: IServiceCreate,
-  coverImageFile?: Express.Multer.File
+  coverImageFile?: Express.Multer.File,
 ) => {
   const { availability, ...serviceData } = payload;
 
@@ -117,7 +117,7 @@ const updateService = async (
   payload: IServiceUpdate,
   coverImageFile?: Express.Multer.File,
   videoStartingFiles?: Express.Multer.File[],
-  videoEndingFiles?: Express.Multer.File[]
+  videoEndingFiles?: Express.Multer.File[],
 ) => {
   // check if service exists
   const existingService = await prisma.service.findUnique({
@@ -303,7 +303,7 @@ const getServiceById = async (serviceId: string) => {
 // get all services
 const getAllServices = async (
   params: IHotelFilterRequest,
-  options: IPaginationOptions
+  options: IPaginationOptions,
 ) => {
   const { limit, page, skip } = paginationHelpers.calculatedPagination(options);
 
@@ -372,7 +372,7 @@ const getAllServices = async (
 const getMyServices = async (
   providerId: string,
   params: IHotelFilterRequest,
-  options: IPaginationOptions
+  options: IPaginationOptions,
 ) => {
   const { limit, page, skip } = paginationHelpers.calculatedPagination(options);
 
@@ -453,10 +453,36 @@ const getMyServices = async (
   };
 };
 
+// delete service
+const deleteService = async (serviceId: string, providerId: string) => {
+  // find user
+  const findUser = await prisma.user.findUnique({
+    where: {
+      id: providerId,
+    },
+  });
+  if (!findUser) {
+    throw new ApiError(httpStatus.NOT_FOUND, "User not found");
+  }
+
+  // find service
+  const findService = await prisma.service.findUnique({
+    where: {
+      id: serviceId,
+    },
+  });
+  if (!findService) {
+    throw new ApiError(httpStatus.NOT_FOUND, "Service not found");
+  }
+
+  await prisma.service.delete({ where: { id: serviceId } });
+};
+
 export const ServiceService = {
   createService,
   updateService,
   getServiceById,
   getAllServices,
   getMyServices,
+  deleteService,
 };

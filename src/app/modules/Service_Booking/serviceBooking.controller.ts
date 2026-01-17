@@ -24,6 +24,51 @@ const createServiceBooking = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+// provider accept booking
+const acceptBooking = catchAsync(async (req: Request, res: Response) => {
+  const result = await ServiceBookingService.acceptBooking(
+    req.user!.id,
+    req.params.bookingId
+  );
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Booking accepted",
+    data: result,
+  });
+});
+
+// provider complete service
+const completeBooking = catchAsync(async (req: Request, res: Response) => {
+  const result = await ServiceBookingService.completeBooking(
+    req.user!.id,
+    req.params.bookingId
+  );
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Service marked as completed",
+    data: result,
+  });
+});
+
+// owner confirm & release payment
+const confirmBookingAndReleasePayment = catchAsync(async (req: Request, res: Response) => {
+  const result = await ServiceBookingService.confirmBookingAndReleasePayment(
+    req.user!.id,
+    req.params.bookingId
+  );
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Payment released to provider",
+    data: result,
+  });
+});
+
 // get all my active and past bookings for a property owner
 const getAllServiceActiveAndPastBookings = catchAsync(
   async (req: Request, res: Response) => {
@@ -88,6 +133,9 @@ const getAllServiceBookingsOfProvider = catchAsync(
 
 export const ServiceBookingController = {
   createServiceBooking,
+  acceptBooking,
+  completeBooking,
+  confirmBookingAndReleasePayment,
   getAllServiceActiveAndPastBookings,
   getSingleServiceBooking,
   getAllServiceBookingsOfProvider,
