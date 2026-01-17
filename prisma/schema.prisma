@@ -30,6 +30,8 @@ enum EveryServiceStatus {
   AVAILABLE
   BOOKED
   INACTIVE
+  WAITING_FOR_ACCEPT
+  ACCEPTED
 }
 
 enum PaymentStatus {
@@ -37,6 +39,7 @@ enum PaymentStatus {
   UNPAID
   REFUNDED
   SUCCESS
+  AUTHORIZED
 }
 
 enum Weekday {
@@ -51,7 +54,10 @@ enum Weekday {
 
 enum BookingStatus {
   PENDING
+  NEED_ACCEPT
   CONFIRMED
+  IN_PROGRESS
+  COMPLETED_BY_PROVIDER
   COMPLETED
   CANCELLED
   EXPIRED
@@ -319,6 +325,8 @@ model Service {
   serviceStatus            ServiceStatus
   recordProofVideoStarting String?
   recordProofVideoEnding   String?
+  isStartedVideo           Boolean            @default(false)
+  isEndedVideo             Boolean            @default(false)
   addRemark                String?
   serviceRating            String?
   serviceReviewCount       Int                @default(0)

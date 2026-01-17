@@ -14,7 +14,7 @@ const createServiceBooking = catchAsync(async (req: Request, res: Response) => {
   const result = await ServiceBookingService.createServiceBooking(
     userId,
     serviceId,
-    req.body
+    req.body,
   );
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -26,9 +26,12 @@ const createServiceBooking = catchAsync(async (req: Request, res: Response) => {
 
 // provider accept booking
 const acceptBooking = catchAsync(async (req: Request, res: Response) => {
+  const providerId = req.user!.id;
+  const bookingId = req.params.bookingId;
+
   const result = await ServiceBookingService.acceptBooking(
-    req.user!.id,
-    req.params.bookingId
+    providerId,
+    bookingId,
   );
 
   sendResponse(res, {
@@ -39,11 +42,32 @@ const acceptBooking = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+// provider in_progress booking
+const inProgressBooking = catchAsync(async (req: Request, res: Response) => {
+  const providerId = req.user!.id;
+  const bookingId = req.params.bookingId;
+
+  const result = await ServiceBookingService.inProgressBooking(
+    providerId,
+    bookingId,
+  );
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Service marked as in-progress",
+    data: result,
+  });
+});
+
 // provider complete service
 const completeBooking = catchAsync(async (req: Request, res: Response) => {
+  const providerId = req.user!.id;
+  const bookingId = req.params.bookingId;
+
   const result = await ServiceBookingService.completeBooking(
-    req.user!.id,
-    req.params.bookingId
+    providerId,
+    bookingId,
   );
 
   sendResponse(res, {
@@ -55,19 +79,21 @@ const completeBooking = catchAsync(async (req: Request, res: Response) => {
 });
 
 // owner confirm & release payment
-const confirmBookingAndReleasePayment = catchAsync(async (req: Request, res: Response) => {
-  const result = await ServiceBookingService.confirmBookingAndReleasePayment(
-    req.user!.id,
-    req.params.bookingId
-  );
+const confirmBookingAndReleasePayment = catchAsync(
+  async (req: Request, res: Response) => {
+    const result = await ServiceBookingService.confirmBookingAndReleasePayment(
+      req.user!.id,
+      req.params.bookingId,
+    );
 
-  sendResponse(res, {
-    statusCode: httpStatus.OK,
-    success: true,
-    message: "Payment released to provider",
-    data: result,
-  });
-});
+    sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: "Payment released to provider",
+      data: result,
+    });
+  },
+);
 
 // get all my active and past bookings for a property owner
 const getAllServiceActiveAndPastBookings = catchAsync(
@@ -84,7 +110,7 @@ const getAllServiceActiveAndPastBookings = catchAsync(
       await ServiceBookingService.getAllServiceActiveAndPastBookings(
         userId,
         filters as IServiceFilterRequest,
-        options
+        options,
       );
     sendResponse(res, {
       statusCode: httpStatus.OK,
@@ -92,7 +118,7 @@ const getAllServiceActiveAndPastBookings = catchAsync(
       message: "Service bookings retrieved successfully",
       data: result,
     });
-  }
+  },
 );
 
 // get single service booking
@@ -102,7 +128,7 @@ const getSingleServiceBooking = catchAsync(
     const bookingId = req.params.bookingId;
     const result = await ServiceBookingService.getSingleServiceBooking(
       bookingId,
-      userId
+      userId,
     );
     sendResponse(res, {
       statusCode: httpStatus.OK,
@@ -110,7 +136,7 @@ const getSingleServiceBooking = catchAsync(
       message: "Service booking retrieved successfully",
       data: result,
     });
-  }
+  },
 );
 
 // get all service bookings for provider by providerId
@@ -120,7 +146,7 @@ const getAllServiceBookingsOfProvider = catchAsync(
     const filter = req.query.filter as string;
     const result = await ServiceBookingService.getAllServiceBookingsOfProvider(
       providerId,
-      filter
+      filter,
     );
     sendResponse(res, {
       statusCode: httpStatus.OK,
@@ -128,12 +154,13 @@ const getAllServiceBookingsOfProvider = catchAsync(
       message: "Service bookings retrieved successfully",
       data: result,
     });
-  }
+  },
 );
 
 export const ServiceBookingController = {
   createServiceBooking,
   acceptBooking,
+  inProgressBooking,
   completeBooking,
   confirmBookingAndReleasePayment,
   getAllServiceActiveAndPastBookings,

@@ -22,9 +22,16 @@ router.post(
   ServiceBookingController.acceptBooking,
 );
 
+// provider in_progress booking
+router.post(
+  "/:bookingId/in-progress",
+  auth(UserRole.SERVICE_PROVIDER),
+  ServiceBookingController.inProgressBooking,
+);
+
 // provider complete service
 router.post(
-  "/:bookingId/complete",
+  "/:bookingId/complete-by-provider",
   auth(UserRole.SERVICE_PROVIDER),
   ServiceBookingController.completeBooking,
 );

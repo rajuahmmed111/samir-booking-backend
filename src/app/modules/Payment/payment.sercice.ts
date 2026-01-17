@@ -143,7 +143,7 @@ const stripeAccountOnboarding = async (userId: string) => {
 const createStripeCheckoutSessionForHotel = async (
   userId: string,
   bookingId: string,
-  description: string
+  description: string,
 ) => {
   // find user
   const user = await prisma.user.findUnique({ where: { id: userId } });
@@ -164,7 +164,7 @@ const createStripeCheckoutSessionForHotel = async (
   if (!provider || !provider.stripeAccountId) {
     throw new ApiError(
       httpStatus.BAD_REQUEST,
-      "Provider not onboarded with Stripe"
+      "Provider not onboarded with Stripe",
     );
   }
 
@@ -240,7 +240,7 @@ const createStripeCheckoutSessionForHotel = async (
 const createStripeCheckoutSessionForService = async (
   userId: string,
   bookingId: string,
-  description: string
+  description: string,
 ) => {
   // find user
   const user = await prisma.user.findUnique({ where: { id: userId } });
@@ -261,7 +261,7 @@ const createStripeCheckoutSessionForService = async (
   if (!provider || !provider.stripeAccountId) {
     throw new ApiError(
       httpStatus.BAD_REQUEST,
-      "Provider not onboarded with Stripe"
+      "Provider not onboarded with Stripe",
     );
   }
 
@@ -346,14 +346,13 @@ const stripeHandleWebhook = async (event: Stripe.Event) => {
       const paymentIntentId = session.payment_intent as string;
 
       // retrieve paymentIntent
-      const paymentIntent = await stripe.paymentIntents.retrieve(
-        paymentIntentId
-      );
+      const paymentIntent =
+        await stripe.paymentIntents.retrieve(paymentIntentId);
 
       if (!paymentIntent.latest_charge) {
         throw new ApiError(
           httpStatus.BAD_REQUEST,
-          "No charge found in PaymentIntent"
+          "No charge found in PaymentIntent",
         );
       }
 
@@ -385,6 +384,14 @@ const stripeHandleWebhook = async (event: Stripe.Event) => {
       let bookingId: string | undefined;
       if (payment.serviceType === "SERVICE") {
         bookingId = payment.service_bookingId || undefined;
+
+        // update payment status to PAID
+        await prisma.payment.update({
+          where: { id: payment.id },
+          data: {
+            status: PaymentStatus.AUTHORIZED,
+          },
+        });
       } else if (payment.serviceType === "HOTEL") {
         bookingId = payment.hotel_bookingId || undefined;
       }
@@ -428,9 +435,18 @@ const stripeHandleWebhook = async (event: Stripe.Event) => {
           console.error("Missing serviceId in booking:", booking);
           return;
         }
+
+        // update booking status to NEED_ACCEPT
+        await (configs.bookingModel as any).update({
+          where: { id: booking.id },
+          data: { bookingStatus: BookingStatus.NEED_ACCEPT },
+        });
+
+        // update service status to WAITING_FOR_ACCEPT
         await (configs.serviceModel as any).update({
           where: { id: booking.serviceId },
-          data: { isBooked: EveryServiceStatus.BOOKED },
+          // data: { isBooked: EveryServiceStatus.BOOKED },
+          data: { isBooked: EveryServiceStatus.WAITING_FOR_ACCEPT },
         });
       }
 
@@ -473,7 +489,7 @@ const stripeHandleWebhook = async (event: Stripe.Event) => {
       };
 
       await BookingNotificationService.sendBookingNotifications(
-        notificationData
+        notificationData,
       );
 
       // ---------- send confirmation email ----------
@@ -492,8 +508,8 @@ const stripeHandleWebhook = async (event: Stripe.Event) => {
               }</strong> booking has been confirmed successfully.</p>
               <p><b>Payment ID:</b> ${payment.id}</p>
               <p><b>Total Paid:</b> ${payment.amount} ${
-            booking.displayCurrency || "USD"
-          }</p>
+                booking.displayCurrency || "USD"
+              }</p>
               <p><b>Status:</b> Confirmed ✅</p>
               <br/>
               <p>Thanks for booking with us!</p>
@@ -519,7 +535,7 @@ const stripeHandleWebhook = async (event: Stripe.Event) => {
 const cancelStripeBooking = async (
   serviceType: ServiceType,
   bookingId: string,
-  userId: string
+  userId: string,
 ) => {
   // Get config for the service type
   const serviceCfg = serviceConfig[serviceType.toUpperCase() as ServiceType];
@@ -545,7 +561,7 @@ const cancelStripeBooking = async (
   if (!payment || !payment.payment_intent) {
     throw new ApiError(
       httpStatus.BAD_REQUEST,
-      "No payment found for this booking"
+      "No payment found for this booking",
     );
   }
 
@@ -556,7 +572,7 @@ const cancelStripeBooking = async (
   if (!partner || !partner.stripeAccountId) {
     throw new ApiError(
       httpStatus.BAD_REQUEST,
-      "Partner has no connected Stripe account"
+      "Partner has no connected Stripe account",
     );
   }
 

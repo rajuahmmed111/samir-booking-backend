@@ -1,5 +1,6 @@
 import {
   BookingStatus,
+  EveryServiceStatus,
   PaymentStatus,
   ServiceStatus,
   UserStatus,
@@ -152,8 +153,9 @@ const createServiceBooking = async (
   return result;
 };
 
-// Provider accept
+// provider accept booking
 const acceptBooking = async (providerId: string, bookingId: string) => {
+  // find the booking
   const booking = await prisma.service_booking.findUnique({
     where: { id: bookingId },
   });
@@ -162,25 +164,108 @@ const acceptBooking = async (providerId: string, bookingId: string) => {
     throw new ApiError(httpStatus.FORBIDDEN, "Unauthorized");
   }
 
+  // update both booking and service inside a transaction
+  const [updatedBooking, updatedService] = await prisma.$transaction([
+    prisma.service_booking.update({
+      where: { id: bookingId },
+      data: { bookingStatus: BookingStatus.CONFIRMED },
+    }),
+    prisma.service.update({
+      where: { id: booking.serviceId! },
+      data: { isBooked: EveryServiceStatus.ACCEPTED },
+    }),
+  ]);
+
+  return { updatedBooking, updatedService };
+};
+
+// provider in_progress booking
+const inProgressBooking = async (providerId: string, bookingId: string) => {
+  const booking = await prisma.service_booking.findUnique({
+    where: { id: bookingId, providerId },
+    include: {
+      service: {
+        select: {
+          id: true,
+          isStartedVideo: true,
+        },
+      },
+    },
+  });
+
+  if (!booking || booking.providerId !== providerId) {
+    throw new ApiError(httpStatus.FORBIDDEN, "Unauthorized");
+  }
+
+  // check if video is already started
+  if (!booking.service?.isStartedVideo) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      "Service started video is required before in-progress booking",
+    );
+  }
+
+  // update booking status
   return prisma.service_booking.update({
     where: { id: bookingId },
-    data: { bookingStatus: BookingStatus.CONFIRMED },
+    data: { bookingStatus: BookingStatus.IN_PROGRESS },
+    select: {
+      id: true,
+      userId: true,
+      providerId: true,
+      bookingStatus: true,
+      service: {
+        select: {
+          id: true,
+          isStartedVideo: true,
+        },
+      },
+    },
   });
 };
 
-// Provider complete
+// provider complete booking
 const completeBooking = async (providerId: string, bookingId: string) => {
   const booking = await prisma.service_booking.findUnique({
-    where: { id: bookingId },
+    where: { id: bookingId, providerId },
+    include: {
+      service: {
+        select: {
+          isStartedVideo: true,
+          isEndedVideo: true,
+        },
+      },
+    },
   });
 
   if (!booking || booking.providerId !== providerId) {
     throw new ApiError(httpStatus.FORBIDDEN, "Unauthorized");
   }
 
+  if (!booking.service?.isEndedVideo) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      "Service end video is required before completing booking",
+    );
+  }
+
+  // update booking status
   return prisma.service_booking.update({
     where: { id: bookingId },
-    data: { bookingStatus: BookingStatus.COMPLETED },
+    data: { bookingStatus: BookingStatus.COMPLETED_BY_PROVIDER },
+    select: {
+      id: true,
+      userId: true,
+      providerId: true,
+      bookingStatus: true,
+      service: {
+        select: {
+          id: true,
+          isStartedVideo: true,
+          isEndedVideo: true,
+        },
+      },
+    },
   });
 };
 
@@ -444,6 +529,7 @@ const getAllServiceBookingsOfProvider = async (
 export const ServiceBookingService = {
   createServiceBooking,
   acceptBooking,
+  inProgressBooking,
   completeBooking,
   confirmBookingAndReleasePayment,
   getAllServiceActiveAndPastBookings,
