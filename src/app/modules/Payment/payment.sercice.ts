@@ -363,197 +363,305 @@ const createStripeCheckoutSessionForService = async (
 };
 
 // stripe webhook payment
+// const stripeHandleWebhook = async (event: Stripe.Event) => {
+//   switch (event.type) {
+//     // case 1:checkout session completed
+//     case "checkout.session.completed": {
+//       const session = event.data.object as Stripe.Checkout.Session;
+//       const sessionId = session.id;
+//       const paymentIntentId = session.payment_intent as string;
+
+//       // retrieve paymentIntent
+//       const paymentIntent =
+//         await stripe.paymentIntents.retrieve(paymentIntentId);
+
+//       if (!paymentIntent.latest_charge) {
+//         throw new ApiError(
+//           httpStatus.BAD_REQUEST,
+//           "No charge found in PaymentIntent",
+//         );
+//       }
+
+//       // find Payment
+//       const payment = await prisma.payment.findFirst({
+//         where: { sessionId },
+//       });
+
+//       if (!payment) {
+//         // console.log(`No payment found for session: ${sessionId}`);
+//         break;
+//       }
+
+//       // update payment to PAID and set paymentIntentId
+//       await prisma.payment.update({
+//         where: { id: payment.id },
+//         data: {
+//           status: PaymentStatus.PAID,
+//           paymentIntentId: paymentIntentId,
+//         },
+//       });
+
+//       // update booking & service status
+//       const configs = serviceConfig[payment.serviceType as ServiceType];
+//       if (!configs) {
+//         return;
+//       }
+
+//       // get bookingId from payment based on service type
+//       let bookingId: string | undefined;
+//       if (payment.serviceType === "SERVICE") {
+//         bookingId = payment.service_bookingId || undefined;
+
+//         // update payment status to PAID
+//         await prisma.payment.update({
+//           where: { id: payment.id },
+//           data: {
+//             status: PaymentStatus.IN_HOLD,
+//           },
+//         });
+//       } else if (payment.serviceType === "HOTEL") {
+//         bookingId = payment.hotel_bookingId || undefined;
+//       }
+
+//       const booking = await (configs.bookingModel as any).findUnique({
+//         where: { id: bookingId },
+//       });
+
+//       if (!booking) {
+//         return;
+//       }
+
+//       // validate required fields before proceeding
+//       const userId = booking.userId;
+//       const partnerId =
+//         payment.serviceType === "SERVICE"
+//           ? booking.providerId
+//           : booking.partnerId;
+
+//       if (!userId || !partnerId) {
+//         console.error("Missing required fields in booking:", {
+//           bookingId,
+//           userId,
+//           partnerId,
+//           serviceType: payment.serviceType,
+//           providerId: booking.providerId,
+//           hotelPartnerId: booking.partnerId,
+//         });
+//         return;
+//       }
+
+//       // update booking status → CONFIRMED
+//       const updateResult = await (configs.bookingModel as any).update({
+//         where: { id: booking.id },
+//         data: { bookingStatus: BookingStatus.CONFIRMED },
+//       });
+
+//       // update service EveryServiceStatus
+//       if (payment.serviceType === "SERVICE") {
+//         if (!booking.serviceId) {
+//           console.error("Missing serviceId in booking:", booking);
+//           return;
+//         }
+
+//         // update booking status to NEED_ACCEPT
+//         await (configs.bookingModel as any).update({
+//           where: { id: booking.id },
+//           data: { bookingStatus: BookingStatus.NEED_ACCEPT },
+//         });
+
+//         // update service status to WAITING_FOR_ACCEPT
+//         await (configs.serviceModel as any).update({
+//           where: { id: booking.serviceId },
+//           // data: { isBooked: EveryServiceStatus.BOOKED },
+//           data: { isBooked: EveryServiceStatus.WAITING_FOR_ACCEPT },
+//         });
+//       }
+
+//       // update hotel status
+//       if (payment.serviceType === "HOTEL") {
+//         if (!booking.hotelId) {
+//           console.error("Missing hotelId in booking:", booking);
+//           return;
+//         }
+//         await (configs.serviceModel as any).update({
+//           where: { id: booking.hotelId },
+//           data: { availableForBooking: EveryServiceStatus.BOOKED },
+//         });
+//       }
+
+//       // ---------- send notification ----------
+//       const notificationServiceId = (booking as any)[
+//         configs.bookingToServiceField
+//       ];
+//       const service = await (configs.serviceModel as any).findUnique({
+//         where: { id: notificationServiceId },
+//       });
+//       if (!service) return;
+
+//       const notificationData: IBookingNotificationData = {
+//         bookingId: booking.id,
+//         userId: booking.userId,
+//         partnerId: partnerId,
+//         serviceTypes: payment.serviceType as ServiceTypes,
+//         serviceName: service[configs.nameField],
+//         totalPrice: booking.totalPrice,
+//         // bookedFromDate:
+//         //   (booking as any).bookedFromDate || (booking as any).date,
+//         // bookedToDate: (booking as any).bookedToDate,
+//         // quantity:
+//         //   (booking as any).rooms ||
+//         //   (booking as any).adults ||
+//         //   (booking as any).number_of_security ||
+//         //   1,
+//       };
+
+//       await BookingNotificationService.sendBookingNotifications(
+//         notificationData,
+//       );
+
+//       // ---------- send confirmation email ----------
+//       try {
+//         const user = await prisma.user.findUnique({
+//           where: { id: booking.userId },
+//         });
+
+//         if (user?.email) {
+//           const subject = `🎉 Your ${payment.serviceType} booking is confirmed!`;
+//           const html = `
+//             <div style="font-family: Arial; padding: 20px;">
+//               <h2>Hi ${user.fullName || "User"},</h2>
+//               <p>Your <strong>${
+//                 payment.serviceType
+//               }</strong> booking has been confirmed successfully.</p>
+//               <p><b>Payment ID:</b> ${payment.id}</p>
+//               <p><b>Total Paid:</b> ${payment.amount} ${
+//                 booking.displayCurrency || "USD"
+//               }</p>
+//               <p><b>Status:</b> Confirmed ✅</p>
+//               <br/>
+//               <p>Thanks for booking with us!</p>
+//               <p>– Team Tim</p>
+//             </div>
+//           `;
+//           await emailSender(subject, user.email, html);
+//         }
+//       } catch (error) {
+//         console.error("❌ Email sending failed:", error);
+//       }
+
+//       break;
+//     }
+
+//     default:
+//       // ignore other events
+//       break;
+//   }
+// };
+
+// stripe webhook payment
 const stripeHandleWebhook = async (event: Stripe.Event) => {
   switch (event.type) {
-    // case 1:checkout session completed
+    // checkout session completed
     case "checkout.session.completed": {
       const session = event.data.object as Stripe.Checkout.Session;
       const sessionId = session.id;
       const paymentIntentId = session.payment_intent as string;
 
-      // retrieve paymentIntent
-      const paymentIntent =
-        await stripe.paymentIntents.retrieve(paymentIntentId);
-
-      if (!paymentIntent.latest_charge) {
-        throw new ApiError(
-          httpStatus.BAD_REQUEST,
-          "No charge found in PaymentIntent",
-        );
-      }
+      if (!paymentIntentId) break;
 
       // find Payment
       const payment = await prisma.payment.findFirst({
         where: { sessionId },
       });
 
-      if (!payment) {
-        // console.log(`No payment found for session: ${sessionId}`);
-        break;
-      }
+      if (!payment) break;
 
-      // update payment to PAID and set paymentIntentId
+      // store paymentIntentId
       await prisma.payment.update({
         where: { id: payment.id },
-        data: {
-          status: PaymentStatus.PAID,
-          paymentIntentId: paymentIntentId,
-        },
+        data: { paymentIntentId },
       });
 
-      // update booking & service status
       const configs = serviceConfig[payment.serviceType as ServiceType];
-      if (!configs) {
-        return;
-      }
+      if (!configs) break;
 
-      // get bookingId from payment based on service type
       let bookingId: string | undefined;
-      if (payment.serviceType === "SERVICE") {
-        bookingId = payment.service_bookingId || undefined;
 
-        // update payment status to PAID
-        await prisma.payment.update({
-          where: { id: payment.id },
-          data: {
-            status: PaymentStatus.IN_HOLD,
-          },
-        });
-      } else if (payment.serviceType === "HOTEL") {
+      if (payment.serviceType === "SERVICE")
+        bookingId = payment.service_bookingId || undefined;
+      else if (payment.serviceType === "HOTEL")
         bookingId = payment.hotel_bookingId || undefined;
-      }
+
+      if (!bookingId) break;
 
       const booking = await (configs.bookingModel as any).findUnique({
         where: { id: bookingId },
       });
 
-      if (!booking) {
-        return;
-      }
+      if (!booking) break;
 
-      // validate required fields before proceeding
-      const userId = booking.userId;
       const partnerId =
         payment.serviceType === "SERVICE"
           ? booking.providerId
           : booking.partnerId;
+      if (!booking.userId || !partnerId) break;
 
-      if (!userId || !partnerId) {
-        console.error("Missing required fields in booking:", {
-          bookingId,
-          userId,
-          partnerId,
-          serviceType: payment.serviceType,
-          providerId: booking.providerId,
-          hotelPartnerId: booking.partnerId,
-        });
-        return;
-      }
-
-      // update booking status → CONFIRMED
-      const updateResult = await (configs.bookingModel as any).update({
-        where: { id: booking.id },
-        data: { bookingStatus: BookingStatus.CONFIRMED },
-      });
-
-      // update service EveryServiceStatus
+      // update booking status
       if (payment.serviceType === "SERVICE") {
-        if (!booking.serviceId) {
-          console.error("Missing serviceId in booking:", booking);
-          return;
-        }
-
-        // update booking status to NEED_ACCEPT
         await (configs.bookingModel as any).update({
           where: { id: booking.id },
           data: { bookingStatus: BookingStatus.NEED_ACCEPT },
         });
 
-        // update service status to WAITING_FOR_ACCEPT
         await (configs.serviceModel as any).update({
           where: { id: booking.serviceId },
-          // data: { isBooked: EveryServiceStatus.BOOKED },
           data: { isBooked: EveryServiceStatus.WAITING_FOR_ACCEPT },
         });
-      }
+      } else if (payment.serviceType === "HOTEL") {
+        await (configs.bookingModel as any).update({
+          where: { id: booking.id },
+          data: { bookingStatus: BookingStatus.CONFIRMED },
+        });
 
-      // update hotel status
-      if (payment.serviceType === "HOTEL") {
-        if (!booking.hotelId) {
-          console.error("Missing hotelId in booking:", booking);
-          return;
-        }
         await (configs.serviceModel as any).update({
           where: { id: booking.hotelId },
           data: { availableForBooking: EveryServiceStatus.BOOKED },
         });
-      }
 
-      // ---------- send notification ----------
-      const notificationServiceId = (booking as any)[
-        configs.bookingToServiceField
-      ];
-      const service = await (configs.serviceModel as any).findUnique({
-        where: { id: notificationServiceId },
-      });
-      if (!service) return;
-
-      const notificationData: IBookingNotificationData = {
-        bookingId: booking.id,
-        userId: booking.userId,
-        partnerId: partnerId,
-        serviceTypes: payment.serviceType as ServiceTypes,
-        serviceName: service[configs.nameField],
-        totalPrice: booking.totalPrice,
-        // bookedFromDate:
-        //   (booking as any).bookedFromDate || (booking as any).date,
-        // bookedToDate: (booking as any).bookedToDate,
-        // quantity:
-        //   (booking as any).rooms ||
-        //   (booking as any).adults ||
-        //   (booking as any).number_of_security ||
-        //   1,
-      };
-
-      await BookingNotificationService.sendBookingNotifications(
-        notificationData,
-      );
-
-      // ---------- send confirmation email ----------
-      try {
-        const user = await prisma.user.findUnique({
-          where: { id: booking.userId },
+        // for HOTEL, mark payment as PAID immediately
+        await prisma.payment.update({
+          where: { id: payment.id },
+          data: { status: PaymentStatus.PAID },
         });
-
-        if (user?.email) {
-          const subject = `🎉 Your ${payment.serviceType} booking is confirmed!`;
-          const html = `
-            <div style="font-family: Arial; padding: 20px;">
-              <h2>Hi ${user.fullName || "User"},</h2>
-              <p>Your <strong>${
-                payment.serviceType
-              }</strong> booking has been confirmed successfully.</p>
-              <p><b>Payment ID:</b> ${payment.id}</p>
-              <p><b>Total Paid:</b> ${payment.amount} ${
-                booking.displayCurrency || "USD"
-              }</p>
-              <p><b>Status:</b> Confirmed ✅</p>
-              <br/>
-              <p>Thanks for booking with us!</p>
-              <p>– Team Tim</p>
-            </div>
-          `;
-          await emailSender(subject, user.email, html);
-        }
-      } catch (error) {
-        console.error("❌ Email sending failed:", error);
       }
 
       break;
     }
 
+    // payment hold update (manual capture required)
+    case "payment_intent.amount_capturable_updated": {
+      const intent = event.data.object as Stripe.PaymentIntent;
+
+      const payment = await prisma.payment.findFirst({
+        where: { paymentIntentId: intent.id },
+      });
+
+      if (!payment) break;
+
+      // only SERVICE payments go to HOLD
+      if (payment.serviceType !== "SERVICE") break;
+
+      if (payment.status === PaymentStatus.IN_HOLD) break;
+
+      await prisma.payment.update({
+        where: { id: payment.id },
+        data: { status: PaymentStatus.IN_HOLD },
+      });
+
+      break;
+    }
+
     default:
-      // ignore other events
       break;
   }
 };

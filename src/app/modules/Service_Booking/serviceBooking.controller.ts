@@ -151,9 +151,11 @@ const getAllServiceBookingsOfProvider = catchAsync(
   async (req: Request, res: Response) => {
     const providerId = req.user?.id;
     const filter = req.query.filter as string;
+    const options = pick(req.query, paginationFields);
     const result = await ServiceBookingService.getAllServiceBookingsOfProvider(
       providerId,
       filter,
+      options,
     );
     sendResponse(res, {
       statusCode: httpStatus.OK,
