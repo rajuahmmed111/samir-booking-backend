@@ -315,8 +315,7 @@ const confirmBookingAndReleasePayment = async (
     where: { id: payment.id },
     data: { status: PaymentStatus.PAID },
   });
-
-  return { released: true };
+4
 };
 
 // get all my active and past bookings for a property owner
