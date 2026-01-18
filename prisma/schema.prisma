@@ -39,7 +39,7 @@ enum PaymentStatus {
   UNPAID
   REFUNDED
   SUCCESS
-  AUTHORIZED
+  IN_HOLD
 }
 
 enum Weekday {

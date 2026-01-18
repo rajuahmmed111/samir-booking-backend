@@ -410,7 +410,7 @@ const stripeHandleWebhook = async (event: Stripe.Event) => {
         await prisma.payment.update({
           where: { id: payment.id },
           data: {
-            status: PaymentStatus.AUTHORIZED,
+            status: PaymentStatus.IN_HOLD,
           },
         });
       } else if (payment.serviceType === "HOTEL") {

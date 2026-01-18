@@ -301,7 +301,7 @@ const confirmBookingAndReleasePaymentWithCaptureSplit = async (
     throw new ApiError(httpStatus.BAD_REQUEST, "Invalid payment");
   }
 
-  if (payment.status !== PaymentStatus.AUTHORIZED) {
+  if (payment.status !== PaymentStatus.IN_HOLD) {
     throw new ApiError(httpStatus.BAD_REQUEST, "Payment not authorized");
   }
 
@@ -345,6 +345,13 @@ const confirmBookingAndReleasePaymentWithCaptureSplit = async (
   const paymentIntent = (await stripe.paymentIntents.retrieve(
     payment.paymentIntentId,
   )) as any;
+
+  console.log("Payment Intent Status:", paymentIntent.status);
+  console.log(
+    "Payment Intent Charges:",
+    paymentIntent.charges?.data?.length || 0,
+  );
+
   let chargeId: string;
 
   if (paymentIntent.status === "succeeded" && paymentIntent.latest_charge) {
@@ -353,21 +360,30 @@ const confirmBookingAndReleasePaymentWithCaptureSplit = async (
   } else if (paymentIntent.status === "succeeded") {
     // payment succeeded but no latest_charge, retrieve charges directly
     if (!paymentIntent.charges?.data?.length) {
-      throw new ApiError(
-        httpStatus.BAD_REQUEST,
-        "No charge found for succeeded payment",
-      );
+      // If no charges in data array, check if latest_charge exists
+      if (paymentIntent.latest_charge) {
+        chargeId = paymentIntent.latest_charge;
+      } else {
+        throw new ApiError(
+          httpStatus.BAD_REQUEST,
+          "No charge found for succeeded payment",
+        );
+      }
+    } else {
+      chargeId = paymentIntent.charges.data[0].id;
     }
-    chargeId = paymentIntent.charges.data[0].id;
   } else {
     // capture payment
     await stripe.paymentIntents.capture(payment.paymentIntentId);
     const capturedIntent = (await stripe.paymentIntents.retrieve(
       payment.paymentIntentId,
     )) as any;
-    if (!capturedIntent.charges?.data?.length)
+    if (!capturedIntent.charges?.data?.length && !capturedIntent.latest_charge)
       throw new ApiError(httpStatus.BAD_REQUEST, "No charge after capture");
-    chargeId = capturedIntent.charges.data[0].id;
+
+    // Use latest_charge if available, otherwise use charges data
+    chargeId =
+      capturedIntent.latest_charge || capturedIntent.charges.data[0].id;
   }
 
   // ✅ check if provider_amount already set to prevent duplicate transfer
