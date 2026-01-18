@@ -55,6 +55,7 @@ enum Weekday {
 enum BookingStatus {
   PENDING
   NEED_ACCEPT
+  CONFIRM
   CONFIRMED
   IN_WORKING
   COMPLETED_BY_PROVIDER

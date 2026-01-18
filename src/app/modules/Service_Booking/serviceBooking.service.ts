@@ -168,7 +168,7 @@ const acceptBooking = async (providerId: string, bookingId: string) => {
   const [updatedBooking, updatedService] = await prisma.$transaction([
     prisma.service_booking.update({
       where: { id: bookingId },
-      data: { bookingStatus: BookingStatus.CONFIRMED },
+      data: { bookingStatus: BookingStatus.CONFIRM },
     }),
     prisma.service.update({
       where: { id: booking.serviceId! },
@@ -293,6 +293,7 @@ const confirmBookingAndReleasePaymentWithCaptureSplit = async (
   bookingId: string,
   paymentId: string,
 ) => {
+  // find payment
   const payment = await prisma.payment.findFirst({
     where: { id: paymentId, userId },
   });
@@ -305,6 +306,7 @@ const confirmBookingAndReleasePaymentWithCaptureSplit = async (
     throw new ApiError(httpStatus.BAD_REQUEST, "Payment not authorized");
   }
 
+  // find booking
   const booking = await prisma.service_booking.findFirst({
     where: {
       id: bookingId,
@@ -326,6 +328,7 @@ const confirmBookingAndReleasePaymentWithCaptureSplit = async (
     );
   }
 
+  // find service provider
   const provider = await prisma.user.findUnique({
     where: { id: payment.providerId },
   });
@@ -341,80 +344,40 @@ const confirmBookingAndReleasePaymentWithCaptureSplit = async (
   const adminAmount = Math.round((totalAmount * PLATFORM_PERCENT) / 100);
   const providerAmount = totalAmount - adminAmount;
 
-  // capture payment if not already captured
-  const paymentIntent = (await stripe.paymentIntents.retrieve(
+  // capture payment
+  const capturedIntent = await stripe.paymentIntents.capture(
     payment.paymentIntentId,
-  )) as any;
-
-  console.log("Payment Intent Status:", paymentIntent.status);
-  console.log(
-    "Payment Intent Charges:",
-    paymentIntent.charges?.data?.length || 0,
   );
 
-  let chargeId: string;
+  // retrieve the payment intent to get charges
+  const paymentIntent = await stripe.paymentIntents.retrieve(
+    payment.paymentIntentId,
+  ) as any;
 
-  if (paymentIntent.status === "succeeded" && paymentIntent.latest_charge) {
-    // payment already captured, use existing charge
-    chargeId = paymentIntent.latest_charge;
-  } else if (paymentIntent.status === "succeeded") {
-    // payment succeeded but no latest_charge, retrieve charges directly
-    if (!paymentIntent.charges?.data?.length) {
-      // If no charges in data array, check if latest_charge exists
-      if (paymentIntent.latest_charge) {
-        chargeId = paymentIntent.latest_charge;
-      } else {
-        throw new ApiError(
-          httpStatus.BAD_REQUEST,
-          "No charge found for succeeded payment",
-        );
-      }
-    } else {
-      chargeId = paymentIntent.charges.data[0].id;
-    }
-  } else {
-    // capture payment
-    await stripe.paymentIntents.capture(payment.paymentIntentId);
-    const capturedIntent = (await stripe.paymentIntents.retrieve(
-      payment.paymentIntentId,
-    )) as any;
-    if (!capturedIntent.charges?.data?.length && !capturedIntent.latest_charge)
-      throw new ApiError(httpStatus.BAD_REQUEST, "No charge after capture");
+  const chargeId =
+    paymentIntent.latest_charge || paymentIntent.charges?.data?.[0]?.id;
 
-    // Use latest_charge if available, otherwise use charges data
-    chargeId =
-      capturedIntent.latest_charge || capturedIntent.charges.data[0].id;
-  }
-
-  // ✅ check if provider_amount already set to prevent duplicate transfer
-  if (!payment.provider_amount) {
-    // Check if original payment had automatic transfer
-    if (paymentIntent.transfer_data?.destination) {
-      // Original payment already transferred full amount to provider
-      // Just mark as paid without additional transfer
-      console.log(
-        "Original payment already transferred full amount to provider, skipping transfer.",
-      );
-    } else {
-      // Create split transfer for manual capture payments
-      await stripe.transfers.create(
-        {
-          amount: providerAmount,
-          currency: payment.currency || "usd",
-          destination: provider.stripeAccountId,
-          source_transaction: chargeId,
-        },
-        {
-          idempotencyKey: `transfer_${payment.id}`, // safe retry
-        },
-      );
-    }
-  } else {
-    console.log(
-      "Provider amount already transferred, skipping duplicate transfer.",
+  if (!chargeId) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      "Charge not found after capture",
     );
   }
 
+  // transfer 90% to provider
+  await stripe.transfers.create(
+    {
+      amount: providerAmount,
+      currency: payment.currency || "usd",
+      destination: provider.stripeAccountId,
+      source_transaction: chargeId,
+    },
+    {
+      idempotencyKey: `transfer_${payment.id}`,
+    },
+  );
+
+  // update DB
   await prisma.payment.update({
     where: { id: payment.id },
     data: {
@@ -424,9 +387,92 @@ const confirmBookingAndReleasePaymentWithCaptureSplit = async (
     },
   });
 
+  // capture payment if not already captured
+  // const paymentIntent = (await stripe.paymentIntents.retrieve(
+  //   payment.paymentIntentId,
+  // )) as any;
+
+  // console.log("Payment Intent Status:", paymentIntent.status);
+  // console.log(
+  //   "Payment Intent Charges:",
+  //   paymentIntent.charges?.data?.length || 0,
+  // );
+
+  // let chargeId: string;
+
+  // if (paymentIntent.status === "succeeded" && paymentIntent.latest_charge) {
+  //   // payment already captured, use existing charge
+  //   chargeId = paymentIntent.latest_charge;
+  // } else if (paymentIntent.status === "succeeded") {
+  //   // payment succeeded but no latest_charge, retrieve charges directly
+  //   if (!paymentIntent.charges?.data?.length) {
+  //     // if no charges in data array, check if latest_charge exists
+  //     if (paymentIntent.latest_charge) {
+  //       chargeId = paymentIntent.latest_charge;
+  //     } else {
+  //       throw new ApiError(
+  //         httpStatus.BAD_REQUEST,
+  //         "No charge found for succeeded payment",
+  //       );
+  //     }
+  //   } else {
+  //     chargeId = paymentIntent.charges.data[0].id;
+  //   }
+  // } else {
+  //   // capture payment
+  //   await stripe.paymentIntents.capture(payment.paymentIntentId);
+  //   const capturedIntent = (await stripe.paymentIntents.retrieve(
+  //     payment.paymentIntentId,
+  //   )) as any;
+  //   if (!capturedIntent.charges?.data?.length && !capturedIntent.latest_charge)
+  //     throw new ApiError(httpStatus.BAD_REQUEST, "No charge after capture");
+
+  //   // latest_charge if available, otherwise use charges data
+  //   chargeId =
+  //     capturedIntent.latest_charge || capturedIntent.charges.data[0].id;
+  // }
+
+  // // check if provider_amount already set to prevent duplicate transfer
+  // if (!payment.provider_amount) {
+  //   // check if original payment had automatic transfer
+  //   if (paymentIntent.transfer_data?.destination) {
+  //     // original payment already transferred full amount to provider
+  //     // just mark as paid without additional transfer
+  //     console.log(
+  //       "Original payment already transferred full amount to provider, skipping transfer.",
+  //     );
+  //   } else {
+  //     // create split transfer for manual capture payments
+  //     await stripe.transfers.create(
+  //       {
+  //         amount: providerAmount,
+  //         currency: payment.currency || "usd",
+  //         destination: provider.stripeAccountId,
+  //         source_transaction: chargeId,
+  //       },
+  //       {
+  //         idempotencyKey: `transfer_${payment.id}`, // safe retry
+  //       },
+  //     );
+  //   }
+  // } else {
+  //   console.log(
+  //     "Provider amount already transferred, skipping duplicate transfer.",
+  //   );
+  // }
+
+  // await prisma.payment.update({
+  //   where: { id: payment.id },
+  //   data: {
+  //     status: PaymentStatus.PAID,
+  //     provider_amount: providerAmount / 100,
+  //     admin_amount: adminAmount / 100,
+  //   },
+  // });
+
   await prisma.service_booking.update({
     where: { id: booking.id },
-    data: { bookingStatus: BookingStatus.CAPTURED },
+    data: { bookingStatus: BookingStatus.CONFIRMED },
   });
 };
 

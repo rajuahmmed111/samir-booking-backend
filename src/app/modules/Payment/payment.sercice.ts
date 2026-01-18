@@ -300,11 +300,17 @@ const createStripeCheckoutSessionForService = async (
     cancel_url: config.stripe.checkout_cancel_url,
 
     // full amount goes to provider
+    // payment_intent_data: {
+    //   capture_method: "manual", // hold in platform account
+    //   transfer_data: {
+    //     destination: provider.stripeAccountId, // provider gets full amount
+    //   },
+    //   description,
+    // },
+
+    // for hold and release later with split payment
     payment_intent_data: {
       capture_method: "manual", // hold in platform account
-      transfer_data: {
-        destination: provider.stripeAccountId, // provider gets full amount
-      },
       description,
     },
 
