@@ -3,7 +3,7 @@ import { WebSocketServer, WebSocket } from "ws";
 import app from "./app";
 import config from "./config";
 import prisma from "./shared/prisma";
-import { changeExpiryBookingStatus, changeExpiryBookingStatusForCancel } from "./utils/cronFn/changeExpiryBookingStatus";
+import { changeExpiryBookingStatus } from "./utils/cronFn/changeExpiryBookingStatus";
 
 // ---------- WebSocket state ----------
 type channelName = string;
@@ -18,7 +18,7 @@ function safeSend(ws: WebSocket, data: unknown) {
 function broadcastToChannel(
   channelName: channelName,
   data: unknown,
-  excludeSocket: WebSocket | null = null
+  excludeSocket: WebSocket | null = null,
 ) {
   const clients = channelClients.get(channelName);
   if (!clients) return;
@@ -58,15 +58,13 @@ async function main() {
     console.log("Server is running on port", config.port);
   });
 
-//   const port = Number(config.port) || 5000;
-// server = app.listen(port, "0.0.0.0", () => {
-//   console.log("Server is running on port", port);
-// });
-
+  //   const port = Number(config.port) || 5000;
+  // server = app.listen(port, "0.0.0.0", () => {
+  //   console.log("Server is running on port", port);
+  // });
 
   // start cron jobs
   changeExpiryBookingStatus();
-  changeExpiryBookingStatusForCancel
 
   wss = new WebSocketServer({ server });
   installHeartbeat(wss);
@@ -157,7 +155,7 @@ async function main() {
                 channelName: channel.channelName,
                 data: newMessage,
               },
-              ws
+              ws,
             );
 
             break;

@@ -40,6 +40,7 @@ enum PaymentStatus {
   REFUNDED
   SUCCESS
   IN_HOLD
+  REJECTED
 }
 
 enum Weekday {
@@ -59,7 +60,7 @@ enum BookingStatus {
   CONFIRMED
   IN_WORKING
   COMPLETED_BY_PROVIDER
-  CAPTURED
+  REJECTED
   COMPLETED
   CANCELLED
   EXPIRED

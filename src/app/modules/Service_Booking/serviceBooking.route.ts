@@ -36,6 +36,13 @@ router.post(
   ServiceBookingController.completeBooking,
 );
 
+// provider reject booking
+router.post(
+  "/:bookingId/reject",
+  auth(UserRole.SERVICE_PROVIDER),
+  ServiceBookingController.rejectBooking,
+);
+
 // property owner confirm → CAPTURE payment
 router.post(
   "/:bookingId/confirm-by-owner",

@@ -286,197 +286,60 @@ const completeBooking = async (providerId: string, bookingId: string) => {
   });
 };
 
-// // property owner confirm → CAPTURE payment
-// const confirmBookingAndReleasePaymentWithCaptureSplit = async (
-//   userId: string,
-//   bookingId: string,
-//   paymentId: string,
-// ) => {
-//   // find payment
-//   const payment = await prisma.payment.findFirst({
-//     where: { id: paymentId, userId },
-//   });
+// provider reject booking
+const rejectBooking = async (userId: string, bookingId: string) => {
+  // find booking
+  const booking = await prisma.service_booking.findFirst({
+    where: { id: bookingId, providerId: userId },
+  });
 
-//   if (!payment || !payment.paymentIntentId || !payment.providerId) {
-//     throw new ApiError(httpStatus.BAD_REQUEST, "Invalid payment");
-//   }
+  if (!booking) {
+    throw new ApiError(httpStatus.NOT_FOUND, "Booking not found");
+  }
 
-//   if (payment.status !== PaymentStatus.IN_HOLD) {
-//     throw new ApiError(httpStatus.BAD_REQUEST, "Payment not authorized");
-//   }
+  if (booking.bookingStatus !== BookingStatus.NEED_ACCEPT) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      "Only confirmed bookings can be rejected",
+    );
+  }
 
-//   // find booking
-//   const booking = await prisma.service_booking.findFirst({
-//     where: {
-//       id: bookingId,
-//       userId,
-//       bookingStatus: BookingStatus.COMPLETED_BY_PROVIDER,
-//     },
-//   });
+  // find payment
+  const payment = await prisma.payment.findFirst({
+    where: { service_bookingId: bookingId },
+  });
 
-//   if (!booking)
-//     throw new ApiError(
-//       httpStatus.BAD_REQUEST,
-//       "Booking not complete by provider",
-//     );
+  if (!payment) {
+    throw new ApiError(httpStatus.BAD_REQUEST, "Payment not found");
+  }
 
-//   if (payment.service_bookingId !== booking.id) {
-//     throw new ApiError(
-//       httpStatus.BAD_REQUEST,
-//       "Payment does not belong to this booking",
-//     );
-//   }
+  // refund payment to property owner
+  if (payment.paymentIntentId) {
+    try {
+      // For manual capture payments, cancel the payment intent instead of refunding
+      await stripe.paymentIntents.cancel(payment.paymentIntentId);
+    } catch (error) {
+      console.error("Payment intent cancellation failed:", error);
+      throw new ApiError(httpStatus.BAD_REQUEST, "Failed to cancel payment");
+    }
+  }
 
-//   // find service provider
-//   const provider = await prisma.user.findUnique({
-//     where: { id: payment.providerId },
-//   });
+  // update booking status
+  await prisma.service_booking.update({
+    where: { id: bookingId },
+    data: { bookingStatus: BookingStatus.REJECTED },
+  });
 
-//   if (!provider || !provider.stripeAccountId) {
-//     throw new ApiError(
-//       httpStatus.BAD_REQUEST,
-//       "Provider Stripe account not found",
-//     );
-//   }
+  // update payment status
+  await prisma.payment.update({
+    where: { id: payment.id },
+    data: { status: PaymentStatus.REFUNDED },
+  });
 
-//   const totalAmount = Math.round(payment.amount * 100);
-//   const adminAmount = Math.round((totalAmount * PLATFORM_PERCENT) / 100);
-//   const providerAmount = totalAmount - adminAmount;
-
-//   // capture payment
-//   const capturedIntent = await stripe.paymentIntents.capture(
-//     payment.paymentIntentId,
-//   );
-
-//   // retrieve the payment intent to get charges
-//   const paymentIntent = await stripe.paymentIntents.retrieve(
-//     payment.paymentIntentId,
-//   ) as any;
-
-//   const chargeId =
-//     paymentIntent.latest_charge || paymentIntent.charges?.data?.[0]?.id;
-
-//   if (!chargeId) {
-//     throw new ApiError(
-//       httpStatus.BAD_REQUEST,
-//       "Charge not found after capture",
-//     );
-//   }
-
-//   // transfer 90% to provider
-//   await stripe.transfers.create(
-//     {
-//       amount: providerAmount,
-//       currency: payment.currency || "usd",
-//       destination: provider.stripeAccountId,
-//       source_transaction: chargeId,
-//     },
-//     {
-//       idempotencyKey: `transfer_${payment.id}`,
-//     },
-//   );
-
-//   // update DB
-//   await prisma.payment.update({
-//     where: { id: payment.id },
-//     data: {
-//       status: PaymentStatus.PAID,
-//       provider_amount: providerAmount / 100,
-//       admin_amount: adminAmount / 100,
-//     },
-//   });
-
-//   // capture payment if not already captured
-//   // const paymentIntent = (await stripe.paymentIntents.retrieve(
-//   //   payment.paymentIntentId,
-//   // )) as any;
-
-//   // console.log("Payment Intent Status:", paymentIntent.status);
-//   // console.log(
-//   //   "Payment Intent Charges:",
-//   //   paymentIntent.charges?.data?.length || 0,
-//   // );
-
-//   // let chargeId: string;
-
-//   // if (paymentIntent.status === "succeeded" && paymentIntent.latest_charge) {
-//   //   // payment already captured, use existing charge
-//   //   chargeId = paymentIntent.latest_charge;
-//   // } else if (paymentIntent.status === "succeeded") {
-//   //   // payment succeeded but no latest_charge, retrieve charges directly
-//   //   if (!paymentIntent.charges?.data?.length) {
-//   //     // if no charges in data array, check if latest_charge exists
-//   //     if (paymentIntent.latest_charge) {
-//   //       chargeId = paymentIntent.latest_charge;
-//   //     } else {
-//   //       throw new ApiError(
-//   //         httpStatus.BAD_REQUEST,
-//   //         "No charge found for succeeded payment",
-//   //       );
-//   //     }
-//   //   } else {
-//   //     chargeId = paymentIntent.charges.data[0].id;
-//   //   }
-//   // } else {
-//   //   // capture payment
-//   //   await stripe.paymentIntents.capture(payment.paymentIntentId);
-//   //   const capturedIntent = (await stripe.paymentIntents.retrieve(
-//   //     payment.paymentIntentId,
-//   //   )) as any;
-//   //   if (!capturedIntent.charges?.data?.length && !capturedIntent.latest_charge)
-//   //     throw new ApiError(httpStatus.BAD_REQUEST, "No charge after capture");
-
-//   //   // latest_charge if available, otherwise use charges data
-//   //   chargeId =
-//   //     capturedIntent.latest_charge || capturedIntent.charges.data[0].id;
-//   // }
-
-//   // // check if provider_amount already set to prevent duplicate transfer
-//   // if (!payment.provider_amount) {
-//   //   // check if original payment had automatic transfer
-//   //   if (paymentIntent.transfer_data?.destination) {
-//   //     // original payment already transferred full amount to provider
-//   //     // just mark as paid without additional transfer
-//   //     console.log(
-//   //       "Original payment already transferred full amount to provider, skipping transfer.",
-//   //     );
-//   //   } else {
-//   //     // create split transfer for manual capture payments
-//   //     await stripe.transfers.create(
-//   //       {
-//   //         amount: providerAmount,
-//   //         currency: payment.currency || "usd",
-//   //         destination: provider.stripeAccountId,
-//   //         source_transaction: chargeId,
-//   //       },
-//   //       {
-//   //         idempotencyKey: `transfer_${payment.id}`, // safe retry
-//   //       },
-//   //     );
-//   //   }
-//   // } else {
-//   //   console.log(
-//   //     "Provider amount already transferred, skipping duplicate transfer.",
-//   //   );
-//   // }
-
-//   // await prisma.payment.update({
-//   //   where: { id: payment.id },
-//   //   data: {
-//   //     status: PaymentStatus.PAID,
-//   //     provider_amount: providerAmount / 100,
-//   //     admin_amount: adminAmount / 100,
-//   //   },
-//   // });
-
-//   await prisma.service_booking.update({
-//     where: { id: booking.id },
-//     data: { bookingStatus: BookingStatus.CONFIRMED },
-//   });
-// };
+  return { message: "Booking rejected successfully" };
+};
 
 const PLATFORM_PERCENT = 10;
-
 // property owner confirm → CAPTURE payment
 const confirmBookingAndReleasePaymentWithCaptureSplit = async (
   userId: string,
@@ -598,10 +461,18 @@ const getAllServiceActiveAndPastBookings = async (
   // filter by userId (user can only see their own bookings)
   andConditions.push({ userId });
 
-  // filter by booking type (active=CONFIRMED, past=COMPLETED)
+  // filter by booking type (active=CONFIRMED, IN_WORKING, COMPLETED_BY_PROVIDER, past=COMPLETED)
   if (bookingType) {
     if (bookingType === "active") {
-      andConditions.push({ bookingStatus: BookingStatus.CONFIRMED });
+      andConditions.push({
+        bookingStatus: {
+          in: [
+            BookingStatus.CONFIRMED,
+            BookingStatus.IN_WORKING,
+            BookingStatus.COMPLETED_BY_PROVIDER,
+          ],
+        },
+      });
     } else if (bookingType === "past") {
       andConditions.push({ bookingStatus: BookingStatus.COMPLETED });
     }
@@ -609,7 +480,12 @@ const getAllServiceActiveAndPastBookings = async (
     // default: show both active and past bookings
     andConditions.push({
       bookingStatus: {
-        in: [BookingStatus.CONFIRMED, BookingStatus.COMPLETED],
+        in: [
+          BookingStatus.CONFIRMED,
+          BookingStatus.IN_WORKING,
+          BookingStatus.COMPLETED_BY_PROVIDER,
+          BookingStatus.COMPLETED,
+        ],
       },
     });
   }
@@ -767,21 +643,15 @@ const getAllServiceBookingsOfProvider = async (
 
   let whereClause: any = { providerId };
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
   if (filter === "new-requests") {
-    // New Requests: CONFIRMED bookings for today or future dates
+    // New Requests: NEED_ACCEPT bookings
+    whereClause.bookingStatus = BookingStatus.NEED_ACCEPT;
+  } else if (filter === "accepted") {
+    // Confirmed: CONFIRMED bookings
     whereClause.bookingStatus = BookingStatus.CONFIRMED;
-    whereClause.date = {
-      gte: today.toISOString().split("T")[0],
-    };
   } else if (filter === "ongoing") {
-    // Ongoing: CONFIRMED bookings where date is in the past (before today)
-    whereClause.bookingStatus = BookingStatus.CONFIRMED;
-    whereClause.date = {
-      lt: today.toISOString().split("T")[0],
-    };
+    // Ongoing: IN_WORKING bookings
+    whereClause.bookingStatus = BookingStatus.IN_WORKING;
   } else if (filter === "completed") {
     // Completed: COMPLETED bookings
     whereClause.bookingStatus = BookingStatus.COMPLETED;
@@ -835,6 +705,7 @@ export const ServiceBookingService = {
   acceptBooking,
   inProgressBooking,
   completeBooking,
+  rejectBooking,
   confirmBookingAndReleasePaymentWithCaptureSplit,
   getAllServiceActiveAndPastBookings,
   getSingleServiceBooking,
