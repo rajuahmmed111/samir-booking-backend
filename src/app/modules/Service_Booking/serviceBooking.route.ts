@@ -36,9 +36,9 @@ router.post(
   ServiceBookingController.completeBooking,
 );
 
-// owner confirm & release payment
+// property owner confirm → CAPTURE payment
 router.post(
-  "/:bookingId/confirm",
+  "/:bookingId/confirm-by-owner",
   auth(UserRole.PROPERTY_OWNER),
   ServiceBookingController.confirmBookingAndReleasePayment,
 );

@@ -204,6 +204,14 @@ const createStripeCheckoutSessionForHotel = async (
     },
   });
 
+  // retrieve payment intent from session
+  let paymentIntentId = checkoutSession.payment_intent as string;
+  
+  // fallback: if payment_intent is null, we'll update it later in the webhook
+  if (!paymentIntentId) {
+    console.warn('Payment intent not available at session creation, will be updated in webhook');
+  }
+
   // update DB with checkoutSessionId
   await prisma.hotel_Booking.update({
     where: { id: bookingId },
@@ -219,7 +227,7 @@ const createStripeCheckoutSessionForHotel = async (
       description,
       currency: "usd",
       sessionId: checkoutSession.id,
-      paymentIntentId: checkoutSession.payment_method_types.join(","),
+      paymentIntentId: paymentIntentId,
       status: PaymentStatus.UNPAID,
       provider: "STRIPE",
       serviceType: "HOTEL",
@@ -306,6 +314,14 @@ const createStripeCheckoutSessionForService = async (
     },
   });
 
+  // retrieve payment intent from session
+  let paymentIntentId = checkoutSession.payment_intent as string;
+  
+  // fallback: if payment_intent is null, we'll update it later in the webhook
+  if (!paymentIntentId) {
+    console.warn('Payment intent not available at session creation, will be updated in webhook');
+  }
+
   // update booking
   await prisma.service_booking.update({
     where: { id: booking.id },
@@ -319,7 +335,7 @@ const createStripeCheckoutSessionForService = async (
       description,
       currency: "usd",
       sessionId: checkoutSession.id,
-      paymentIntentId: checkoutSession.payment_method_types.join(","),
+      paymentIntentId: paymentIntentId,
       status: PaymentStatus.UNPAID,
       provider: "STRIPE",
       serviceType: "SERVICE",
@@ -366,11 +382,12 @@ const stripeHandleWebhook = async (event: Stripe.Event) => {
         break;
       }
 
-      // update payment to PAID
+      // update payment to PAID and set paymentIntentId
       await prisma.payment.update({
         where: { id: payment.id },
         data: {
           status: PaymentStatus.PAID,
+          paymentIntentId: paymentIntentId,
         },
       });
 

@@ -78,12 +78,15 @@ const completeBooking = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-// owner confirm & release payment
+// property owner confirm → CAPTURE payment
 const confirmBookingAndReleasePayment = catchAsync(
   async (req: Request, res: Response) => {
+    const userId = req.user!.id;
+    const bookingId = req.params.bookingId;
+
     const result = await ServiceBookingService.confirmBookingAndReleasePayment(
-      req.user!.id,
-      req.params.bookingId,
+      userId,
+      bookingId,
     );
 
     sendResponse(res, {

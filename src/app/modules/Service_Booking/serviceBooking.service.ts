@@ -208,7 +208,7 @@ const inProgressBooking = async (providerId: string, bookingId: string) => {
   // update booking status
   return prisma.service_booking.update({
     where: { id: bookingId },
-    data: { bookingStatus: BookingStatus.IN_PROGRESS },
+    data: { bookingStatus: BookingStatus.IN_WORKING },
     select: {
       id: true,
       userId: true,
@@ -226,8 +226,12 @@ const inProgressBooking = async (providerId: string, bookingId: string) => {
 
 // provider complete booking
 const completeBooking = async (providerId: string, bookingId: string) => {
-  const booking = await prisma.service_booking.findUnique({
-    where: { id: bookingId, providerId },
+  const booking = await prisma.service_booking.findFirst({
+    where: {
+      id: bookingId,
+      providerId,
+      bookingStatus: BookingStatus.IN_WORKING,
+    },
     include: {
       service: {
         select: {
@@ -238,7 +242,14 @@ const completeBooking = async (providerId: string, bookingId: string) => {
     },
   });
 
-  if (!booking || booking.providerId !== providerId) {
+  if (!booking) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      "Booking is not in working state",
+    );
+  }
+
+  if (booking.providerId !== providerId) {
     throw new ApiError(httpStatus.FORBIDDEN, "Unauthorized");
   }
 
@@ -269,17 +280,28 @@ const completeBooking = async (providerId: string, bookingId: string) => {
   });
 };
 
-// Owner confirm → CAPTURE payment
+// property owner confirm → CAPTURE payment
 const confirmBookingAndReleasePayment = async (
   userId: string,
   bookingId: string,
 ) => {
-  const booking = await prisma.service_booking.findUnique({
-    where: { id: bookingId },
+  const booking = await prisma.service_booking.findFirst({
+    where: {
+      id: bookingId,
+      userId,
+      bookingStatus: BookingStatus.COMPLETED_BY_PROVIDER,
+    },
     include: { payments: true },
   });
 
-  if (!booking || booking.userId !== userId) {
+  if (!booking) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      "Booking is not complete by the service provider state",
+    );
+  }
+
+  if (booking.userId !== userId) {
     throw new ApiError(httpStatus.FORBIDDEN, "Unauthorized");
   }
 
@@ -289,10 +311,9 @@ const confirmBookingAndReleasePayment = async (
   }
 
   await stripe.paymentIntents.capture(payment.paymentIntentId);
-
   await prisma.payment.update({
     where: { id: payment.id },
-    data: { status: PaymentStatus.SUCCESS },
+    data: { status: PaymentStatus.PAID },
   });
 
   return { released: true };
