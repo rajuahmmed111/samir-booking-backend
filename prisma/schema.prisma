@@ -622,7 +622,9 @@ model Payment {
   paymentIntentId String?
   status          PaymentStatus
   provider        PaymentProvider
-  transactionId   String?
+  // transactionId   String?
+  provider_amount Float?
+  admin_amount    Float?
   serviceType     String
   partnerId       String?         @db.ObjectId
   planId          String?

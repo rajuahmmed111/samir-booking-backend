@@ -40,7 +40,7 @@ router.post(
 router.post(
   "/:bookingId/confirm-by-owner",
   auth(UserRole.PROPERTY_OWNER),
-  ServiceBookingController.confirmBookingAndReleasePayment,
+  ServiceBookingController.confirmBookingAndReleasePaymentWithCaptureSplit,
 );
 
 // get all my active and past bookings for a property owner

@@ -79,15 +79,19 @@ const completeBooking = catchAsync(async (req: Request, res: Response) => {
 });
 
 // property owner confirm → CAPTURE payment
-const confirmBookingAndReleasePayment = catchAsync(
+const confirmBookingAndReleasePaymentWithCaptureSplit = catchAsync(
   async (req: Request, res: Response) => {
     const userId = req.user!.id;
     const bookingId = req.params.bookingId;
+    const paymentId = req.body.paymentId;
+    // console.log(paymentId)
 
-    const result = await ServiceBookingService.confirmBookingAndReleasePayment(
-      userId,
-      bookingId,
-    );
+    const result =
+      await ServiceBookingService.confirmBookingAndReleasePaymentWithCaptureSplit(
+        userId,
+        bookingId,
+        paymentId,
+      );
 
     sendResponse(res, {
       statusCode: httpStatus.OK,
@@ -165,7 +169,7 @@ export const ServiceBookingController = {
   acceptBooking,
   inProgressBooking,
   completeBooking,
-  confirmBookingAndReleasePayment,
+  confirmBookingAndReleasePaymentWithCaptureSplit,
   getAllServiceActiveAndPastBookings,
   getSingleServiceBooking,
   getAllServiceBookingsOfProvider,

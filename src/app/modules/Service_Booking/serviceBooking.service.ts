@@ -276,46 +276,142 @@ const completeBooking = async (providerId: string, bookingId: string) => {
           isEndedVideo: true,
         },
       },
+      payments: {
+        select: {
+          id: true,
+          amount: true,
+        },
+      },
     },
   });
 };
 
+const PLATFORM_PERCENT = 10;
 // property owner confirm → CAPTURE payment
-const confirmBookingAndReleasePayment = async (
+const confirmBookingAndReleasePaymentWithCaptureSplit = async (
   userId: string,
   bookingId: string,
+  paymentId: string,
 ) => {
+  const payment = await prisma.payment.findFirst({
+    where: { id: paymentId, userId },
+  });
+
+  if (!payment || !payment.paymentIntentId || !payment.providerId) {
+    throw new ApiError(httpStatus.BAD_REQUEST, "Invalid payment");
+  }
+
+  if (payment.status !== PaymentStatus.AUTHORIZED) {
+    throw new ApiError(httpStatus.BAD_REQUEST, "Payment not authorized");
+  }
+
   const booking = await prisma.service_booking.findFirst({
     where: {
       id: bookingId,
       userId,
       bookingStatus: BookingStatus.COMPLETED_BY_PROVIDER,
     },
-    include: { payments: true },
   });
 
-  if (!booking) {
+  if (!booking)
     throw new ApiError(
       httpStatus.BAD_REQUEST,
-      "Booking is not complete by the service provider state",
+      "Booking not complete by provider",
+    );
+
+  if (payment.service_bookingId !== booking.id) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      "Payment does not belong to this booking",
     );
   }
 
-  if (booking.userId !== userId) {
-    throw new ApiError(httpStatus.FORBIDDEN, "Unauthorized");
+  const provider = await prisma.user.findUnique({
+    where: { id: payment.providerId },
+  });
+
+  if (!provider || !provider.stripeAccountId) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      "Provider Stripe account not found",
+    );
   }
 
-  const payment = booking.payments[0];
-  if (!payment?.paymentIntentId) {
-    throw new ApiError(httpStatus.BAD_REQUEST, "PaymentIntent missing");
+  const totalAmount = Math.round(payment.amount * 100);
+  const adminAmount = Math.round((totalAmount * PLATFORM_PERCENT) / 100);
+  const providerAmount = totalAmount - adminAmount;
+
+  // capture payment if not already captured
+  const paymentIntent = (await stripe.paymentIntents.retrieve(
+    payment.paymentIntentId,
+  )) as any;
+  let chargeId: string;
+
+  if (paymentIntent.status === "succeeded" && paymentIntent.latest_charge) {
+    // payment already captured, use existing charge
+    chargeId = paymentIntent.latest_charge;
+  } else if (paymentIntent.status === "succeeded") {
+    // payment succeeded but no latest_charge, retrieve charges directly
+    if (!paymentIntent.charges?.data?.length) {
+      throw new ApiError(
+        httpStatus.BAD_REQUEST,
+        "No charge found for succeeded payment",
+      );
+    }
+    chargeId = paymentIntent.charges.data[0].id;
+  } else {
+    // capture payment
+    await stripe.paymentIntents.capture(payment.paymentIntentId);
+    const capturedIntent = (await stripe.paymentIntents.retrieve(
+      payment.paymentIntentId,
+    )) as any;
+    if (!capturedIntent.charges?.data?.length)
+      throw new ApiError(httpStatus.BAD_REQUEST, "No charge after capture");
+    chargeId = capturedIntent.charges.data[0].id;
   }
 
-  await stripe.paymentIntents.capture(payment.paymentIntentId);
+  // ✅ check if provider_amount already set to prevent duplicate transfer
+  if (!payment.provider_amount) {
+    // Check if original payment had automatic transfer
+    if (paymentIntent.transfer_data?.destination) {
+      // Original payment already transferred full amount to provider
+      // Just mark as paid without additional transfer
+      console.log(
+        "Original payment already transferred full amount to provider, skipping transfer.",
+      );
+    } else {
+      // Create split transfer for manual capture payments
+      await stripe.transfers.create(
+        {
+          amount: providerAmount,
+          currency: payment.currency || "usd",
+          destination: provider.stripeAccountId,
+          source_transaction: chargeId,
+        },
+        {
+          idempotencyKey: `transfer_${payment.id}`, // safe retry
+        },
+      );
+    }
+  } else {
+    console.log(
+      "Provider amount already transferred, skipping duplicate transfer.",
+    );
+  }
+
   await prisma.payment.update({
     where: { id: payment.id },
-    data: { status: PaymentStatus.PAID },
+    data: {
+      status: PaymentStatus.PAID,
+      provider_amount: providerAmount / 100,
+      admin_amount: adminAmount / 100,
+    },
   });
-4
+
+  await prisma.service_booking.update({
+    where: { id: booking.id },
+    data: { bookingStatus: BookingStatus.CAPTURED },
+  });
 };
 
 // get all my active and past bookings for a property owner
@@ -551,7 +647,7 @@ export const ServiceBookingService = {
   acceptBooking,
   inProgressBooking,
   completeBooking,
-  confirmBookingAndReleasePayment,
+  confirmBookingAndReleasePaymentWithCaptureSplit,
   getAllServiceActiveAndPastBookings,
   getSingleServiceBooking,
   getAllServiceBookingsOfProvider,

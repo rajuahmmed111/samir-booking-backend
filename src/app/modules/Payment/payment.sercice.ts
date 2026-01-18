@@ -206,10 +206,12 @@ const createStripeCheckoutSessionForHotel = async (
 
   // retrieve payment intent from session
   let paymentIntentId = checkoutSession.payment_intent as string;
-  
+
   // fallback: if payment_intent is null, we'll update it later in the webhook
   if (!paymentIntentId) {
-    console.warn('Payment intent not available at session creation, will be updated in webhook');
+    console.warn(
+      "Payment intent not available at session creation, will be updated in webhook",
+    );
   }
 
   // update DB with checkoutSessionId
@@ -316,10 +318,12 @@ const createStripeCheckoutSessionForService = async (
 
   // retrieve payment intent from session
   let paymentIntentId = checkoutSession.payment_intent as string;
-  
+
   // fallback: if payment_intent is null, we'll update it later in the webhook
   if (!paymentIntentId) {
-    console.warn('Payment intent not available at session creation, will be updated in webhook');
+    console.warn(
+      "Payment intent not available at session creation, will be updated in webhook",
+    );
   }
 
   // update booking
