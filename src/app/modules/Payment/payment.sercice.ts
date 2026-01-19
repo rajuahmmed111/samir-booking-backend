@@ -635,6 +635,31 @@ const stripeHandleWebhook = async (event: Stripe.Event) => {
         });
       }
 
+      // ------------------- send notifications for HOTEL bookings immediately after checkout -------------------
+      if (payment.serviceType === "HOTEL") {
+        try {
+          const notificationData: IBookingNotificationData = {
+            bookingId: booking.id,
+            userId: booking.userId || undefined, // user who booked
+            partnerId: payment.partnerId || undefined, // hotel owner
+            serviceTypes: ServiceTypes.HOTEL,
+            serviceName: booking.propertyName,
+            totalPrice: payment.amount,
+            hotelId: payment.hotelId || undefined,
+          };
+
+          await BookingNotificationService.sendBookingNotifications(
+            notificationData,
+          );
+        } catch (notificationError) {
+          console.error(
+            "HOTEL notification sending failed:",
+            notificationError,
+          );
+          // Don't fail the webhook if notification fails
+        }
+      }
+
       break;
     }
 
@@ -657,6 +682,38 @@ const stripeHandleWebhook = async (event: Stripe.Event) => {
         where: { id: payment.id },
         data: { status: PaymentStatus.IN_HOLD },
       });
+
+      // ------------------- send notifications for SERVICE bookings after payment hold is established -------------------
+      try {
+        // find the booking
+        const booking = await prisma.service_booking.findFirst({
+          where: { id: payment.service_bookingId || undefined },
+        });
+
+        if (booking) {
+          const notificationData: IBookingNotificationData = {
+            bookingId: booking.id,
+            userId: booking.userId || undefined, // property owner who booked
+            partnerId: payment.partnerId || undefined, // hotel owner for hotel bookings
+            providerId: booking.providerId || undefined, // service provider for service bookings
+            serviceTypes: ServiceTypes.SERVICE,
+            serviceName: booking.serviceName || booking.property,
+            totalPrice: payment.amount,
+            hotelId: payment.hotelId || undefined,
+            serviceId: booking.serviceId || undefined,
+          };
+
+          await BookingNotificationService.sendBookingNotifications(
+            notificationData,
+          );
+        }
+      } catch (notificationError) {
+        console.error(
+          "SERVICE notification sending failed:",
+          notificationError,
+        );
+        // Don't fail the webhook if notification fails
+      }
 
       break;
     }

@@ -628,7 +628,6 @@ model Payment {
   provider_amount Float?
   admin_amount    Float?
   serviceType     String
-  partnerId       String?         @db.ObjectId
   planId          String?
   isDeleted       Boolean         @default(false)
   metadata        Json?
@@ -638,6 +637,7 @@ model Payment {
 
   // Relations
   hotelId                 String?                @db.ObjectId
+  partnerId               String?                @db.ObjectId
   providerId              String?                @db.ObjectId
   user                    User                   @relation(fields: [userId], references: [id])
   userId                  String                 @db.ObjectId
