@@ -704,6 +704,7 @@ const getAllServiceActiveAndPastBookings = async (
       andConditions.push({
         bookingStatus: {
           in: [
+            BookingStatus.NEED_ACCEPT,
             BookingStatus.CONFIRMED,
             BookingStatus.IN_WORKING,
             BookingStatus.COMPLETED_BY_PROVIDER,
