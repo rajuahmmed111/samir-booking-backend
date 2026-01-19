@@ -15,6 +15,7 @@ import {
 import { IPaginationOptions } from "../../../interfaces/paginations";
 import { paginationHelpers } from "../../../helpars/paginationHelper";
 import stripe from "../../../helpars/stripe";
+import { BookingNotificationService } from "../../../shared/notificationService";
 
 // create service booking
 const createServiceBooking = async (
@@ -107,7 +108,11 @@ const createServiceBooking = async (
       date: data.date,
       day: data.day,
       bookingStatus: {
-        in: [BookingStatus.PENDING, BookingStatus.CONFIRMED],
+        in: [
+          // BookingStatus.PENDING,
+          // BookingStatus.NEED_ACCEPT,
+          BookingStatus.CONFIRMED,
+        ],
       },
     },
   });
@@ -130,7 +135,7 @@ const createServiceBooking = async (
       timeSlot: data.timeSlot,
       totalPrice: data.totalPrice,
       specialInstructions: data.specialInstructions,
-      bookingStatus: BookingStatus.PENDING,
+      bookingStatus: BookingStatus.NEED_ACCEPT,
     },
     include: {
       user: {
@@ -150,17 +155,40 @@ const createServiceBooking = async (
       },
     },
   });
+
+  // ------------send notification to service provider------------
+  try {
+    const notificationData = {
+      bookingId: result.id,
+      userId: result.userId || undefined, // property owner who booked
+      providerId: result.providerId || undefined, // service provider
+      serviceTypes: "SERVICE" as any,
+      serviceName: result.serviceName,
+      totalPrice: result.totalPrice,
+      serviceId: result.serviceId || undefined,
+    };
+
+    await BookingNotificationService.sendBookingNotifications(notificationData);
+  } catch (notificationError) {
+    console.error("Create booking notification failed:", notificationError);
+    // don't fail booking if notification fails
+  }
+
   return result;
 };
 
 // provider accept booking
 const acceptBooking = async (providerId: string, bookingId: string) => {
   // find the booking
-  const booking = await prisma.service_booking.findUnique({
-    where: { id: bookingId },
+  const booking = await prisma.service_booking.findFirst({
+    where: {
+      id: bookingId,
+      providerId,
+      bookingStatus: BookingStatus.NEED_ACCEPT,
+    },
   });
 
-  if (!booking || booking.providerId !== providerId) {
+  if (!booking) {
     throw new ApiError(httpStatus.FORBIDDEN, "Unauthorized");
   }
 
@@ -172,17 +200,41 @@ const acceptBooking = async (providerId: string, bookingId: string) => {
     }),
     prisma.service.update({
       where: { id: booking.serviceId! },
-      data: { isBooked: EveryServiceStatus.ACCEPTED },
+      data: { isBooked: EveryServiceStatus.BOOKED },
     }),
   ]);
+
+  // ---------send notification to property owner---------
+  try {
+    const notificationData = {
+      bookingId: booking.id,
+      userId: booking.userId || undefined, // property owner who booked
+      providerId: booking.providerId || undefined, // service provider who accepted
+      serviceTypes: "SERVICE" as any,
+      serviceName: booking.serviceName,
+      totalPrice: booking.totalPrice,
+      serviceId: booking.serviceId || undefined,
+    };
+
+    await BookingNotificationService.sendBookingAcceptNotification(
+      notificationData,
+    );
+  } catch (notificationError) {
+    console.error("Accept notification failed:", notificationError);
+    // don't fail the booking if notification fails
+  }
 
   return { updatedBooking, updatedService };
 };
 
 // provider in_progress booking
 const inProgressBooking = async (providerId: string, bookingId: string) => {
-  const booking = await prisma.service_booking.findUnique({
-    where: { id: bookingId, providerId },
+  const booking = await prisma.service_booking.findFirst({
+    where: {
+      id: bookingId,
+      providerId,
+      bookingStatus: BookingStatus.CONFIRMED,
+    },
     include: {
       service: {
         select: {
@@ -287,10 +339,62 @@ const completeBooking = async (providerId: string, bookingId: string) => {
 };
 
 // provider reject booking
-const rejectBooking = async (userId: string, bookingId: string) => {
+// const rejectBooking = async (userId: string, bookingId: string) => {
+//   // find booking
+//   const booking = await prisma.service_booking.findFirst({
+//     where: { id: bookingId, providerId: userId },
+//   });
+
+//   if (!booking) {
+//     throw new ApiError(httpStatus.NOT_FOUND, "Booking not found");
+//   }
+
+//   if (booking.bookingStatus !== BookingStatus.NEED_ACCEPT) {
+//     throw new ApiError(
+//       httpStatus.BAD_REQUEST,
+//       "Only confirmed bookings can be rejected",
+//     );
+//   }
+
+//   // find payment
+//   const payment = await prisma.payment.findFirst({
+//     where: { service_bookingId: bookingId },
+//   });
+
+//   if (!payment) {
+//     throw new ApiError(httpStatus.BAD_REQUEST, "Payment not found");
+//   }
+
+//   // refund payment to property owner
+//   if (payment.paymentIntentId) {
+//     try {
+//       // For manual capture payments, cancel the payment intent instead of refunding
+//       await stripe.paymentIntents.cancel(payment.paymentIntentId);
+//     } catch (error) {
+//       console.error("Payment intent cancellation failed:", error);
+//       throw new ApiError(httpStatus.BAD_REQUEST, "Failed to cancel payment");
+//     }
+//   }
+
+//   // update booking status
+//   await prisma.service_booking.update({
+//     where: { id: bookingId },
+//     data: { bookingStatus: BookingStatus.REJECTED },
+//   });
+
+//   // update payment status
+//   await prisma.payment.update({
+//     where: { id: payment.id },
+//     data: { status: PaymentStatus.REFUNDED },
+//   });
+
+//   return { message: "Booking rejected successfully" };
+// };
+// provider reject booking
+const rejectBooking = async (providerId: string, bookingId: string) => {
   // find booking
   const booking = await prisma.service_booking.findFirst({
-    where: { id: bookingId, providerId: userId },
+    where: { id: bookingId, providerId },
   });
 
   if (!booking) {
@@ -300,43 +404,59 @@ const rejectBooking = async (userId: string, bookingId: string) => {
   if (booking.bookingStatus !== BookingStatus.NEED_ACCEPT) {
     throw new ApiError(
       httpStatus.BAD_REQUEST,
-      "Only confirmed bookings can be rejected",
+      "Only confirmed bookings can be rejected by provider",
     );
   }
 
-  // find payment
-  const payment = await prisma.payment.findFirst({
-    where: { service_bookingId: bookingId },
+  // update both booking and service inside a transaction
+  const [updatedBooking, updatedService] = await prisma.$transaction([
+    prisma.service_booking.update({
+      where: { id: bookingId },
+      data: { bookingStatus: BookingStatus.REJECTED },
+    }),
+    prisma.service.update({
+      where: { id: booking.serviceId! },
+      data: { isBooked: EveryServiceStatus.AVAILABLE },
+    }),
+  ]);
+
+  return { updatedBooking, updatedService };
+};
+
+// cancel booking from property owner
+const cancelBookingByPropertyOwner = async (
+  userId: string,
+  bookingId: string,
+) => {
+  // find booking
+  const booking = await prisma.service_booking.findFirst({
+    where: { id: bookingId, userId },
   });
 
-  if (!payment) {
-    throw new ApiError(httpStatus.BAD_REQUEST, "Payment not found");
+  if (!booking) {
+    throw new ApiError(httpStatus.NOT_FOUND, "Booking not found");
   }
 
-  // refund payment to property owner
-  if (payment.paymentIntentId) {
-    try {
-      // For manual capture payments, cancel the payment intent instead of refunding
-      await stripe.paymentIntents.cancel(payment.paymentIntentId);
-    } catch (error) {
-      console.error("Payment intent cancellation failed:", error);
-      throw new ApiError(httpStatus.BAD_REQUEST, "Failed to cancel payment");
-    }
+  if (booking.bookingStatus !== BookingStatus.CONFIRMED) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      "Only confirmed bookings can be cancelled by property owner",
+    );
   }
 
-  // update booking status
-  await prisma.service_booking.update({
-    where: { id: bookingId },
-    data: { bookingStatus: BookingStatus.REJECTED },
-  });
+  // update both booking and service inside a transaction
+  const [updatedBooking, updatedService] = await prisma.$transaction([
+    prisma.service_booking.update({
+      where: { id: bookingId },
+      data: { bookingStatus: BookingStatus.REJECTED },
+    }),
+    prisma.service.update({
+      where: { id: booking.serviceId! },
+      data: { isBooked: EveryServiceStatus.AVAILABLE },
+    }),
+  ]);
 
-  // update payment status
-  await prisma.payment.update({
-    where: { id: payment.id },
-    data: { status: PaymentStatus.REFUNDED },
-  });
-
-  return { message: "Booking rejected successfully" };
+  return { updatedBooking, updatedService };
 };
 
 const PLATFORM_PERCENT = 10;
@@ -708,6 +828,7 @@ export const ServiceBookingService = {
   inProgressBooking,
   completeBooking,
   rejectBooking,
+  cancelBookingByPropertyOwner,
   confirmBookingAndReleasePaymentWithCaptureSplit,
   getAllServiceActiveAndPastBookings,
   getSingleServiceBooking,

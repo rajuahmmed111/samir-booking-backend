@@ -80,9 +80,12 @@ const completeBooking = catchAsync(async (req: Request, res: Response) => {
 
 // provider reject booking
 const rejectBooking = catchAsync(async (req: Request, res: Response) => {
-  const userId = req.user?.id;
+  const providerId = req.user?.id;
   const bookingId = req.params.bookingId;
-  const result = await ServiceBookingService.rejectBooking(userId, bookingId);
+  const result = await ServiceBookingService.rejectBooking(
+    providerId,
+    bookingId,
+  );
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
@@ -90,6 +93,24 @@ const rejectBooking = catchAsync(async (req: Request, res: Response) => {
     data: result,
   });
 });
+
+// cancel booking from property owner
+const cancelBookingByPropertyOwner = catchAsync(
+  async (req: Request, res: Response) => {
+    const userId = req.user?.id;
+    const bookingId = req.params.bookingId;
+    const result = await ServiceBookingService.cancelBookingByPropertyOwner(
+      userId,
+      bookingId,
+    );
+    sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: "Booking cancelled successfully",
+      data: result,
+    });
+  },
+);
 
 // property owner confirm → CAPTURE payment
 const confirmBookingAndReleasePaymentWithCaptureSplit = catchAsync(
@@ -185,6 +206,7 @@ export const ServiceBookingController = {
   inProgressBooking,
   completeBooking,
   rejectBooking,
+  cancelBookingByPropertyOwner,
   confirmBookingAndReleasePaymentWithCaptureSplit,
   getAllServiceActiveAndPastBookings,
   getSingleServiceBooking,

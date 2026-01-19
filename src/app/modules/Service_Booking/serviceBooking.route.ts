@@ -43,6 +43,13 @@ router.post(
   ServiceBookingController.rejectBooking,
 );
 
+// cancel booking from property owner
+router.post(
+  "/:bookingId/cancel-by-owner",
+  auth(UserRole.PROPERTY_OWNER),
+  ServiceBookingController.cancelBookingByPropertyOwner,
+);
+
 // property owner confirm → CAPTURE payment
 router.post(
   "/:bookingId/confirm-by-owner",

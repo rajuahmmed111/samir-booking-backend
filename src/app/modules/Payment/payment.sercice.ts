@@ -608,15 +608,14 @@ const stripeHandleWebhook = async (event: Stripe.Event) => {
 
       // update booking status
       if (payment.serviceType === "SERVICE") {
-        await (configs.bookingModel as any).update({
-          where: { id: booking.id },
-          data: { bookingStatus: BookingStatus.NEED_ACCEPT },
-        });
-
-        await (configs.serviceModel as any).update({
-          where: { id: booking.serviceId },
-          data: { isBooked: EveryServiceStatus.WAITING_FOR_ACCEPT },
-        });
+        // await (configs.bookingModel as any).update({
+        //   where: { id: booking.id },
+        //   data: { bookingStatus: BookingStatus.NEED_ACCEPT },
+        // });
+        // await (configs.serviceModel as any).update({
+        //   where: { id: booking.serviceId },
+        //   data: { isBooked: EveryServiceStatus.WAITING_FOR_ACCEPT },
+        // });
       } else if (payment.serviceType === "HOTEL") {
         await (configs.bookingModel as any).update({
           where: { id: booking.id },
@@ -656,7 +655,7 @@ const stripeHandleWebhook = async (event: Stripe.Event) => {
             "HOTEL notification sending failed:",
             notificationError,
           );
-          // Don't fail the webhook if notification fails
+          // don't fail the webhook if notification fails
         }
       }
 
@@ -694,16 +693,20 @@ const stripeHandleWebhook = async (event: Stripe.Event) => {
           const notificationData: IBookingNotificationData = {
             bookingId: booking.id,
             userId: booking.userId || undefined, // property owner who booked
-            partnerId: payment.partnerId || undefined, // hotel owner for hotel bookings
             providerId: booking.providerId || undefined, // service provider for service bookings
             serviceTypes: ServiceTypes.SERVICE,
             serviceName: booking.serviceName || booking.property,
             totalPrice: payment.amount,
-            hotelId: payment.hotelId || undefined,
+            // hotelId: payment.hotelId || undefined,
             serviceId: booking.serviceId || undefined,
           };
 
           await BookingNotificationService.sendBookingNotifications(
+            notificationData,
+          );
+
+          // send payment request notification to property owner
+          await BookingNotificationService.sendPaymentRequestNotification(
             notificationData,
           );
         }
