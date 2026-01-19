@@ -116,8 +116,6 @@ const updateService = async (
   serviceId: string,
   payload: IServiceUpdate,
   coverImageFile?: Express.Multer.File,
-  videoStartingFiles?: Express.Multer.File[],
-  videoEndingFiles?: Express.Multer.File[],
 ) => {
   // check if service exists
   const existingService = await prisma.service.findUnique({
@@ -161,30 +159,6 @@ const updateService = async (
     coverImagePath = uploaded.secure_url;
   }
 
-  // video starting upload
-  let videoStartingPaths: string[] = [];
-  if (videoStartingFiles && videoStartingFiles.length > 0) {
-    for (const file of videoStartingFiles) {
-      const uploaded = await uploadFile.uploadToCloudinary(file);
-      if (!uploaded?.secure_url) {
-        throw new Error("Cloudinary upload failed for starting video");
-      }
-      videoStartingPaths.push(uploaded.secure_url);
-    }
-  }
-
-  // video ending upload
-  let videoEndingPaths: string[] = [];
-  if (videoEndingFiles && videoEndingFiles.length > 0) {
-    for (const file of videoEndingFiles) {
-      const uploaded = await uploadFile.uploadToCloudinary(file);
-      if (!uploaded?.secure_url) {
-        throw new Error("Cloudinary upload failed for ending video");
-      }
-      videoEndingPaths.push(uploaded.secure_url);
-    }
-  }
-
   // prepare update data
   const updateData: any = {};
 
@@ -196,10 +170,6 @@ const updateService = async (
     updateData.description = convertedServiceData.description;
   if (convertedServiceData.offered_services)
     updateData.offered_services = convertedServiceData.offered_services;
-  if (videoStartingPaths.length > 0)
-    updateData.recordProofVideoStarting = videoStartingPaths.join(",");
-  if (videoEndingPaths.length > 0)
-    updateData.recordProofVideoEnding = videoEndingPaths.join(",");
   if (convertedServiceData.addRemark)
     updateData.addRemark = convertedServiceData.addRemark;
   if (coverImagePath) updateData.coverImage = coverImagePath;

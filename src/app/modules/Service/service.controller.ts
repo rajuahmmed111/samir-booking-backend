@@ -30,19 +30,12 @@ const updateService = catchAsync(async (req: Request, res: Response) => {
   const coverImageFile = !Array.isArray(files)
     ? files?.coverImage?.[0]
     : undefined;
-  const videoStartingFiles = !Array.isArray(files)
-    ? files?.recordProofVideoStarting || []
-    : [];
-  const videoEndingFiles = !Array.isArray(files)
-    ? files?.recordProofVideoEnding || []
-    : [];
+
   const { serviceId } = req.params;
   const result = await ServiceService.updateService(
     serviceId,
     req.body,
     coverImageFile,
-    videoStartingFiles,
-    videoEndingFiles,
   );
   sendResponse(res, {
     statusCode: httpStatus.OK,

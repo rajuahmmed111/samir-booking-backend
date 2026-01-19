@@ -34,7 +34,6 @@ export interface IServiceCreate {
   offered_services: OfferedService[];
   coverImage: string;
   serviceStatus: string;
-  recordProofVideoStarting?: string;
   addRemark?: string;
   availability: ServiceAvailability[];
 }
@@ -47,8 +46,6 @@ export interface IServiceUpdate {
   offered_services?: OfferedService[];
   coverImage?: string;
   serviceStatus?: string;
-  recordProofVideoStarting?: string;
-  recordProofVideoEnding?: string;
   addRemark?: string;
   availability?: ServiceAvailability[];
 }
@@ -61,8 +58,6 @@ export interface IServiceResponse {
   offered_services: OfferedService[];
   coverImage: string;
   serviceStatus: string;
-  recordProofVideoStarting?: string;
-  recordProofVideoEnding?: string;
   addRemark?: string;
   createdAt: Date;
   updatedAt: Date;

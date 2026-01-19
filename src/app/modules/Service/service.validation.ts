@@ -63,8 +63,6 @@ const updateServiceSchema = z.object({
         ServiceStatus.PENDING,
       ])
       .optional(),
-    recordProofVideoStarting: z.string().optional(),
-    recordProofVideoEnding: z.string().optional(),
     addRemark: z.string().optional(),
     availability: z
       .array(ServiceAvailabilitySchema)
