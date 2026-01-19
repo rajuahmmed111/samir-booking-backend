@@ -351,16 +351,18 @@ model Service {
 
 model StartAndEndProofVideo {
   id                       String   @id @default(auto()) @map("_id") @db.ObjectId
-  recordProofVideoStarting String?
+  recordProofVideoStarting String[]
   isStartedVideo           Boolean  @default(false)
-  recordProofVideoEnding   String?
+  recordProofVideoEnding   String[]
   isEndedVideo             Boolean  @default(false)
   createdAt                DateTime @default(now())
   updatedAt                DateTime @updatedAt
 
   // relationships
-  serviceId String?  @db.ObjectId
-  service   Service? @relation(fields: [serviceId], references: [id])
+  bookingId String?          @db.ObjectId
+  booking   Service_booking? @relation(fields: [bookingId], references: [id])
+  serviceId String?          @db.ObjectId
+  service   Service?         @relation(fields: [serviceId], references: [id])
 
   @@map("start_and_end_proof_videos")
 }
@@ -409,13 +411,14 @@ model Service_booking {
   updatedAt           DateTime         @updatedAt
 
   // relationships
-  hotelId    String?   @db.ObjectId
-  providerId String?   @db.ObjectId
-  userId     String?   @db.ObjectId
-  user       User?     @relation(fields: [userId], references: [id])
-  serviceId  String?   @db.ObjectId
-  service    Service?  @relation(fields: [serviceId], references: [id])
-  payments   Payment[]
+  hotelId                String?                 @db.ObjectId
+  providerId             String?                 @db.ObjectId
+  userId                 String?                 @db.ObjectId
+  user                   User?                   @relation(fields: [userId], references: [id])
+  serviceId              String?                 @db.ObjectId
+  service                Service?                @relation(fields: [serviceId], references: [id])
+  payments               Payment[]
+  startAndEndProofVideos StartAndEndProofVideo[]
 
   @@map("service_bookings")
 }

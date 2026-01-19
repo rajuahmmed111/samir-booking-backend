@@ -19,6 +19,7 @@ import { subscriptionRoutes } from "../modules/Subscriptioin/subscription.route"
 import { serviceRoutes } from "../modules/Service/service.route";
 import { serviceBookingRoute } from "../modules/Service_Booking/serviceBooking.route";
 import { supportRoutes } from "../modules/Support/support.route";
+import { startingEndingProofVideoRoutes } from "../modules/Record_Proof_Video/recordProofVideo.route";
 
 const router = express.Router();
 
@@ -44,6 +45,10 @@ const moduleRoutes = [
   {
     path: "/services",
     route: serviceRoutes,
+  },
+  {
+    path: "/record-proof-video",
+    route: startingEndingProofVideoRoutes,
   },
   {
     path: "/service-booking",
