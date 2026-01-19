@@ -239,7 +239,12 @@ const inProgressBooking = async (providerId: string, bookingId: string) => {
       service: {
         select: {
           id: true,
-          isStartedVideo: true,
+          startAndEndProofVideos: {
+            select: {
+              id: true,
+              isStartedVideo: true,
+            },
+          },
         },
       },
     },
@@ -250,7 +255,11 @@ const inProgressBooking = async (providerId: string, bookingId: string) => {
   }
 
   // check if video is already started
-  if (!booking.service?.isStartedVideo) {
+  const hasStartedVideo = booking.service?.startAndEndProofVideos?.some(
+    (video) => video.isStartedVideo,
+  );
+
+  if (!hasStartedVideo) {
     throw new ApiError(
       httpStatus.BAD_REQUEST,
       "Service started video is required before in-progress booking",
@@ -269,7 +278,13 @@ const inProgressBooking = async (providerId: string, bookingId: string) => {
       service: {
         select: {
           id: true,
-          isStartedVideo: true,
+          startAndEndProofVideos: {
+            select: {
+              id: true,
+              isStartedVideo: true,
+              recordProofVideoStarting: true,
+            },
+          },
         },
       },
     },
@@ -287,8 +302,14 @@ const completeBooking = async (providerId: string, bookingId: string) => {
     include: {
       service: {
         select: {
-          isStartedVideo: true,
-          isEndedVideo: true,
+          id: true,
+          startAndEndProofVideos: {
+            select: {
+              id: true,
+              isStartedVideo: true,
+              isEndedVideo: true,
+            },
+          },
         },
       },
     },
@@ -305,7 +326,12 @@ const completeBooking = async (providerId: string, bookingId: string) => {
     throw new ApiError(httpStatus.FORBIDDEN, "Unauthorized");
   }
 
-  if (!booking.service?.isEndedVideo) {
+  // check if video is already ended
+  const hasEndedVideo = booking.service?.startAndEndProofVideos?.some(
+    (video) => video.isEndedVideo,
+  );
+
+  if (!hasEndedVideo) {
     throw new ApiError(
       httpStatus.BAD_REQUEST,
       "Service end video is required before completing booking",
@@ -326,8 +352,15 @@ const completeBooking = async (providerId: string, bookingId: string) => {
         select: {
           id: true,
           serviceName: true,
-          isStartedVideo: true,
-          isEndedVideo: true,
+          startAndEndProofVideos: {
+            select: {
+              id: true,
+              recordProofVideoStarting: true,
+              isStartedVideo: true,
+              recordProofVideoEnding: true,
+              isEndedVideo: true,
+            },
+          },
         },
       },
       payments: {
@@ -738,6 +771,13 @@ const getAllServiceActiveAndPastBookings = async (
         select: {
           id: true,
           serviceRating: true,
+          startAndEndProofVideos: {
+            select: {
+              id: true,
+              recordProofVideoStarting: true,
+              recordProofVideoEnding: true,
+            },
+          },
           user: {
             select: {
               id: true,
@@ -790,6 +830,13 @@ const getSingleServiceBooking = async (bookingId: string, userId: string) => {
           serviceReviewCount: true,
           coverImage: true,
           providerId: true,
+          startAndEndProofVideos: {
+            select: {
+              id: true,
+              recordProofVideoStarting: true,
+              recordProofVideoEnding: true,
+            },
+          },
           user: {
             select: {
               id: true,
@@ -889,6 +936,13 @@ const getAllServiceBookingsOfProvider = async (
           serviceReviewCount: true,
           offered_services: true,
           coverImage: true,
+          startAndEndProofVideos: {
+            select: {
+              id: true,
+              recordProofVideoStarting: true,
+              recordProofVideoEnding: true,
+            },
+          },
         },
       },
     },
