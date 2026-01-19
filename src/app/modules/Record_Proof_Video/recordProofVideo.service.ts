@@ -74,6 +74,8 @@ const updateRecordProofVideoEnding = async (
   // find existing proof video
   const existingProof = await prisma.startAndEndProofVideo.findFirst({
     where: {
+      bookingId,
+      serviceId: booking.serviceId,
       isStartedVideo: true,
       isEndedVideo: false,
     },
