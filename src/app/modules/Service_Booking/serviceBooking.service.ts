@@ -651,7 +651,9 @@ const getAllServiceBookingsOfProvider = async (
     whereClause.bookingStatus = BookingStatus.CONFIRMED;
   } else if (filter === "ongoing") {
     // Ongoing: IN_WORKING bookings
-    whereClause.bookingStatus = BookingStatus.IN_WORKING;
+    whereClause.bookingStatus = {
+      in: [BookingStatus.IN_WORKING, BookingStatus.COMPLETED_BY_PROVIDER],
+    };
   } else if (filter === "completed") {
     // Completed: COMPLETED bookings
     whereClause.bookingStatus = BookingStatus.COMPLETED;
