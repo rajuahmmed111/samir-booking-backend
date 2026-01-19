@@ -313,17 +313,19 @@ const completeBooking = async (providerId: string, bookingId: string) => {
   }
 
   // update booking status
-  return prisma.service_booking.update({
+  const result = await prisma.service_booking.update({
     where: { id: bookingId },
     data: { bookingStatus: BookingStatus.COMPLETED_BY_PROVIDER },
     select: {
       id: true,
       userId: true,
+      serviceId: true,
       providerId: true,
       bookingStatus: true,
       service: {
         select: {
           id: true,
+          serviceName: true,
           isStartedVideo: true,
           isEndedVideo: true,
         },
@@ -336,6 +338,28 @@ const completeBooking = async (providerId: string, bookingId: string) => {
       },
     },
   });
+
+  // --------- send notification to service provider ---------
+  try {
+    const notificationData = {
+      bookingId: result.id,
+      userId: result.userId || undefined, // property owner who confirmed
+      providerId: result.providerId || undefined, // service provider
+      serviceTypes: "SERVICE" as any,
+      serviceName: result.service?.serviceName || "",
+      totalPrice: result.payments[0]?.amount || 0,
+      serviceId: result.serviceId || undefined,
+    };
+
+    await BookingNotificationService.sendBookingCompleteNotification(
+      notificationData,
+    );
+  } catch (notificationError) {
+    console.error("Complete booking notification failed:", notificationError);
+    // don't fail booking if notification fails
+  }
+
+  return result;
 };
 
 // provider reject booking
@@ -420,6 +444,26 @@ const rejectBooking = async (providerId: string, bookingId: string) => {
     }),
   ]);
 
+  // send notification to property owner
+  try {
+    const notificationData = {
+      bookingId: booking.id,
+      userId: booking.userId || undefined, // property owner who made booking
+      providerId: booking.providerId || undefined, // service provider who rejected
+      serviceTypes: "SERVICE" as any,
+      serviceName: booking.serviceName,
+      totalPrice: booking.totalPrice,
+      serviceId: booking.serviceId || undefined,
+    };
+
+    await BookingNotificationService.sendRejectBookingNotification(
+      notificationData,
+    );
+  } catch (notificationError) {
+    console.error("Reject booking notification failed:", notificationError);
+    // don't fail booking if notification fails
+  }
+
   return { updatedBooking, updatedService };
 };
 
@@ -455,6 +499,26 @@ const cancelBookingByPropertyOwner = async (
       data: { isBooked: EveryServiceStatus.AVAILABLE },
     }),
   ]);
+
+  // send notification to service provider
+  try {
+    const notificationData: any = {
+      bookingId: booking.id,
+      userId: booking.userId, // property owner who cancelled
+      providerId: booking.providerId, // service provider who receives notification
+      serviceTypes: "SERVICE" as any,
+      serviceName: booking.serviceName,
+      totalPrice: booking.totalPrice,
+      serviceId: booking.serviceId,
+    };
+
+    await BookingNotificationService.sendCancelBookingByPropertyOwnerNotification(
+      notificationData,
+    );
+  } catch (notificationError) {
+    console.error("Cancel booking notification failed:", notificationError);
+    // don't fail booking if notification fails
+  }
 
   return { updatedBooking, updatedService };
 };
@@ -565,6 +629,26 @@ const confirmBookingAndReleasePaymentWithCaptureSplit = async (
       bookingStatus: BookingStatus.COMPLETED,
     },
   });
+
+  // send notification to service provider
+  try {
+    const notificationData = {
+      bookingId: booking.id,
+      userId: booking.userId || undefined, // property owner who confirmed
+      providerId: booking.providerId || undefined, // service provider
+      serviceTypes: "SERVICE" as any,
+      serviceName: booking.serviceName,
+      totalPrice: payment.amount,
+      serviceId: booking.serviceId || undefined,
+    };
+
+    await BookingNotificationService.sendConfirmBookingAndReleasePaymentWithCaptureSplit(
+      notificationData,
+    );
+  } catch (notificationError) {
+    console.error("Confirm booking notification failed:", notificationError);
+    // don't fail booking if notification fails
+  }
 };
 
 // get all my active and past bookings for a property owner

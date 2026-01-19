@@ -311,6 +311,218 @@ const sendPaymentRequestNotification = async (
   }
 };
 
+// send booking complete notification to property owner
+const sendBookingCompleteNotification = async (
+  data: IBookingNotificationData,
+): Promise<INotificationResult> => {
+  const notifications: Array<any> = [];
+
+  try {
+    // get property owner who confirmed booking
+    const userInfo = await prisma.user.findUnique({
+      where: { id: data.userId },
+    });
+
+    // get service provider who completed work
+    const providerInfo = await prisma.user.findUnique({
+      where: { id: data.providerId },
+    });
+
+    if (!userInfo || !providerInfo) throw new Error("User not found");
+
+    // notify service provider that booking is confirmed and they can expect payment
+    if (providerInfo.fcmToken) {
+      const providerMessage = {
+        title: "The service provider confirmed that the work was completed.",
+        body: `${userInfo.fullName} has confirmed your service completion for ${data.serviceName}.`, // Payment will be released to your account.
+      };
+      const providerResult = await sendNotification(
+        data.providerId!,
+        providerInfo.fcmToken,
+        providerMessage,
+        data,
+        "service_provider",
+      );
+      notifications.push(providerResult);
+    }
+
+    const successCount = notifications.filter((n) => n.success).length;
+
+    return {
+      success: successCount > 0,
+      notifications,
+      message: `${successCount} booking completion notifications sent successfully`,
+    };
+  } catch (error: any) {
+    console.error("Booking completion notification service failed:", error);
+    return {
+      success: false,
+      notifications,
+      message: "Booking completion notification service failed",
+      error: error.message,
+    };
+  }
+};
+
+// send booking complete notification to service provider
+const sendConfirmBookingAndReleasePaymentWithCaptureSplit = async (
+  data: IBookingNotificationData,
+): Promise<INotificationResult> => {
+  const notifications: Array<any> = [];
+
+  try {
+    // get property owner who confirmed the booking and released payment
+    const userInfo = await prisma.user.findUnique({
+      where: { id: data.userId },
+    });
+
+    // get service provider who received the notification
+    const providerInfo = await prisma.user.findUnique({
+      where: { id: data.providerId },
+    });
+
+    if (!userInfo || !providerInfo) throw new Error("User not found");
+
+    //
+    if (providerInfo.fcmToken) {
+      const providerMessage = {
+        title: "Payment has been released to your account.",
+        body: `${userInfo.fullName} has confirmed your service completion for ${data.serviceName}. Payment has been released to your account.`,
+      };
+      const providerResult = await sendNotification(
+        data.providerId!,
+        providerInfo.fcmToken,
+        providerMessage,
+        data,
+        "service_provider",
+      );
+      notifications.push(providerResult);
+    }
+
+    const successCount = notifications.filter((n) => n.success).length;
+
+    return {
+      success: successCount > 0,
+      notifications,
+      message: `${successCount} booking completion notifications sent successfully`,
+    };
+  } catch (error: any) {
+    console.error("Booking completion notification service failed:", error);
+    return {
+      success: false,
+      notifications,
+      message: "Booking completion notification service failed",
+      error: error.message,
+    };
+  }
+};
+
+// send reject booking notification to property owner
+const sendRejectBookingNotification = async (
+  data: IBookingNotificationData,
+): Promise<INotificationResult> => {
+  const notifications: Array<any> = [];
+
+  try {
+    // get property owner who made booking
+    const userInfo = await prisma.user.findUnique({
+      where: { id: data.userId },
+    });
+
+    // get service provider who rejected booking
+    const providerInfo = await prisma.user.findUnique({
+      where: { id: data.providerId },
+    });
+
+    if (!userInfo || !providerInfo) throw new Error("User not found");
+
+    // notify property owner that booking was rejected
+    if (userInfo.fcmToken) {
+      const ownerMessage = {
+        title: "Service provider has rejected your booking request.",
+        body: `${providerInfo.fullName} has rejected your service booking for ${data.serviceName}.`,
+      };
+      const ownerResult = await sendNotification(
+        data.userId!,
+        userInfo.fcmToken,
+        ownerMessage,
+        data,
+        "user",
+      );
+      notifications.push(ownerResult);
+    }
+
+    const successCount = notifications.filter((n) => n.success).length;
+
+    return {
+      success: successCount > 0,
+      notifications,
+      message: `${successCount} reject booking notifications sent successfully`,
+    };
+  } catch (error: any) {
+    console.error("Reject booking notification service failed:", error);
+    return {
+      success: false,
+      notifications,
+      message: "Reject booking notification service failed",
+      error: error.message,
+    };
+  }
+};
+
+// send cancel booking notification to service provider
+const sendCancelBookingByPropertyOwnerNotification = async (
+  data: IBookingNotificationData,
+): Promise<INotificationResult> => {
+  const notifications: Array<any> = [];
+
+  try {
+    // get property owner who cancelled booking
+    const userInfo = await prisma.user.findUnique({
+      where: { id: data.userId },
+    });
+
+    // get service provider who receives notification
+    const providerInfo = await prisma.user.findUnique({
+      where: { id: data.providerId },
+    });
+
+    if (!userInfo || !providerInfo) throw new Error("User not found");
+
+    // notify service provider that booking was cancelled
+    if (providerInfo.fcmToken) {
+      const providerMessage = {
+        title: "Property owner has cancelled the booking.",
+        body: `${userInfo.fullName} has cancelled the service booking for ${data.serviceName}.`,
+      };
+      const providerResult = await sendNotification(
+        data.providerId!,
+        providerInfo.fcmToken,
+        providerMessage,
+        data,
+        "service_provider",
+      );
+      notifications.push(providerResult);
+    }
+
+    const successCount = notifications.filter((n) => n.success).length;
+
+    return {
+      success: successCount > 0,
+      notifications,
+      message: `${successCount} cancel booking notifications sent successfully`,
+    };
+  } catch (error: any) {
+    console.error("Cancel booking notification service failed:", error);
+    return {
+      success: false,
+      notifications,
+      message: "Cancel booking notification service failed",
+      error: error.message,
+    };
+  }
+};
+
 // main function for cancel notification
 const sendCancelNotifications = async (
   data: IBookingNotificationData,
@@ -384,4 +596,8 @@ export const BookingNotificationService = {
   sendCancelNotifications,
   sendBookingAcceptNotification,
   sendPaymentRequestNotification,
+  sendBookingCompleteNotification,
+  sendConfirmBookingAndReleasePaymentWithCaptureSplit,
+  sendRejectBookingNotification,
+  sendCancelBookingByPropertyOwnerNotification,
 };
