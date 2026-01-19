@@ -315,27 +315,23 @@ type OfferedService {
 }
 
 model Service {
-  id                       String             @id @default(auto()) @map("_id") @db.ObjectId
-  serviceName              String
-  serviceType              String
-  address                  String
-  description              String
-  experience               Float
+  id                 String             @id @default(auto()) @map("_id") @db.ObjectId
+  serviceName        String
+  serviceType        String
+  address            String
+  description        String
+  experience         Float
   // price                    Float
-  offered_services         OfferedService[]
+  offered_services   OfferedService[]
   // estimatedDuration String
-  coverImage               String
-  serviceStatus            ServiceStatus
-  recordProofVideoStarting String?
-  recordProofVideoEnding   String?
-  isStartedVideo           Boolean            @default(false)
-  isEndedVideo             Boolean            @default(false)
-  addRemark                String?
-  serviceRating            String?
-  serviceReviewCount       Int                @default(0)
-  isBooked                 EveryServiceStatus @default(AVAILABLE)
-  createdAt                DateTime           @default(now())
-  updatedAt                DateTime           @updatedAt
+  coverImage         String
+  serviceStatus      ServiceStatus
+  addRemark          String?
+  serviceRating      String?
+  serviceReviewCount Int                @default(0)
+  isBooked           EveryServiceStatus @default(AVAILABLE)
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
 
   // relationships
   availability           Availability[]
