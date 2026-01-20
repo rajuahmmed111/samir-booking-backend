@@ -244,11 +244,13 @@ model CustomPrice {
 }
 
 model InventoryItem {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  name      String // e.g., "Dinner Plates", "Forks", "Knives"
-  quantity  Int
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  name            String // e.g., "Dinner Plates", "Forks", "Knives"
+  quantity        Int
+  missingQuantity Int?
+  description     String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   // relationships
   hotel   Hotel  @relation(fields: [hotelId], references: [id], onDelete: Cascade)

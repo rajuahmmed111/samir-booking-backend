@@ -940,7 +940,7 @@ const getAllServiceBookingsOfProvider = async (
       },
     },
   });
-
+  console.log(result, "result");
   const total = await prisma.service_booking.count({ where: whereClause });
 
   return {

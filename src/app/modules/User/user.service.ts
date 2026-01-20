@@ -428,7 +428,7 @@ const getAllServiceProvidersForPropertyOwner = async (
       fullName: true,
       email: true,
       profileImage: true,
-      // passportOrNID: true,
+      passportOrNID: true,
       contactNumber: true,
       address: true,
       country: true,
