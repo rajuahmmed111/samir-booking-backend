@@ -107,6 +107,8 @@ const getAllShowUserInfo = async (
       isShow: true,
       providerId: true,
       propertyOwnerId: true,
+      createdAt: true,
+      updatedAt: true,
       user: {
         select: {
           id: true,
