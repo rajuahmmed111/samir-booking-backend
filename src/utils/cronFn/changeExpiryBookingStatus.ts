@@ -111,46 +111,46 @@ export const changeExpiryBookingStatus = () => {
   });
 
   // run every hour back amount to property owner
-  cron.schedule("0 * * * *", async () => {
-    console.log("Running auto-refund check...");
+  // cron.schedule("0 * * * *", async () => {
+  //   console.log("Running auto-refund check...");
 
-    const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000); // 24 hours ago
+  //   const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000); // 24 hours ago
 
-    // find bookings still NEED_ACCEPT older than 24h
-    const pendingBookings = await prisma.service_booking.findMany({
-      where: {
-        bookingStatus: BookingStatus.NEED_ACCEPT,
-        createdAt: { lt: cutoff },
-      },
-      include: { payments: true },
-    });
+  //   // find bookings still NEED_ACCEPT older than 24h
+  //   const pendingBookings = await prisma.service_booking.findMany({
+  //     where: {
+  //       bookingStatus: BookingStatus.NEED_ACCEPT,
+  //       createdAt: { lt: cutoff },
+  //     },
+  //     include: { payments: true },
+  //   });
 
-    for (const booking of pendingBookings) {
-      const payment = booking.payments.find(
-        (p) => p.status === PaymentStatus.IN_HOLD,
-      );
-      if (!payment || !payment.paymentIntentId) continue;
+  //   for (const booking of pendingBookings) {
+  //     const payment = booking.payments.find(
+  //       (p) => p.status === PaymentStatus.IN_HOLD,
+  //     );
+  //     if (!payment || !payment.paymentIntentId) continue;
 
-      try {
-        // cancel payment intent (refund customer)
-        await stripe.paymentIntents.cancel(payment.paymentIntentId);
+  //     try {
+  //       // cancel payment intent (refund customer)
+  //       await stripe.paymentIntents.cancel(payment.paymentIntentId);
 
-        // update payment status
-        await prisma.payment.update({
-          where: { id: payment.id },
-          data: { status: PaymentStatus.REFUNDED },
-        });
+  //       // update payment status
+  //       await prisma.payment.update({
+  //         where: { id: payment.id },
+  //         data: { status: PaymentStatus.REFUNDED },
+  //       });
 
-        // update booking status
-        await prisma.service_booking.update({
-          where: { id: booking.id },
-          data: { bookingStatus: BookingStatus.REJECTED },
-        });
+  //       // update booking status
+  //       await prisma.service_booking.update({
+  //         where: { id: booking.id },
+  //         data: { bookingStatus: BookingStatus.REJECTED },
+  //       });
 
-        console.log(`Booking ${booking.id} auto-refunded after 24h`);
-      } catch (err) {
-        console.error(`Failed to auto-refund booking ${booking.id}`, err);
-      }
-    }
-  });
+  //       console.log(`Booking ${booking.id} auto-refunded after 24h`);
+  //     } catch (err) {
+  //       console.error(`Failed to auto-refund booking ${booking.id}`, err);
+  //     }
+  //   }
+  // });
 };

@@ -1,26 +1,5 @@
 import { z } from "zod";
 
-// update inventory item validation
-const updateInventoryItemValidation = z.object({
-  body: z.object({
-    name: z.string().min(1, "Name cannot be empty").optional(),
-
-    quantity: z
-      .number()
-      .int("Quantity must be an integer")
-      .min(0, "Quantity cannot be negative")
-      .optional(),
-
-    missingQuantity: z
-      .number()
-      .int("Missing quantity must be an integer")
-      .min(0, "Missing quantity cannot be negative")
-      .optional(),
-
-    description: z.string().optional(),
-  }),
-});
-
 // update multiple inventory items validation
 const updateMultipleInventoryItemsValidation = z.object({
   body: z.object({
@@ -49,6 +28,5 @@ const updateMultipleInventoryItemsValidation = z.object({
 });
 
 export const InventoryValidation = {
-  updateInventoryItemValidation,
   updateMultipleInventoryItemsValidation,
 };

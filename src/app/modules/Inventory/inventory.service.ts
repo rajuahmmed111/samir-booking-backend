@@ -1,33 +1,7 @@
 import prisma from "../../../shared/prisma";
 import ApiError from "../../../errors/ApiErrors";
 import httpStatus from "http-status";
-import {
-  IUpdateInventoryItem,
-  IUpdateInventoryItems,
-} from "./inventory.interface";
-
-// update many inventory items by hotelId
-const updateInventoryItem = async (
-  hotelId: string,
-  data: IUpdateInventoryItem,
-) => {
-  // verify hotel exists
-  const hotel = await prisma.hotel.findUnique({
-    where: { id: hotelId },
-  });
-
-  if (!hotel) {
-    throw new ApiError(httpStatus.NOT_FOUND, "Hotel not found");
-  }
-
-  // update all inventory items for this hotel
-  const result = await prisma.inventoryItem.updateMany({
-    where: { hotelId },
-    data,
-  });
-
-  return result;
-};
+import { IUpdateInventoryItems } from "./inventory.interface";
 
 // update multiple specific inventory items by hotelId
 const updateMultipleInventoryItems = async (
@@ -74,6 +48,5 @@ const updateMultipleInventoryItems = async (
 };
 
 export const InventoryService = {
-  updateInventoryItem,
   updateMultipleInventoryItems,
 };
