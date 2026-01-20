@@ -102,6 +102,25 @@ const getAllShowUserInfo = async (
     where,
     skip,
     take: limit,
+    select: {
+      id: true,
+      isShow: true,
+      providerId: true,
+      propertyOwnerId: true,
+      user: {
+        select: {
+          id: true,
+          fullName: true,
+          email: true,
+          role: true,
+          profileImage: true,
+          passportOrNID: true,
+          contactNumber: true,
+          address: true,
+          country: true,
+        },
+      },
+    },
     orderBy: [
       { isShow: "asc" }, // false comes first, then true
       { id: "desc" }, // then by id (newest first)

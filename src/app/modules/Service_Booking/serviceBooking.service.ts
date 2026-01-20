@@ -814,6 +814,11 @@ const getSingleServiceBooking = async (bookingId: string, userId: string) => {
           id: true,
           fullName: true,
           email: true,
+          contactNumber: true,
+          profileImage: true,
+          role: true,
+          address: true,
+          country: true,
         },
       },
       service: {
@@ -836,12 +841,25 @@ const getSingleServiceBooking = async (bookingId: string, userId: string) => {
               fullName: true,
               email: true,
               contactNumber: true,
+              profileImage: true,
+              role: true,
+              address: true,
+              country: true,
             },
           },
           reviews: true,
         },
       },
-      payments: true,
+      payments: {
+        select: {
+          id: true,
+          amount: true,
+          currency: true,
+          status: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      },
     },
   });
 
@@ -854,7 +872,14 @@ const getSingleServiceBooking = async (bookingId: string, userId: string) => {
   if (hotelId) {
     hotelInfo = await prisma.hotel.findUnique({
       where: { id: hotelId },
-      include: {
+      select: {
+        id: true,
+        propertyTitle: true,
+        propertyAddress: true,
+        propertyDescription: true,
+        hotelRating: true,
+        hotelReviewCount: true,
+        uploadPhotosOrVideos: true,
         guards: true,
       },
     });
