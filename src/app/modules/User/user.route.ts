@@ -16,21 +16,28 @@ router.get("/admins", auth(UserRole.SUPER_ADMIN), UserController.getAllAdmins);
 router.get(
   "/",
   auth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
-  UserController.getAllUsers
+  UserController.getAllUsers,
 );
 
 // get all property owners
 router.get(
   "/property-owners",
   auth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
-  UserController.getAllPropertyOwners
+  UserController.getAllPropertyOwners,
+);
+
+// get all service provider for property owner
+router.get(
+  "/service-providers-for-property-owner",
+  auth(UserRole.PROPERTY_OWNER),
+  UserController.getAllServiceProvidersForPropertyOwner,
 );
 
 // get all blocked users
 router.get(
   "/blocked-users",
   auth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
-  UserController.getAllBlockedUsers
+  UserController.getAllBlockedUsers,
 );
 
 //get my profile
@@ -41,9 +48,9 @@ router.get(
     UserRole.ADMIN,
     UserRole.PROPERTY_OWNER,
     UserRole.SERVICE_PROVIDER,
-    UserRole.USER
+    UserRole.USER,
   ),
-  UserController.getMyProfile
+  UserController.getMyProfile,
 );
 
 // get user by id
@@ -54,9 +61,9 @@ router.get(
     UserRole.ADMIN,
     UserRole.PROPERTY_OWNER,
     UserRole.SERVICE_PROVIDER,
-    UserRole.USER
+    UserRole.USER,
   ),
-  UserController.getUserById
+  UserController.getUserById,
 );
 
 // create user
@@ -65,7 +72,7 @@ router.post(
   uploadFile.passportOrNID,
   parseBodyData,
   validateRequest(userValidation.createUserZodSchema),
-  UserController.createUser
+  UserController.createUser,
 );
 
 // create role for supper admin
@@ -73,7 +80,7 @@ router.post(
   "/add-role",
   auth(UserRole.SUPER_ADMIN),
   validateRequest(userValidation.createUserZodSchema),
-  UserController.createRoleSupperAdmin
+  UserController.createRoleSupperAdmin,
 );
 
 // verify user
@@ -83,14 +90,14 @@ router.post("/verify-user", UserController.verifyOtpAndCreateUser);
 router.patch(
   "/update-user-status-inactive/:id",
   auth(UserRole.SUPER_ADMIN, UserRole.ADMIN),
-  UserController.updateUserStatusActiveToInActive
+  UserController.updateUserStatusActiveToInActive,
 );
 
 // update  user status access admin (inactive to active)
 router.patch(
   "/update-user-status-active/:id",
   auth(UserRole.SUPER_ADMIN, UserRole.ADMIN),
-  UserController.updateUserStatusInActiveToActive
+  UserController.updateUserStatusInActiveToActive,
 );
 
 // single update user (info + profile image)
@@ -101,12 +108,12 @@ router.patch(
     UserRole.ADMIN,
     UserRole.PROPERTY_OWNER,
     UserRole.SERVICE_PROVIDER,
-    UserRole.USER
+    UserRole.USER,
   ),
   uploadFile.profileImage,
   parseBodyData,
   validateRequest(userValidation.updateUserZodSchema),
-  UserController.updateUser
+  UserController.updateUser,
 );
 
 // update user profile image
@@ -117,10 +124,10 @@ router.patch(
     UserRole.ADMIN,
     UserRole.PROPERTY_OWNER,
     UserRole.SERVICE_PROVIDER,
-    UserRole.USER
+    UserRole.USER,
   ),
   uploadFile.profileImage,
-  UserController.updateUserProfileImage
+  UserController.updateUserProfileImage,
 );
 
 // delete my account
@@ -131,16 +138,16 @@ router.patch(
     UserRole.ADMIN,
     UserRole.PROPERTY_OWNER,
     UserRole.SERVICE_PROVIDER,
-    UserRole.USER
+    UserRole.USER,
   ),
-  UserController.deleteMyAccount
+  UserController.deleteMyAccount,
 );
 
 // delete user access admin
 router.delete(
   "/delete-user/:id",
   auth(UserRole.SUPER_ADMIN),
-  UserController.deleteUserAccessAdmin
+  UserController.deleteUserAccessAdmin,
 );
 
 export const userRoute = router;

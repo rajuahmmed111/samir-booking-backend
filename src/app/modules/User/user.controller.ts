@@ -3,11 +3,9 @@ import httpStatus from "http-status";
 import catchAsync from "../../../shared/catchAsync";
 import sendResponse from "../../../shared/sendResponse";
 import { UserService } from "./user.service";
-import ApiError from "../../../errors/ApiErrors";
 import { pick } from "../../../shared/pick";
 import { filterField } from "./user.constant";
 import { paginationFields } from "../../../constants/pagination";
-import { isValidObjectId } from "../../../utils/validateObjectId";
 import { IUploadedFile } from "../../../interfaces/file";
 
 // create user
@@ -37,7 +35,7 @@ const createRoleSupperAdmin = catchAsync(
       message: "OTP generated and sent to email successfully",
       data: result,
     });
-  }
+  },
 );
 
 // verify user
@@ -51,7 +49,7 @@ const verifyOtpAndCreateUser = catchAsync(
       message: "User verified successfully",
       data: result,
     });
-  }
+  },
 );
 
 // get all users
@@ -77,10 +75,26 @@ const getAllPropertyOwners = catchAsync(async (req: Request, res: Response) => {
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: "Business Partners fetched successfully",
+    message: "Property Owners fetched successfully",
     data: result,
   });
 });
+
+// get all service provider for property owner
+const getAllServiceProvidersForPropertyOwner = catchAsync(
+  async (req: Request, res: Response) => {
+    const filter = pick(req.query, filterField);
+    const options = pick(req.query, paginationFields);
+    const result = await UserService.getAllServiceProvidersForPropertyOwner(filter, options);
+
+    sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: "Service Providers fetched successfully",
+      data: result,
+    });
+  },
+);
 
 // get all blocked users
 const getAllBlockedUsers = catchAsync(async (req: Request, res: Response) => {
@@ -107,7 +121,7 @@ const updateUserStatusActiveToInActive = catchAsync(
       message: "Admin status updated successfully",
       data: result,
     });
-  }
+  },
 );
 
 // update  user status access admin (inactive to active)
@@ -121,7 +135,7 @@ const updateUserStatusInActiveToActive = catchAsync(
       message: "Admin status updated successfully",
       data: result,
     });
-  }
+  },
 );
 
 // get user by id
@@ -194,7 +208,7 @@ const updateUserProfileImage = catchAsync(
       message: "My profile image updated successfully",
       data: result,
     });
-  }
+  },
 );
 
 // delete my account
@@ -230,7 +244,7 @@ const deleteUserAccessAdmin = catchAsync(
       message: "Admin deleted successfully",
       data: undefined,
     });
-  }
+  },
 );
 
 export const UserController = {
@@ -239,6 +253,7 @@ export const UserController = {
   verifyOtpAndCreateUser,
   getAllUsers,
   getAllPropertyOwners,
+  getAllServiceProvidersForPropertyOwner,
   getAllBlockedUsers,
   updateUserStatusActiveToInActive,
   updateUserStatusInActiveToActive,

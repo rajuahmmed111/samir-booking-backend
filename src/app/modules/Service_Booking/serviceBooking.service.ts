@@ -236,15 +236,15 @@ const inProgressBooking = async (providerId: string, bookingId: string) => {
       bookingStatus: BookingStatus.CONFIRMED,
     },
     include: {
+      startAndEndProofVideos: {
+        select: {
+          id: true,
+          isStartedVideo: true,
+        },
+      },
       service: {
         select: {
           id: true,
-          startAndEndProofVideos: {
-            select: {
-              id: true,
-              isStartedVideo: true,
-            },
-          },
         },
       },
     },
@@ -254,12 +254,7 @@ const inProgressBooking = async (providerId: string, bookingId: string) => {
     throw new ApiError(httpStatus.FORBIDDEN, "Unauthorized");
   }
 
-  // check if video is already started
-  const hasStartedVideo = booking.service?.startAndEndProofVideos?.some(
-    (video) => video.isStartedVideo,
-  );
-
-  if (!hasStartedVideo) {
+  if (!booking.startAndEndProofVideos?.isStartedVideo) {
     throw new ApiError(
       httpStatus.BAD_REQUEST,
       "Service started video is required before in-progress booking",
@@ -275,16 +270,16 @@ const inProgressBooking = async (providerId: string, bookingId: string) => {
       userId: true,
       providerId: true,
       bookingStatus: true,
+      startAndEndProofVideos: {
+        select: {
+          id: true,
+          isStartedVideo: true,
+          recordProofVideoStarting: true,
+        },
+      },
       service: {
         select: {
           id: true,
-          startAndEndProofVideos: {
-            select: {
-              id: true,
-              isStartedVideo: true,
-              recordProofVideoStarting: true,
-            },
-          },
         },
       },
     },
@@ -300,16 +295,16 @@ const completeBooking = async (providerId: string, bookingId: string) => {
       bookingStatus: BookingStatus.IN_WORKING,
     },
     include: {
+      startAndEndProofVideos: {
+        select: {
+          id: true,
+          isStartedVideo: true,
+          isEndedVideo: true,
+        },
+      },
       service: {
         select: {
           id: true,
-          startAndEndProofVideos: {
-            select: {
-              id: true,
-              isStartedVideo: true,
-              isEndedVideo: true,
-            },
-          },
         },
       },
     },
@@ -326,11 +321,7 @@ const completeBooking = async (providerId: string, bookingId: string) => {
     throw new ApiError(httpStatus.FORBIDDEN, "Unauthorized");
   }
 
-  // check if video is already ended
-  const hasEndedVideo = booking.service?.startAndEndProofVideos?.some(
-    (video) => video.isEndedVideo,
-  );
-
+  const hasEndedVideo = booking.startAndEndProofVideos?.isEndedVideo;
   if (!hasEndedVideo) {
     throw new ApiError(
       httpStatus.BAD_REQUEST,
@@ -348,19 +339,19 @@ const completeBooking = async (providerId: string, bookingId: string) => {
       serviceId: true,
       providerId: true,
       bookingStatus: true,
+      startAndEndProofVideos: {
+        select: {
+          id: true,
+          recordProofVideoStarting: true,
+          isStartedVideo: true,
+          recordProofVideoEnding: true,
+          isEndedVideo: true,
+        },
+      },
       service: {
         select: {
           id: true,
           serviceName: true,
-          startAndEndProofVideos: {
-            select: {
-              id: true,
-              recordProofVideoStarting: true,
-              isStartedVideo: true,
-              recordProofVideoEnding: true,
-              isEndedVideo: true,
-            },
-          },
         },
       },
       payments: {
@@ -761,6 +752,13 @@ const getAllServiceActiveAndPastBookings = async (
         ? { [options.sortBy]: options.sortOrder }
         : { createdAt: "desc" },
     include: {
+      startAndEndProofVideos: {
+        select: {
+          id: true,
+          recordProofVideoStarting: true,
+          recordProofVideoEnding: true,
+        },
+      },
       user: {
         select: {
           id: true,
@@ -772,13 +770,6 @@ const getAllServiceActiveAndPastBookings = async (
         select: {
           id: true,
           serviceRating: true,
-          startAndEndProofVideos: {
-            select: {
-              id: true,
-              recordProofVideoStarting: true,
-              recordProofVideoEnding: true,
-            },
-          },
           user: {
             select: {
               id: true,
@@ -811,6 +802,13 @@ const getSingleServiceBooking = async (bookingId: string, userId: string) => {
       userId,
     },
     include: {
+      startAndEndProofVideos: {
+        select: {
+          id: true,
+          recordProofVideoStarting: true,
+          recordProofVideoEnding: true,
+        },
+      },
       user: {
         select: {
           id: true,
@@ -831,13 +829,7 @@ const getSingleServiceBooking = async (bookingId: string, userId: string) => {
           serviceReviewCount: true,
           coverImage: true,
           providerId: true,
-          startAndEndProofVideos: {
-            select: {
-              id: true,
-              recordProofVideoStarting: true,
-              recordProofVideoEnding: true,
-            },
-          },
+
           user: {
             select: {
               id: true,
@@ -921,6 +913,13 @@ const getAllServiceBookingsOfProvider = async (
         ? { [options.sortBy]: options.sortOrder }
         : { createdAt: "desc" },
     include: {
+      startAndEndProofVideos: {
+        select: {
+          id: true,
+          recordProofVideoStarting: true,
+          recordProofVideoEnding: true,
+        },
+      },
       user: {
         select: {
           id: true,
@@ -937,13 +936,6 @@ const getAllServiceBookingsOfProvider = async (
           serviceReviewCount: true,
           offered_services: true,
           coverImage: true,
-          startAndEndProofVideos: {
-            select: {
-              id: true,
-              recordProofVideoStarting: true,
-              recordProofVideoEnding: true,
-            },
-          },
         },
       },
     },
