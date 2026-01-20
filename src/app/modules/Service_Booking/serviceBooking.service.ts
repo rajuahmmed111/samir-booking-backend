@@ -940,7 +940,33 @@ const getAllServiceBookingsOfProvider = async (
       },
     },
   });
-  console.log(result, "result");
+
+  // get inventory items for each booking using hotelId
+  const bookingsWithInventory = await Promise.all(
+    result.map(async (booking) => {
+      let inventoryItems: any[] = [];
+
+      if (booking.hotelId) {
+        inventoryItems = await prisma.inventoryItem.findMany({
+          where: { hotelId: booking.hotelId },
+          select: {
+            id: true,
+            name: true,
+            quantity: true,
+            missingQuantity: true,
+            description: true,
+          },
+        });
+      }
+
+      return {
+        ...booking,
+        inventoryItems,
+      };
+    }),
+  );
+
+  console.log(bookingsWithInventory, "result");
   const total = await prisma.service_booking.count({ where: whereClause });
 
   return {
@@ -949,7 +975,7 @@ const getAllServiceBookingsOfProvider = async (
       page,
       limit,
     },
-    data: result,
+    data: bookingsWithInventory,
   };
 };
 
