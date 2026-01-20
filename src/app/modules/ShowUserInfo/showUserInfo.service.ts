@@ -127,6 +127,28 @@ const getAllShowUserInfo = async (
     ],
   });
 
+  // find provider info by providerId
+  const providerInfo = await prisma.user.findMany({
+    where: { id: { in: result.map((item) => item.providerId) } },
+    select: {
+      id: true,
+      fullName: true,
+      email: true,
+      role: true,
+      profileImage: true,
+      passportOrNID: true,
+      contactNumber: true,
+      address: true,
+      country: true,
+    },
+  });
+
+  // map provider info to result
+  const resultWithProviderInfo = result.map((item) => {
+    const provider = providerInfo.find((info) => info.id === item.providerId);
+    return { ...item, provider };
+  });
+
   // total count
   const total = await prisma.showUserInfo.count({
     where,
@@ -138,7 +160,7 @@ const getAllShowUserInfo = async (
       page,
       limit,
     },
-    data: result,
+    data: resultWithProviderInfo,
   };
 };
 
