@@ -21,6 +21,7 @@ import { serviceBookingRoute } from "../modules/Service_Booking/serviceBooking.r
 import { supportRoutes } from "../modules/Support/support.route";
 import { startingEndingProofVideoRoutes } from "../modules/Record_Proof_Video/recordProofVideo.route";
 import { inventoryRoutes } from "../modules/Inventory/inventory.route";
+import { showUserInfoRoutes } from "../modules/ShowUserInfo/showUserInfo.route";
 
 const router = express.Router();
 
@@ -28,6 +29,10 @@ const moduleRoutes = [
   {
     path: "/users",
     route: userRoute,
+  },
+  {
+    path: "/show-user-info",
+    route: showUserInfoRoutes,
   },
   {
     path: "/auth",
