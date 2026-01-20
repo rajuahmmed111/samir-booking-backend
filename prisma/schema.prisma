@@ -106,26 +106,32 @@ enum ServiceStatus {
   PENDING
 }
 
+enum ShowUserInfo {
+  PENDING
+  VERIFIED
+}
+
 // ---------------------------------------------------------
 //  MODEL
 // ---------------------------------------------------------
 
 model User {
-  id              String     @id @default(auto()) @map("_id") @db.ObjectId
+  id              String       @id @default(auto()) @map("_id") @db.ObjectId
   fullName        String?
-  email           String     @unique
+  email           String       @unique
   password        String
-  profileImage    String     @default("https://i.ibb.co/Ps9gZ8DD/Profile-image.png")
+  profileImage    String       @default("https://i.ibb.co/Ps9gZ8DD/Profile-image.png")
   passportOrNID   String[] // upload passport or NID
   contactNumber   String?
   address         String?
   country         String?
-  role            UserRole   @default(USER)
-  status          UserStatus @default(ACTIVE)
-  fcmToken        String?    @default("")
+  role            UserRole     @default(USER)
+  status          UserStatus   @default(ACTIVE)
+  fcmToken        String?      @default("")
   dateOfBirth     DateTime?
-  isEmailVerified Boolean    @default(false)
-  isPhoneVerified Boolean    @default(false)
+  isEmailVerified Boolean      @default(false)
+  isPhoneVerified Boolean      @default(false)
+  showUserInfo    ShowUserInfo @default(PENDING)
 
   // Stripe
   stripeAccountId   String?
