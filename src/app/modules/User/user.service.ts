@@ -24,7 +24,7 @@ import { createOtpEmailTemplate } from "../../../utils/createOtpEmailTemplate";
 // create user
 const createUser = async (
   payload: any,
-  passportFiles?: Express.Multer.File[]
+  passportFiles?: Express.Multer.File[],
 ) => {
   // check if email exists
   const existingUser = await prisma.user.findUnique({
@@ -126,7 +126,7 @@ const verifyOtpAndCreateUser = async (email: string, otp: string) => {
     await prisma.user.delete({ where: { id: user.id } });
     throw new ApiError(
       httpStatus.BAD_REQUEST,
-      "OTP has expired, please register again"
+      "OTP has expired, please register again",
     );
   }
 
@@ -161,7 +161,7 @@ const verifyOtpAndCreateUser = async (email: string, otp: string) => {
 // get all users
 const getAllUsers = async (
   params: IFilterRequest,
-  options: IPaginationOptions
+  options: IPaginationOptions,
 ): Promise<IGenericResponse<SafeUser[]>> => {
   const { limit, page, skip } = paginationHelpers.calculatedPagination(options);
 
@@ -253,7 +253,7 @@ const getAllUsers = async (
 // get all property owners
 const getAllPropertyOwners = async (
   params: IFilterRequest,
-  options: IPaginationOptions
+  options: IPaginationOptions,
 ): Promise<IGenericResponse<SafeUser[]>> => {
   const { limit, page, skip } = paginationHelpers.calculatedPagination(options);
 
@@ -362,7 +362,7 @@ const getAllPropertyOwners = async (
 // get all service provider for property owner
 const getAllServiceProvidersForPropertyOwner = async (
   params: IFilterRequest,
-  options: IPaginationOptions
+  options: IPaginationOptions,
 ): Promise<IGenericResponse<SafeUser[]>> => {
   const { limit, page, skip } = paginationHelpers.calculatedPagination(options);
 
@@ -428,7 +428,7 @@ const getAllServiceProvidersForPropertyOwner = async (
       fullName: true,
       email: true,
       profileImage: true,
-      securityDocs: true,
+      // passportOrNID: true,
       contactNumber: true,
       address: true,
       country: true,
@@ -471,7 +471,7 @@ const getAllServiceProvidersForPropertyOwner = async (
 // get all blocked users
 const getAllBlockedUsers = async (
   params: IFilterRequest,
-  options: IPaginationOptions
+  options: IPaginationOptions,
 ): Promise<IGenericResponse<SafeUser[]>> => {
   const { limit, page, skip } = paginationHelpers.calculatedPagination(options);
 
@@ -699,7 +699,7 @@ const getAllAdmins = async () => {
 const updateUser = async (
   id: string,
   updates: IUpdateUser,
-  file?: IUploadedFile
+  file?: IUploadedFile,
 ): Promise<SafeUser> => {
   const user = await prisma.user.findUnique({
     where: { id, status: UserStatus.ACTIVE },
@@ -770,7 +770,7 @@ const getMyProfile = async (id: string) => {
 // update user profile image
 const updateUserProfileImage = async (
   id: string,
-  req: Request
+  req: Request,
 ): Promise<IProfileImageResponse> => {
   console.log(req.file, "req.file in user service");
   const userInfo = await prisma.user.findUnique({

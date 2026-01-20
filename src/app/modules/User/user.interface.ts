@@ -36,11 +36,12 @@ export type SafeUser = {
   fullName: string | null;
   email: string;
   profileImage: string;
+  // passportOrNID?: string[];
   contactNumber: string | null;
   address: string | null;
   country: string | null;
   role: UserRole;
-  fcmToken: string | null;
+  fcmToken?: string | null;
   status: UserStatus;
   createdAt: Date;
   updatedAt: Date;
