@@ -1,6 +1,5 @@
 import { Router } from "express";
 import { ShowUserInfoController } from "./showUserInfo.controller";
-import validateRequest from "../../middlewares/validateRequest";
 import auth from "../../middlewares/auth";
 import { UserRole } from "@prisma/client";
 
@@ -18,6 +17,13 @@ router.patch(
   "/:id",
   auth(UserRole.SUPER_ADMIN, UserRole.ADMIN),
   ShowUserInfoController.updateShowUserInfo,
+);
+
+// get all show user info
+router.get(
+  "/",
+  auth(UserRole.SUPER_ADMIN, UserRole.ADMIN),
+  ShowUserInfoController.getAllShowUserInfo,
 );
 
 export const showUserInfoRoutes = router;

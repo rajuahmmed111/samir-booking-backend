@@ -1,3 +1,8 @@
+export type IShowUserInfoFilterRequest = {
+  searchTerm?: string | undefined;
+  isShow?: boolean | undefined;
+};
+
 export interface ICreateShowUserInfo {
   providerId: string;
   propertyOwnerId: string;

@@ -1,7 +1,10 @@
 import prisma from "../../../shared/prisma";
 import ApiError from "../../../errors/ApiErrors";
 import httpStatus from "http-status";
-import { UserRole } from "@prisma/client";
+import { Prisma, UserRole } from "@prisma/client";
+import { IShowUserInfoFilterRequest } from "./showUserInfo.interface";
+import { IPaginationOptions } from "../../../interfaces/paginations";
+import { paginationHelpers } from "../../../helpars/paginationHelper";
 
 // create show user info for property owner by providerId
 const createShowUserInfo = async (
@@ -58,7 +61,70 @@ const updateShowUserInfo = async (id: string) => {
   return result;
 };
 
+// get all show user info
+const getAllShowUserInfo = async (
+  params: IShowUserInfoFilterRequest,
+  options: IPaginationOptions,
+) => {
+  const { limit, page, skip } = paginationHelpers.calculatedPagination(options);
+
+  const { searchTerm, ...filterData } = params;
+
+  const filters: Prisma.ShowUserInfoWhereInput[] = [];
+
+  // exact match filters with type conversion
+  if (Object.keys(filterData).length > 0) {
+    filters.push({
+      AND: Object.keys(filterData).map((key) => {
+        const value = (filterData as any)[key];
+
+        // Convert string boolean to actual boolean
+        if (key === "isShow" && typeof value === "string") {
+          return {
+            [key]: {
+              equals: value === "true",
+            },
+          };
+        }
+
+        return {
+          [key]: {
+            equals: value,
+          },
+        };
+      }),
+    });
+  }
+
+  const where: Prisma.ShowUserInfoWhereInput = { AND: filters };
+
+  const result = await prisma.showUserInfo.findMany({
+    where,
+    skip,
+    take: limit,
+    orderBy: [
+      { isShow: "asc" }, // false comes first, then true
+      { id: "desc" }, // then by id (newest first)
+    ],
+  });
+
+  // total count
+  const total = await prisma.showUserInfo.count({
+    where,
+  });
+
+  return {
+    meta: {
+      total,
+      page,
+      limit,
+    },
+    data: result,
+  };
+};
+
 export const ShowUserInfoService = {
   createShowUserInfo,
   updateShowUserInfo,
+  getAllShowUserInfo,
 };
