@@ -460,9 +460,9 @@ const getAllServiceProvidersForPropertyOwner = async (
 
   return {
     meta: {
+      total,
       page,
       limit,
-      total,
     },
     data: usersWithServiceFee,
   };
