@@ -20,6 +20,7 @@ import { serviceRoutes } from "../modules/Service/service.route";
 import { serviceBookingRoute } from "../modules/Service_Booking/serviceBooking.route";
 import { supportRoutes } from "../modules/Support/support.route";
 import { startingEndingProofVideoRoutes } from "../modules/Record_Proof_Video/recordProofVideo.route";
+import { inventoryRoutes } from "../modules/Inventory/inventory.route";
 
 const router = express.Router();
 
@@ -35,6 +36,10 @@ const moduleRoutes = [
   {
     path: "/hotels",
     route: hotelRoute,
+  },
+  {
+    path: "/inventory",
+    route: inventoryRoutes,
   },
 
   {
