@@ -799,7 +799,7 @@ const getSingleServiceBooking = async (bookingId: string, userId: string) => {
   const bookingInfo = await prisma.service_booking.findFirst({
     where: {
       id: bookingId,
-      userId,
+      // userId,
     },
     include: {
       startAndEndProofVideos: {
