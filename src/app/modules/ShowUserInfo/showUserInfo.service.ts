@@ -37,6 +37,15 @@ const createShowUserInfo = async (
     },
   });
 
+  // ---------send notification to admin----------
+  // create notification for admin
+  await prisma.notifications.create({
+    data: {
+      title: "New Show User Info Request",
+      body: "A new request to show user info has been made by a property owner. Please review the request and take appropriate action.",
+    },
+  });
+
   return result;
 };
 
