@@ -64,10 +64,10 @@ router.get(
   ServiceBookingController.getAllServiceActiveAndPastBookings,
 );
 
-// get single service booking (deatiles) by bookingId
+// get single service booking (details) by bookingId
 router.get(
   "/:bookingId",
-  auth(UserRole.PROPERTY_OWNER),
+  auth(UserRole.PROPERTY_OWNER, UserRole.SERVICE_PROVIDER),
   ServiceBookingController.getSingleServiceBooking,
 );
 
