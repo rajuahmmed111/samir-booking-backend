@@ -164,7 +164,7 @@ const createStripeCheckoutSessionForHotel = async (
   if (!provider || !provider.stripeAccountId) {
     throw new ApiError(
       httpStatus.BAD_REQUEST,
-      "Provider not onboarded with Stripe",
+      "Property Owner not onboarded with Stripe",
     );
   }
 
