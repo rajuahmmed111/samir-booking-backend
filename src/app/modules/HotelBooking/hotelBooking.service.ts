@@ -10,7 +10,7 @@ import { uploadFile } from "../../../helpars/fileUploader";
 const createHotelRoomBooking = async (
   userId: string,
   hotelId: string,
-  data: IHotelBookingData
+  data: IHotelBookingData,
 ) => {
   const { basePrice, bookedFromDate, bookedToDate } = data;
 
@@ -95,7 +95,7 @@ const createHotelRoomBooking = async (
   if (overlappingBooking) {
     throw new ApiError(
       httpStatus.BAD_REQUEST,
-      "This hotel is already booked for the selected dates"
+      "This hotel is already booked for the selected dates",
     );
   }
 
@@ -104,6 +104,7 @@ const createHotelRoomBooking = async (
       totalPrice: Number(totalPrice.toFixed(2)),
       bookedFromDate,
       bookedToDate,
+      personOfGuests: data.personOfGuests,
       userId,
       hotelId: hotel?.id,
       partnerId: hotel.partnerId!,
@@ -234,7 +235,7 @@ const getHotelBookingById = async (partnerId: string, bookingId: string) => {
   if (booking?.partnerId !== partnerId) {
     throw new ApiError(
       httpStatus.FORBIDDEN,
-      "You are not authorized to update this booking"
+      "You are not authorized to update this booking",
     );
   }
   return booking;
@@ -244,7 +245,7 @@ const getHotelBookingById = async (partnerId: string, bookingId: string) => {
 const createTravelers = async (
   bookingId: string,
   travelersData: { fullName: string }[],
-  passportFiles?: Express.Multer.File[]
+  passportFiles?: Express.Multer.File[],
 ) => {
   const booking = await prisma.hotel_Booking.findUnique({
     where: { id: bookingId },

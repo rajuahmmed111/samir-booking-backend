@@ -298,6 +298,7 @@ model Hotel_Booking {
   checkoutSessionId String?
   bookedFromDate    String
   bookedToDate      String
+  personOfGuests    Int
   totalPrice        Float
   bookingStatus     BookingStatus @default(PENDING)
   createdAt         DateTime      @default(now())
