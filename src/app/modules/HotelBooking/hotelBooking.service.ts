@@ -79,7 +79,7 @@ const createHotelRoomBooking = async (
   const overlappingBooking = await prisma.hotel_Booking.findFirst({
     where: {
       hotelId,
-      bookingStatus: { not: BookingStatus.CANCELLED }, // ignore cancelled bookings
+      bookingStatus: { not: BookingStatus.CONFIRMED }, // ignore cancelled bookings
       OR: [
         {
           bookedFromDate: { lte: bookedToDate },
