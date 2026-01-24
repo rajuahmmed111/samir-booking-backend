@@ -188,8 +188,8 @@ const createStripeCheckoutSessionForHotel = async (
       },
     ],
     mode: "payment",
-    // success_url: config.stripe.checkout_success_url,
-    success_url: `${config.stripe}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
+    success_url: config.stripe.checkout_success_url,
+    // success_url: `${config.stripe}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: config.stripe.checkout_cancel_url,
     // full amount goes to property owner
     payment_intent_data: {
