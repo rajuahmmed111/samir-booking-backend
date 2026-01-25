@@ -11,42 +11,54 @@ const router = express.Router();
 router.get(
   "/",
   auth(UserRole.PROPERTY_OWNER),
-  HotelBookingController.getAllHotelBookings
+  HotelBookingController.getAllHotelBookings,
 );
 
 // get single hotel booking for owner
 router.get(
   "/owner/single",
   auth(UserRole.PROPERTY_OWNER),
-  HotelBookingController.getSingleHotelBookingForOwner
+  HotelBookingController.getSingleHotelBookingForOwner,
 );
 
 // get all my hotel bookings
 router.get(
   "/my-bookings",
   auth(UserRole.USER),
-  HotelBookingController.getAllMyHotelBookings
+  HotelBookingController.getAllMyHotelBookings,
 );
 
 // get single my hotel booking
 router.get(
   "/my-bookings/user/single",
   auth(UserRole.USER),
-  HotelBookingController.getSingleMyHotelBookingForUser
+  HotelBookingController.getSingleMyHotelBookingForUser,
+);
+
+// get single booking details for user hotel by the bookingId
+router.get(
+  "/my-bookings/user/single/:bookingId",
+  auth(UserRole.USER),
+  HotelBookingController.getSingleBookingDetailForUserHotelByBookingId,
 );
 
 // get hotel booking by id
 router.get(
   "/:bookingId",
-  auth(UserRole.PROPERTY_OWNER, UserRole.USER),
-  HotelBookingController.getHotelBookingById
+  auth(
+    UserRole.SUPER_ADMIN,
+    UserRole.ADMIN,
+    UserRole.PROPERTY_OWNER,
+    UserRole.USER,
+  ),
+  HotelBookingController.getHotelBookingById,
 );
 
 // create hotel booking
 router.post(
   "/:hotelId",
   auth(UserRole.USER, UserRole.PROPERTY_OWNER, UserRole.SERVICE_PROVIDER),
-  HotelBookingController.createHotelRoomBooking
+  HotelBookingController.createHotelRoomBooking,
 );
 
 // create travelers with passport images
@@ -57,11 +69,11 @@ router.post(
     UserRole.PROPERTY_OWNER,
     UserRole.SERVICE_PROVIDER,
     UserRole.ADMIN,
-    UserRole.SUPER_ADMIN
+    UserRole.SUPER_ADMIN,
   ),
   uploadFile.passportImages,
   parseBodyData,
-  HotelBookingController.createTravelers
+  HotelBookingController.createTravelers,
 );
 
 export const hotelBookingRoute = router;
