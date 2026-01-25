@@ -14,7 +14,7 @@ router.get(
 
 // send single notification
 router.post(
-  "/send-notification/:userId",
+  "/send-notification",
   auth(),
   NotificationController.sendSingleNotification
 );
