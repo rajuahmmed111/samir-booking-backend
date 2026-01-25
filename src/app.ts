@@ -30,6 +30,22 @@ export const corsOptions = {
   credentials: true,
 };
 
+// app.use(
+//   bodyParser.json({
+//     verify: function (
+//       req: express.Request,
+//       res: express.Response,
+//       buf: Buffer,
+//     ) {
+//       req.rawBody = buf;
+//     },
+//   }),
+// );
+
+// Middleware setup
+app.use(cors(corsOptions));
+app.use(cookieParser());
+
 app.use(
   bodyParser.json({
     verify: function (
@@ -42,9 +58,6 @@ app.use(
   }),
 );
 
-// Middleware setup
-app.use(cors(corsOptions));
-app.use(cookieParser());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static("public"));
 
