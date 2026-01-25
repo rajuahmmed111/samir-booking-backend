@@ -5,43 +5,62 @@ import { IPaginationOptions } from "../../../interfaces/paginations";
 import prisma from "../../../shared/prisma";
 
 // Send notification to a single user
+// const sendSingleNotification = async (req: any) => {
+//   const user = await prisma.user.findUnique({
+//     where: { id: req.params.userId },
+//   });
+
+//   if (!user?.fcmToken) {
+//     throw new ApiError(404, "User not found with FCM token");
+//   }
+
+//   const message = {
+//     notification: {
+//       title: req.body.title,
+//       body: req.body.body,
+//     },
+//     token: user.fcmToken,
+//   };
+
+//   try {
+//     const response = await admin.messaging().send(message);
+//     // await prisma.notifications.create({
+//     //   data: {
+//     //     receiverId: req.params.userId,
+//     //     title: req.body.title,
+//     //     body: req.body.body,
+//     //   },
+//     // });
+//     return response;
+//   } catch (error: any) {
+//     if (error.code === "messaging/invalid-registration-token") {
+//       throw new ApiError(400, "Invalid FCM registration token");
+//     } else if (error.code === "messaging/registration-token-not-registered") {
+//       throw new ApiError(404, "FCM token is no longer registered");
+//     } else {
+//       throw new ApiError(500, "Failed to send notification");
+//     }
+//   }
+// };
+
+// send notification just save database
 const sendSingleNotification = async (req: any) => {
-  console.log(req, "req");
   const user = await prisma.user.findUnique({
     where: { id: req.params.userId },
   });
 
-  if (!user?.fcmToken) {
-    throw new ApiError(404, "User not found with FCM token");
+  if (!user) {
+    throw new ApiError(404, "User not found");
   }
 
-  const message = {
-    notification: {
+  await prisma.notifications.create({
+    data: {
       title: req.body.title,
       body: req.body.body,
+      bookingId: req.body.bookingId,
+      receiverId: req.params.userId,
     },
-    token: user.fcmToken,
-  };
-
-  try {
-    const response = await admin.messaging().send(message);
-    // await prisma.notifications.create({
-    //   data: {
-    //     receiverId: req.params.userId,
-    //     title: req.body.title,
-    //     body: req.body.body,
-    //   },
-    // });
-    return response;
-  } catch (error: any) {
-    if (error.code === "messaging/invalid-registration-token") {
-      throw new ApiError(400, "Invalid FCM registration token");
-    } else if (error.code === "messaging/registration-token-not-registered") {
-      throw new ApiError(404, "FCM token is no longer registered");
-    } else {
-      throw new ApiError(500, "Failed to send notification");
-    }
-  }
+  });
 };
 
 // Send notifications to all users with valid FCM tokens
@@ -143,7 +162,7 @@ const getAllNotifications = async (options: IPaginationOptions) => {
 // get single notification
 const getSingleNotificationFromDB = async (
   req: any,
-  notificationId: string
+  notificationId: string,
 ) => {
   const notification = await prisma.notifications.findFirst({
     where: {
