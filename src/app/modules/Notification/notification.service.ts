@@ -46,7 +46,7 @@ import prisma from "../../../shared/prisma";
 // send notification just save database
 const sendSingleNotification = async (req: any) => {
   const user = await prisma.user.findUnique({
-    where: { id: req.params.userId },
+    where: { id: req.user?.id },
   });
 
   if (!user) {
