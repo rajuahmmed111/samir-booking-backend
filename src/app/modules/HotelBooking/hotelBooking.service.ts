@@ -204,11 +204,13 @@ const getSingleMyHotelBookingForUser = async (userId: string) => {
   return result;
 };
 
-// get single my hotel booking
+// get single booking details for user hotel by the bookingId
 const getSingleBookingDetailForUserHotelByBookingId = async (
   userId: string,
   bookingId: string,
 ) => {
+  console.log(bookingId, userId);
+
   // find user
   const user = await prisma.user.findUnique({ where: { id: userId } });
   if (!user) {
@@ -216,7 +218,7 @@ const getSingleBookingDetailForUserHotelByBookingId = async (
   }
 
   const result = await prisma.hotel_Booking.findFirst({
-    where: { id: bookingId, userId, bookingStatus: BookingStatus.CONFIRMED },
+    where: { id: bookingId, bookingStatus: BookingStatus.CONFIRMED },
     include: {
       hotel: true,
       payment: true,

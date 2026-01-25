@@ -93,6 +93,7 @@ const getSingleBookingDetailForUserHotelByBookingId = catchAsync(
   async (req: Request, res: Response) => {
     const userId = req.user?.id;
     const bookingId = req.params.bookingId;
+    
     const result =
       await HotelBookingService.getSingleBookingDetailForUserHotelByBookingId(
         userId,
