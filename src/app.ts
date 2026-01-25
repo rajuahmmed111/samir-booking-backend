@@ -17,9 +17,6 @@ declare global {
 
 const app: Application = express();
 
-// AWS / Reverse Proxy setup
-app.set("trust proxy", true);
-
 export const corsOptions = {
   // origin: [
   //   "http://localhost:5173",
@@ -52,7 +49,6 @@ app.use(cors(corsOptions));
 app.use(cookieParser());
 
 app.use(express.json());
-// app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static("public"));
 
