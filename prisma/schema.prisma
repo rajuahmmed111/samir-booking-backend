@@ -212,6 +212,7 @@ model Hotel {
   // Security Access
   smartLockCode        String?
   keyBoxPin            String?
+  wifiPassword         String?
   // Amenities
   amenities            String[]
   // inventory
