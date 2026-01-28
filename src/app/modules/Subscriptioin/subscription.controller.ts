@@ -201,7 +201,7 @@ const handleStripeWebhook = catchAsync(async (req: Request, res: Response) => {
     event = stripe.webhooks.constructEvent(
       req.rawBody!, // RAW BODY
       sig,
-      config.stripe.webhookSecret as string,
+      config.stripe.webhookSecret_2 as string,
     );
   } catch (err: any) {
     throw new ApiError(

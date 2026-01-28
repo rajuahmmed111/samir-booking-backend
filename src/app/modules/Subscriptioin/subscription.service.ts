@@ -344,18 +344,29 @@ const handleStripeWebhook = async (event: Stripe.Event) => {
     case "invoice.payment_succeeded": {
       const invoice = event.data.object as Stripe.Invoice;
       const stripeSubscriptionId = invoice.subscription as string | null;
-      if (!stripeSubscriptionId) return { ok: false };
+      if (!stripeSubscriptionId)
+        return { ok: false, reason: "missing subscription" };
 
       const purchase = await prisma.purchase_subscription.findFirst({
         where: { stripeSubscriptionId },
       });
-      if (!purchase) return { ok: false };
+      if (!purchase) return { ok: false, reason: "subscription not found" };
 
-      await prisma.purchase_subscription.update({
-        where: { id: purchase.id },
+      // safe line item
+      const lineItem = invoice.lines.data.find(
+        (line) => (line as any).type === "subscription_item_details",
+      );
+
+      const endDate = lineItem?.period?.end
+        ? new Date(lineItem.period.end * 1000)
+        : new Date();
+
+      // update all matching subscriptions
+      await prisma.purchase_subscription.updateMany({
+        where: { stripeSubscriptionId },
         data: {
           status: "ACTIVE",
-          endDate: new Date(invoice.lines.data[0].period.end * 1000),
+          endDate,
         },
       });
 
@@ -366,17 +377,21 @@ const handleStripeWebhook = async (event: Stripe.Event) => {
           currency: invoice.currency,
           status: "SUCCESS",
           provider: "STRIPE",
-          paymentIntentId: invoice.payment_intent as string | undefined,
+          paymentIntentId:
+            (invoice.payment_intent as string | undefined) ?? undefined,
           serviceType: "SUBSCRIPTION",
           userId: purchase.userId,
           planId: purchase.planId,
         },
       });
 
-      // user isSubscribed
+      // update user subscription status safely
+      const activeSubs = await prisma.purchase_subscription.count({
+        where: { userId: purchase.userId, status: "ACTIVE" },
+      });
       await prisma.user.update({
         where: { id: purchase.userId },
-        data: { isSubscribed: true },
+        data: { isSubscribed: activeSubs > 0 },
       });
 
       return { ok: true, handled: "invoice.payment_succeeded" };
@@ -397,24 +412,92 @@ const handleStripeWebhook = async (event: Stripe.Event) => {
 
     case "customer.subscription.deleted": {
       const sub = event.data.object as Stripe.Subscription;
-      await prisma.purchase_subscription.updateMany({
+
+      // Find and update subscription
+      const purchase = await prisma.purchase_subscription.findFirst({
         where: { stripeSubscriptionId: sub.id },
-        data: { status: "CANCELED" },
       });
+
+      if (purchase) {
+        await prisma.purchase_subscription.updateMany({
+          where: { stripeSubscriptionId: sub.id },
+          data: { status: "CANCELED" },
+        });
+
+        // Update user isSubscribed status
+        await prisma.user.update({
+          where: { id: purchase.userId },
+          data: { isSubscribed: false },
+        });
+      }
+
       return { ok: true, handled: "customer.subscription.deleted" };
     }
 
     case "customer.subscription.updated": {
       const sub = event.data.object as Stripe.Subscription;
+
+      const endDate = sub.current_period_end
+        ? new Date(sub.current_period_end * 1000)
+        : undefined;
+
       await prisma.purchase_subscription.updateMany({
         where: { stripeSubscriptionId: sub.id },
         data: {
-          endDate: new Date(sub.current_period_end * 1000),
+          ...(endDate && { endDate }),
           cancelAtPeriodEnd: sub.cancel_at_period_end ?? false,
+          status: "ACTIVE", // make sure it's active
         },
       });
+
+      // update user subscription status
+      const activeSubs = await prisma.purchase_subscription.count({
+        where: { stripeSubscriptionId: sub.id, status: "ACTIVE" },
+      });
+      if (activeSubs > 0) {
+        const purchase = await prisma.purchase_subscription.findFirst({
+          where: { stripeSubscriptionId: sub.id },
+        });
+        if (purchase) {
+          await prisma.user.update({
+            where: { id: purchase.userId },
+            data: { isSubscribed: true },
+          });
+        }
+      }
+
       return { ok: true, handled: "customer.subscription.updated" };
     }
+
+    // add handlers for product/plan/price events (optional - for logging/monitoring)
+    case "product.created":
+    case "plan.created":
+    case "price.created":
+      // These are typically handled during plan creation, but we can log them
+      console.log(`Stripe event handled: ${event.type}`);
+      return { ok: true, handled: event.type };
+
+    // handle payment related events
+    case "payment_method.attached":
+    case "charge.succeeded":
+    case "payment_intent.succeeded":
+    case "payment_intent.created":
+      console.log(`Stripe event handled: ${event.type}`);
+      return { ok: true, handled: event.type };
+
+    // handle invoice related events
+    case "invoice.created":
+    case "invoice.finalized":
+    case "invoice.updated":
+    case "invoice.paid":
+    case "invoice_payment.paid" as any:
+      console.log(`Stripe event handled: ${event.type}`);
+      return { ok: true, handled: event.type };
+
+    // handle subscription creation
+    case "customer.subscription.created":
+      console.log(`Stripe event handled: ${event.type}`);
+      return { ok: true, handled: event.type };
 
     default:
       console.log("Unhandled stripe event:", event.type);
