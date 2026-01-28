@@ -22,7 +22,7 @@ import { paginationHelpers } from "../../../helpars/paginationHelper";
 // create subscription plan
 const createSubscriptionPlan = async (
   data: ICreateSubscriptionPlan,
-  userId?: string
+  userId?: string,
 ) => {
   // create stripe product
   const product = await stripe.products.create({ name: data.name });
@@ -57,7 +57,7 @@ const createSubscriptionPlan = async (
 const getAllSubscriptionsPlan = async (
   searchQuery?: string,
   skip: number = 0,
-  limit: number = 10
+  limit: number = 10,
 ): Promise<SubscriptionPlan[]> => {
   const where: any = {};
   if (searchQuery) {
@@ -76,7 +76,7 @@ const getAllSubscriptionsPlan = async (
 
 // get specific subscriptionPlan
 const getSpecificSubscriptionPlan = async (
-  id: string
+  id: string,
 ): Promise<SubscriptionPlan | null> => {
   return await prisma.subscriptionPlan.findUnique({
     where: { id },
@@ -86,7 +86,7 @@ const getSpecificSubscriptionPlan = async (
 // update specific subscriptionPlan
 const updateSpecificSubscriptionPlan = async (
   id: string,
-  data: Partial<ICreateSubscriptionPlan>
+  data: Partial<ICreateSubscriptionPlan>,
 ): Promise<SubscriptionPlan> => {
   return await prisma.subscriptionPlan.update({
     where: { id },
@@ -96,7 +96,7 @@ const updateSpecificSubscriptionPlan = async (
 
 // delete specific subscriptionPlan
 const deleteSpecificSubscriptionPlan = async (
-  id: string
+  id: string,
 ): Promise<SubscriptionPlan> => {
   return await prisma.subscriptionPlan.delete({
     where: { id },
@@ -108,7 +108,7 @@ const deleteSpecificSubscriptionPlan = async (
 // get all purchase subscription
 const getAllPurchaseSubscription = async (
   params: ISubscriptionFilterRequest,
-  options: IPaginationOptions
+  options: IPaginationOptions,
 ) => {
   const { limit, page, skip } = paginationHelpers.calculatedPagination(options);
 
@@ -265,7 +265,7 @@ const createSubscription = async (userId: string, planId: string) => {
 // create checkout session for subscription
 const createCheckoutSessionForSubscription = async (
   userId: string,
-  planId: string
+  planId: string,
 ) => {
   const user = await prisma.user.findUnique({ where: { id: userId } });
 
