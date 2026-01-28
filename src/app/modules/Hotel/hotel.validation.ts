@@ -74,6 +74,8 @@ const createHotelSchema = z.object({
     customPrices: z.string().optional(),
     // inventory items
     inventoryItems: z.string().optional(),
+    syncWithAirbnb: z.string().optional().default("false"),
+    airbnbIcalUrl: z.string().optional(),
   }),
 });
 
@@ -113,6 +115,8 @@ const updateHotelSchema = z.object({
     customPrices: z.string().optional(),
     // inventory items
     inventoryItems: z.string().optional(),
+    syncWithAirbnb: z.string().optional().default("false"),
+    airbnbIcalUrl: z.string().optional(),
   }),
 });
 

@@ -33,7 +33,7 @@ const createHotel = async (req: Request) => {
   if (!hotelImagesOrV) {
     throw new ApiError(
       httpStatus.BAD_REQUEST,
-      "uploadPhotosOrVideos field is required"
+      "uploadPhotosOrVideos field is required",
     );
   }
 
@@ -55,7 +55,7 @@ const createHotel = async (req: Request) => {
   const uploadedMedia: string[] = [];
 
   const uploads = await Promise.all(
-    hotelImagesOrV.map((file) => uploadFile.uploadToCloudinary(file))
+    hotelImagesOrV.map((file) => uploadFile.uploadToCloudinary(file)),
   );
 
   uploads.forEach((u) => {
@@ -95,7 +95,7 @@ const createHotel = async (req: Request) => {
 
     availableForBooking,
     syncWithAirbnb,
-    syncWithBooking,
+    airbnbIcalUrl,
   } = req.body;
 
   const result = await prisma.hotel.create({
@@ -161,8 +161,8 @@ const createHotel = async (req: Request) => {
         : undefined,
 
       availableForBooking,
-      syncWithAirbnb,
-      syncWithBooking,
+      syncWithAirbnb: String(syncWithAirbnb) === "true", // convert to boolean
+      airbnbIcalUrl,
     },
     include: {
       customPrices: true,
@@ -193,7 +193,7 @@ const createGuard = async (req: Request) => {
   if (existingGuard) {
     throw new ApiError(
       httpStatus.BAD_REQUEST,
-      "Guard already exists for this hotel"
+      "Guard already exists for this hotel",
     );
   }
 
@@ -229,7 +229,7 @@ const createGuard = async (req: Request) => {
 // get all hotels with search filtering and pagination
 const getAllHotels = async (
   params: IHotelFilterRequest,
-  options: IPaginationOptions
+  options: IPaginationOptions,
 ) => {
   const { limit, page, skip } = paginationHelpers.calculatedPagination(options);
 
@@ -302,7 +302,7 @@ const getAllHotels = async (
 const getAllHotelsForPartner = async (
   partnerId: string,
   params: IHotelFilterRequest,
-  options: IPaginationOptions
+  options: IPaginationOptions,
 ) => {
   const { limit, page, skip } = paginationHelpers.calculatedPagination(options);
   const { searchTerm, ...filterData } = params;
@@ -555,7 +555,7 @@ const updateHotel = async (req: Request) => {
   const uploadedMedia: string[] = [];
 
   const uploads = await Promise.all(
-    hotelImagesOrV.map((file) => uploadFile.uploadToCloudinary(file))
+    hotelImagesOrV.map((file) => uploadFile.uploadToCloudinary(file)),
   );
 
   uploads.forEach((u) => {
