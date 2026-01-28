@@ -21,12 +21,12 @@ const createSubscriptionPlan = catchAsync(
     const userId = req.user?.id;
     const newSubscription = await SubscriptionService.createSubscriptionPlan(
       subscription,
-      userId
+      userId,
     );
     if (!newSubscription) {
       throw new ApiError(
         httpStatus.BAD_REQUEST,
-        "Failed to create new subscription!"
+        "Failed to create new subscription!",
       );
     }
     sendResponse(res, {
@@ -35,7 +35,7 @@ const createSubscriptionPlan = catchAsync(
       message: "Subscription created successfully",
       data: newSubscription,
     });
-  }
+  },
 );
 
 // get all subscriptions plan
@@ -49,7 +49,7 @@ const getAllSubscriptionsPlan = catchAsync(
     const subscriptions = await SubscriptionService.getAllSubscriptionsPlan(
       query as string,
       skip,
-      limit
+      limit,
     );
 
     const totalSubscriptions = subscriptions.length || 0;
@@ -61,16 +61,15 @@ const getAllSubscriptionsPlan = catchAsync(
       message: "Subscriptions retrieved successfully",
       data: subscriptions,
     });
-  }
+  },
 );
 
 // get specific subscription plan by id
 const getSpecificSubscriptionPlan = catchAsync(
   async (req: Request, res: Response) => {
     const { id } = req.params;
-    const subscription = await SubscriptionService.getSpecificSubscriptionPlan(
-      id
-    );
+    const subscription =
+      await SubscriptionService.getSpecificSubscriptionPlan(id);
     if (!subscription) {
       throw new ApiError(httpStatus.BAD_REQUEST, "Subscription not found!");
     }
@@ -80,7 +79,7 @@ const getSpecificSubscriptionPlan = catchAsync(
       message: "Subscription retrieved successfully",
       data: subscription,
     });
-  }
+  },
 );
 
 // update specific subscription plan
@@ -98,7 +97,7 @@ const updateSpecificSubscriptionPlan = catchAsync(
       message: "Subscription updated successfully",
       data: updatedSubscription,
     });
-  }
+  },
 );
 
 // deleting specific subscription plan
@@ -114,7 +113,7 @@ const deleteSpecificSubscriptionPlan = catchAsync(
       message: "Subscription deleted successfully",
       data: deletedSubscription,
     });
-  }
+  },
 );
 
 // ----------------------------subscription--------------------------------
@@ -126,7 +125,7 @@ const getAllPurchaseSubscription = catchAsync(
     const options = pick(req.query, paginationFields);
     const subscriptions = await SubscriptionService.getAllPurchaseSubscription(
       filter,
-      options
+      options,
     );
     sendResponse(res, {
       statusCode: httpStatus.OK,
@@ -134,23 +133,22 @@ const getAllPurchaseSubscription = catchAsync(
       message: "Subscriptions retrieved successfully",
       data: subscriptions,
     });
-  }
+  },
 );
 
 // get my purchase subscription
 const getMyPurchaseSubscription = catchAsync(
   async (req: Request, res: Response) => {
     const userId = req.user?.id;
-    const subscriptions = await SubscriptionService.getMyPurchaseSubscription(
-      userId
-    );
+    const subscriptions =
+      await SubscriptionService.getMyPurchaseSubscription(userId);
     sendResponse(res, {
       statusCode: httpStatus.OK,
       success: true,
       message: "Subscriptions retrieved successfully",
       data: subscriptions,
     });
-  }
+  },
 );
 
 // create subscription
@@ -160,7 +158,7 @@ const createSubscription = catchAsync(async (req: Request, res: Response) => {
 
   const subscription = await SubscriptionService.createSubscription(
     userId,
-    planId
+    planId,
   );
 
   sendResponse(res, {
@@ -174,14 +172,14 @@ const createSubscription = catchAsync(async (req: Request, res: Response) => {
 // create checkout session for subscription
 const createCheckoutSessionForSubscription = async (
   req: Request,
-  res: Response
+  res: Response,
 ) => {
   const userId = req.user?.id;
   const { planId } = req.body;
   const session =
     await SubscriptionService.createCheckoutSessionForSubscription(
       userId,
-      planId
+      planId,
     );
   return sendResponse(res, {
     statusCode: 200,
@@ -203,13 +201,13 @@ const handleStripeWebhook = catchAsync(async (req: Request, res: Response) => {
     event = stripe.webhooks.constructEvent(
       req.rawBody!, // RAW BODY
       sig,
-      config.stripe.webhookSecret as string
+      config.stripe.webhookSecret_2 as string,
     );
   } catch (err: any) {
     throw new ApiError(
       httpStatus.BAD_REQUEST,
       `Webhook Error: ${err.message}`,
-      ""
+      "",
     );
   }
 
