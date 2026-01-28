@@ -61,6 +61,7 @@ const createHotelSchema = z.object({
     // security Access
     smartLockCode: z.string().min(4, "Smart lock code is required"),
     keyBoxPin: z.string().min(4, "Key box pin is required"),
+    wifiPassword: z.string().min(4, "Wifi password is required"),
     // amenities (JSON string)
     amenities: z.string().min(1, "Amenities are required"),
     // additional info
@@ -102,6 +103,7 @@ const updateHotelSchema = z.object({
 
     smartLockCode: z.string().optional(),
     keyBoxPin: z.string().optional(),
+    wifiPassword: z.string().optional(),
 
     amenities: z.string().optional(),
 

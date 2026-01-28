@@ -80,6 +80,7 @@ const createHotel = async (req: Request) => {
 
     smartLockCode,
     keyBoxPin,
+    wifiPassword,
 
     amenities,
 
@@ -115,6 +116,7 @@ const createHotel = async (req: Request) => {
 
       smartLockCode,
       keyBoxPin,
+      wifiPassword,
 
       amenities: amenities ? JSON.parse(amenities) : [],
 
@@ -577,6 +579,7 @@ const updateHotel = async (req: Request) => {
     bathrooms,
     smartLockCode,
     keyBoxPin,
+    wifiPassword,
     amenities,
     addSecurityKeys,
     addLocalTips,
@@ -585,6 +588,8 @@ const updateHotel = async (req: Request) => {
     monthlyOffers,
     customPrices, // [{startDate, endDate, price}]
     inventoryItems, // [{name, quantity}]
+    syncWithAirbnb,
+    airbnbIcalUrl,
   } = req.body;
 
   // Update hotel
@@ -603,6 +608,7 @@ const updateHotel = async (req: Request) => {
       bathrooms: bathrooms ? parseInt(bathrooms) : undefined,
       smartLockCode,
       keyBoxPin,
+      wifiPassword,
       amenities: amenities ? JSON.parse(amenities) : undefined,
       houseRules: uploadedHouseRules || hotelExists.houseRules,
       addSecurityKeys,
@@ -633,6 +639,9 @@ const updateHotel = async (req: Request) => {
             })),
           }
         : undefined,
+
+      syncWithAirbnb: String(syncWithAirbnb) === "true" ? true : false,
+      airbnbIcalUrl: airbnbIcalUrl ? airbnbIcalUrl : undefined,
     },
     include: {
       customPrices: true,
