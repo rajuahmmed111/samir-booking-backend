@@ -37,7 +37,7 @@ const customPriceSchema = z
     {
       message:
         "Either provide 'date' for single day pricing OR both 'startDate' and 'endDate' for date range pricing",
-    }
+    },
   );
 
 // inventory item schema
