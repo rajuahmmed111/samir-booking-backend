@@ -309,7 +309,7 @@ model Hotel_Booking {
   bookingStatus     BookingStatus @default(PENDING)
   // with airbnb or app
   bookingSource     BookingSource @default(APP)
-  externalBookingId String? // Airbnb event UID
+  externalBookingId String?       @unique // Airbnb event UID
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
 
