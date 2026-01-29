@@ -175,12 +175,9 @@ const exportHotelIcal = catchAsync(async (req: Request, res: Response) => {
   if (!hotel) {
     return res.status(404).send("Hotel not found");
   }
-
-  // create iCal formate url content
-  let calendar = `BEGIN:VCALENDAR
-      VERSION:2.0
-      PRODID:-//YourApp//Hotel Calendar//EN
-      `;
+  // iCal content without any leading spaces
+  let calendar =
+    "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//Samir Booking//Hotel Calendar//EN\n";
 
   hotel.hotel_bookings.forEach((booking) => {
     // bookedFromDate & bookedToDate are stored as strings in DB
