@@ -28,7 +28,7 @@ const getPartnerTotalEarningsHotel = catchAsync(
 
     const result = await StatisticsService.getPartnerTotalEarningsHotel(
       partnerId,
-      timeRange as string
+      timeRange as string,
     );
 
     sendResponse(res, {
@@ -37,7 +37,7 @@ const getPartnerTotalEarningsHotel = catchAsync(
       message: "Property owner earnings fetched successfully",
       data: result,
     });
-  }
+  },
 );
 
 // service provider total earnings service
@@ -49,7 +49,7 @@ const getServiceProviderTotalEarningsService = catchAsync(
     const result =
       await StatisticsService.getServiceProviderTotalEarningsService(
         providerId,
-        timeRange as string
+        timeRange as string,
       );
 
     sendResponse(res, {
@@ -58,25 +58,63 @@ const getServiceProviderTotalEarningsService = catchAsync(
       message: "Property owner earnings fetched successfully",
       data: result,
     });
-  }
+  },
 );
 
 // admin total earnings
-const getAdminTotalEarnings = catchAsync(async (req: Request, res: Response) => {
-  const { timeRange } = req.query;
-  const result = await StatisticsService.getAdminTotalEarnings(timeRange as string);
-  sendResponse(res, {
-    statusCode: httpStatus.OK,
-    success: true,
-    message: "Admin earnings fetched successfully",
-    data: result,
-  });
-});
+const getAdminTotalEarnings = catchAsync(
+  async (req: Request, res: Response) => {
+    const { timeRange } = req.query;
+    const result = await StatisticsService.getAdminTotalEarnings(
+      timeRange as string,
+    );
+    sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: "Admin earnings fetched successfully",
+      data: result,
+    });
+  },
+);
+
+// get my properties, services bookings, guest bookings, earnings
+const getMyDashboardForPropertyOwner = catchAsync(
+  async (req: Request, res: Response) => {
+    const userId = req.user?.id;
+    const result =
+      await StatisticsService.getMyDashboardForPropertyOwner(userId);
+    sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: "My dashboard fetched successfully",
+      data: result,
+    });
+  },
+);
+
+// get my services, services bookings,  earnings
+const getMyDashboardForServiceProvider = catchAsync(
+  async (req: Request, res: Response) => {
+    const userId = req.user?.id;
+    const result =
+      await StatisticsService.getMyDashboardForServiceProvider(userId);
+    sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: "My dashboard fetched successfully",
+      data: result,
+    });
+  },
+);
 
 export const StatisticsController = {
   getOverview,
   // sales
   getPartnerTotalEarningsHotel,
   getServiceProviderTotalEarningsService,
+  getMyDashboardForPropertyOwner,
+  getMyDashboardForServiceProvider,
+
+  // admin earns
   getAdminTotalEarnings,
 };

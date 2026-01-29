@@ -9,28 +9,42 @@ const router = express.Router();
 router.get(
   "/overview",
   auth(UserRole.SUPER_ADMIN, UserRole.ADMIN),
-  StatisticsController.getOverview
+  StatisticsController.getOverview,
 );
 
 // partner total earings hotel
 router.get(
   "/earnings-hotel",
   auth(UserRole.PROPERTY_OWNER),
-  StatisticsController.getPartnerTotalEarningsHotel
+  StatisticsController.getPartnerTotalEarningsHotel,
 );
 
 // service provider total earnings service
 router.get(
   "/earnings-service",
   auth(UserRole.SERVICE_PROVIDER),
-  StatisticsController.getServiceProviderTotalEarningsService
+  StatisticsController.getServiceProviderTotalEarningsService,
 );
 
 // admin total earnings
 router.get(
   "/admin-earnings",
   auth(UserRole.SUPER_ADMIN, UserRole.ADMIN),
-  StatisticsController.getAdminTotalEarnings
+  StatisticsController.getAdminTotalEarnings,
+);
+
+// get my properties, services bookings, guest bookings, earnings
+router.get(
+  "/my-dashboard/property-owner",
+  auth(UserRole.PROPERTY_OWNER),
+  StatisticsController.getMyDashboardForPropertyOwner,
+);
+
+// get my services, services bookings,  earnings
+router.get(
+  "/my-dashboard/service-provider",
+  auth(UserRole.SERVICE_PROVIDER),
+  StatisticsController.getMyDashboardForServiceProvider,
 );
 
 export const statisticsRoutes = router;

@@ -145,7 +145,7 @@ const getOverview = async (params: IFilterRequest) => {
 // property owner total earnings hotel
 const getPartnerTotalEarningsHotel = async (
   partnerId: string,
-  timeRange?: string
+  timeRange?: string,
 ) => {
   // find partner
   const partner = await prisma.user.findUnique({
@@ -297,7 +297,7 @@ const getPartnerTotalEarningsHotel = async (
       monthName,
       earnings,
       count,
-    })
+    }),
   );
 
   const bookingsTrend = allMonths.map(
@@ -306,7 +306,7 @@ const getPartnerTotalEarningsHotel = async (
       monthName,
       bookings,
       revenue,
-    })
+    }),
   );
 
   return {
@@ -322,7 +322,7 @@ const getPartnerTotalEarningsHotel = async (
 // service provider total earnings service
 const getServiceProviderTotalEarningsService = async (
   providerId: string,
-  timeRange?: string
+  timeRange?: string,
 ) => {
   // find partner
   const partner = await prisma.user.findUnique({
@@ -475,7 +475,7 @@ const getServiceProviderTotalEarningsService = async (
       monthName,
       earnings,
       count,
-    })
+    }),
   );
 
   const bookingsTrend = allMonths.map(
@@ -484,7 +484,7 @@ const getServiceProviderTotalEarningsService = async (
       monthName,
       bookings,
       revenue,
-    })
+    }),
   );
 
   return {
@@ -540,7 +540,7 @@ const getAdminTotalEarnings = async (timeRange?: string) => {
 
   // average per booking amount from PAID payments only
   const paidPayments = payments.filter(
-    (payment) => payment.status === PaymentStatus.PAID
+    (payment) => payment.status === PaymentStatus.PAID,
   );
   const averageEarnings =
     totalBookings > 0 && paidPayments.length > 0
@@ -602,7 +602,7 @@ const getAdminTotalEarnings = async (timeRange?: string) => {
       type: "SERVICE",
     })),
   ].sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
   );
 
   // group by month
@@ -637,7 +637,7 @@ const getAdminTotalEarnings = async (timeRange?: string) => {
 
     const totalEarnings = monthPayments.reduce(
       (sum, payment) => sum + payment.amount,
-      0
+      0,
     );
 
     return {
@@ -651,7 +651,7 @@ const getAdminTotalEarnings = async (timeRange?: string) => {
   // calculate total earnings
   const totalEarnings = payments.reduce(
     (sum, payment) => sum + payment.amount,
-    0
+    0,
   );
 
   return {
@@ -664,12 +664,87 @@ const getAdminTotalEarnings = async (timeRange?: string) => {
   };
 };
 
+// get my properties, services bookings, guest bookings, earnings
+const getMyDashboardForPropertyOwner = async (userId: string) => {
+  // total properties
+  const totalProperties = await prisma.hotel.count({
+    where: {
+      partnerId: userId,
+    },
+  });
+
+  // total hotel bookings
+  const totalBookings = await prisma.hotel_Booking.count({
+    where: {
+      userId,
+      bookingStatus: BookingStatus.CONFIRMED,
+    },
+  });
+
+  // total services bookings
+  const totalServices = await prisma.service_booking.count({
+    where: {
+      userId,
+      bookingStatus: BookingStatus.CONFIRMED,
+    },
+  });
+
+  // total payments
+  const totalPayments = await prisma.payment.count({
+    where: {
+      partnerId: userId,
+      status: PaymentStatus.PAID,
+    },
+  });
+
+  return {
+    totalProperties,
+    totalServices,
+    totalBookings,
+    totalPayments,
+  };
+};
+
+// get my services, services bookings,  earnings
+const getMyDashboardForServiceProvider = async (userId: string) => {
+  // total services
+  const totalServices = await prisma.service.count({
+    where: {
+      providerId: userId,
+    },
+  });
+
+  // total services bookings
+  const totalServicesBookings = await prisma.service_booking.count({
+    where: {
+      providerId: userId,
+      bookingStatus: BookingStatus.CONFIRMED,
+    },
+  });
+
+  // total payments
+  const totalPayments = await prisma.payment.count({
+    where: {
+      providerId: userId,
+      status: PaymentStatus.PAID,
+    },
+  });
+
+  return {
+    totalServices,
+    totalServicesBookings,
+    totalPayments,
+  };
+};
+
 export const StatisticsService = {
   getOverview,
 
   // sales
   getPartnerTotalEarningsHotel,
   getServiceProviderTotalEarningsService,
+  getMyDashboardForPropertyOwner,
+  getMyDashboardForServiceProvider,
 
   // admin earns
   getAdminTotalEarnings,
