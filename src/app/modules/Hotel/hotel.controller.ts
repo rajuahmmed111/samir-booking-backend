@@ -175,26 +175,24 @@ const exportHotelIcal = catchAsync(async (req: Request, res: Response) => {
   if (!hotel) {
     return res.status(404).send("Hotel not found");
   }
+
   // iCal content without any leading spaces
   let calendar =
     "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//Samir Booking//Hotel Calendar//EN\n";
 
   hotel.hotel_bookings.forEach((booking) => {
-    // bookedFromDate & bookedToDate are stored as strings in DB
     const startDate = new Date(booking.bookedFromDate);
     const endDate = new Date(booking.bookedToDate);
 
-    calendar += `
-      BEGIN:VEVENT
-      UID:${booking.externalBookingId ?? booking.id}
-      SUMMARY:Booked
-      DTSTART:${formatIcalDate(startDate)}
-      DTEND:${formatIcalDate(endDate)}
-      END:VEVENT
-      `;
+    calendar += "BEGIN:VEVENT\n";
+    calendar += `UID:${booking.externalBookingId ?? booking.id}\n`;
+    calendar += "SUMMARY:Booked\n";
+    calendar += `DTSTART:${formatIcalDate(startDate)}\n`;
+    calendar += `DTEND:${formatIcalDate(endDate)}\n`;
+    calendar += "END:VEVENT\n";
   });
 
-  calendar += `END:VCALENDAR`;
+  calendar += "END:VCALENDAR";
 
   // set headers for iCal download
   res.setHeader("Content-Type", "text/calendar");
