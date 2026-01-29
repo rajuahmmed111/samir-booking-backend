@@ -300,7 +300,7 @@ const getAllHotels = async (
   };
 };
 
-// get all my hotels for partner
+// get all my hotels for partners
 const getAllHotelsForPartner = async (
   partnerId: string,
   params: IHotelFilterRequest,
