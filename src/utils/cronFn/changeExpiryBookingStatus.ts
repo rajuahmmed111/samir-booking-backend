@@ -99,6 +99,6 @@ export const changeExpiryBookingStatus = () => {
   // sync airbnb booked calendar every 30 minutes
   cron.schedule("*/30 * * * *", async () => {
     await syncAirbnbBookedCalendar();
-    console.log("⏰ Syncing Airbnb booked calendar...");
+    // console.log("⏰ Syncing Airbnb booked calendar...");
   });
 };
