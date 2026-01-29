@@ -154,14 +154,11 @@ const deleteHotel = catchAsync(async (req: Request, res: Response) => {
 const exportHotelIcal = catchAsync(async (req: Request, res: Response) => {
   const { hotelId } = req.params;
 
-  // fetch hotel with bookings, including externalBookingId
   const hotel = await prisma.hotel.findUnique({
     where: { id: hotelId },
     include: {
       hotel_bookings: {
-        where: {
-          bookingStatus: BookingStatus.CONFIRMED,
-        },
+        where: { bookingStatus: BookingStatus.CONFIRMED },
         select: {
           id: true,
           bookedFromDate: true,
@@ -176,28 +173,24 @@ const exportHotelIcal = catchAsync(async (req: Request, res: Response) => {
     return res.status(404).send("Hotel not found");
   }
 
-  // create iCal content
-  let calendar = `BEGIN:VCALENDAR
-      VERSION:2.0
-      PRODID:-//YourApp//Hotel Calendar//EN
-      `;
+  // create iCal content without any indentation
+  let calendar =
+    "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//YourApp//Hotel Calendar//EN\n";
 
   hotel.hotel_bookings.forEach((booking) => {
-    // bookedFromDate & bookedToDate are stored as strings in DB
     const startDate = new Date(booking.bookedFromDate);
     const endDate = new Date(booking.bookedToDate);
 
-    calendar += `
-      BEGIN:VEVENT
-      UID:${booking.externalBookingId ?? booking.id}
-      SUMMARY:Booked
-      DTSTART:${formatIcalDate(startDate)}
-      DTEND:${formatIcalDate(endDate)}
-      END:VEVENT
-      `;
+    calendar +=
+      "BEGIN:VEVENT\n" +
+      `UID:${booking.externalBookingId ?? booking.id}\n` +
+      "SUMMARY:Booked\n" +
+      `DTSTART:${formatIcalDate(startDate)}\n` +
+      `DTEND:${formatIcalDate(endDate)}\n` +
+      "END:VEVENT\n";
   });
 
-  calendar += `END:VCALENDAR`;
+  calendar += "END:VCALENDAR";
 
   // set headers for iCal download
   res.setHeader("Content-Type", "text/calendar");
