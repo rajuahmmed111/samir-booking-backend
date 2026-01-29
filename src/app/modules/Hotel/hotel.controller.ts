@@ -6,6 +6,8 @@ import { HotelService } from "./hotel.service";
 import { pick } from "../../../shared/pick";
 import { paginationFields } from "../../../constants/pagination";
 import { filterField } from "./hotel.constant";
+import prisma from "../../../shared/prisma";
+import { BookingStatus } from "@prisma/client";
 
 // create hotel
 const createHotel = catchAsync(async (req: Request, res: Response) => {
@@ -53,7 +55,7 @@ const getAllHotelsForPartner = catchAsync(
     const result = await HotelService.getAllHotelsForPartner(
       partnerId,
       filter,
-      options
+      options,
     );
 
     sendResponse(res, {
@@ -62,7 +64,7 @@ const getAllHotelsForPartner = catchAsync(
       message: "Hotels fetched successfully",
       data: result,
     });
-  }
+  },
 );
 
 // get select my property
@@ -77,7 +79,7 @@ const getSelectMyProperties = catchAsync(
       message: "Retrieved selected properties successfully",
       data: result,
     });
-  }
+  },
 );
 
 // get single hotel
@@ -148,6 +150,70 @@ const deleteHotel = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+// export hotel bookings as iCal
+const exportHotelIcal = catchAsync(async (req: Request, res: Response) => {
+  const { hotelId } = req.params;
+
+  // fetch hotel with bookings, including externalBookingId
+  const hotel = await prisma.hotel.findUnique({
+    where: { id: hotelId },
+    include: {
+      hotel_bookings: {
+        where: {
+          bookingStatus: BookingStatus.CONFIRMED,
+        },
+        select: {
+          id: true,
+          bookedFromDate: true,
+          bookedToDate: true,
+          externalBookingId: true,
+        },
+      },
+    },
+  });
+
+  if (!hotel) {
+    return res.status(404).send("Hotel not found");
+  }
+
+  // create iCal content
+  let calendar = `BEGIN:VCALENDAR
+      VERSION:2.0
+      PRODID:-//YourApp//Hotel Calendar//EN
+      `;
+
+  hotel.hotel_bookings.forEach((booking) => {
+    // bookedFromDate & bookedToDate are stored as strings in DB
+    const startDate = new Date(booking.bookedFromDate);
+    const endDate = new Date(booking.bookedToDate);
+
+    calendar += `
+      BEGIN:VEVENT
+      UID:${booking.externalBookingId ?? booking.id}
+      SUMMARY:Booked
+      DTSTART:${formatIcalDate(startDate)}
+      DTEND:${formatIcalDate(endDate)}
+      END:VEVENT
+      `;
+  });
+
+  calendar += `END:VCALENDAR`;
+
+  // set headers for iCal download
+  res.setHeader("Content-Type", "text/calendar");
+  res.setHeader(
+    "Content-Disposition",
+    `attachment; filename=hotel-${hotelId}.ics`,
+  );
+  res.send(calendar);
+});
+
+// helper function
+function formatIcalDate(date: Date) {
+  const d = new Date(date);
+  return d.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+}
+
 export const HotelController = {
   createHotel,
   getAllHotels,
@@ -159,4 +225,5 @@ export const HotelController = {
   updateHotel,
   deleteHotel,
   createGuard,
+  exportHotelIcal,
 };

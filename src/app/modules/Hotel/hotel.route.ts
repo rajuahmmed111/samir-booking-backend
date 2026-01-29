@@ -16,21 +16,21 @@ router.get("/", HotelController.getAllHotels);
 router.get(
   "/partner-hotels",
   auth(UserRole.PROPERTY_OWNER),
-  HotelController.getAllHotelsForPartner
+  HotelController.getAllHotelsForPartner,
 );
 
 // get select my property
 router.get(
   "/select-my-properties",
   auth(UserRole.PROPERTY_OWNER),
-  HotelController.getSelectMyProperties
+  HotelController.getSelectMyProperties,
 );
 
 // get my favorites
 router.get(
   "/my-favorites",
   auth(UserRole.USER),
-  HotelController.getAllFavoriteHotels
+  HotelController.getAllFavoriteHotels,
 );
 
 // get single hotel
@@ -40,7 +40,7 @@ router.get("/:id", HotelController.getSingleHotel);
 router.post(
   "/favorite/:hotelId",
   auth(UserRole.USER),
-  HotelController.toggleFavorite
+  HotelController.toggleFavorite,
 );
 
 // create hotel
@@ -53,7 +53,7 @@ router.post(
   ]),
   parseBodyData,
   validateRequest(hotelValidation.createHotelSchema),
-  HotelController.createHotel
+  HotelController.createHotel,
 );
 
 // create guard
@@ -63,7 +63,7 @@ router.post(
   uploadFile.upload.fields([{ name: "guardPhoto", maxCount: 1 }]),
   parseBodyData,
   validateRequest(hotelValidation.createGuardSchema),
-  HotelController.createGuard
+  HotelController.createGuard,
 );
 
 // update hotel
@@ -75,14 +75,17 @@ router.patch(
     { name: "houseRules", maxCount: 5 },
   ]),
   parseBodyData,
-  HotelController.updateHotel
+  HotelController.updateHotel,
 );
 
 // delete hotel
 router.delete(
   "/:hotelId",
   auth(UserRole.PROPERTY_OWNER),
-  HotelController.deleteHotel
+  HotelController.deleteHotel,
 );
+
+// get hotel iCal export
+router.get("/:hotelId/calendar.ics", HotelController.exportHotelIcal);
 
 export const hotelRoute = router;

@@ -66,6 +66,11 @@ enum BookingStatus {
   EXPIRED
 }
 
+enum BookingSource {
+  APP
+  AIRBNB
+}
+
 enum PaymentProvider {
   STRIPE
 }
@@ -302,6 +307,9 @@ model Hotel_Booking {
   personOfGuests    Int
   totalPrice        Float
   bookingStatus     BookingStatus @default(PENDING)
+  // with airbnb or app
+  bookingSource     BookingSource @default(APP)
+  externalBookingId String? // Airbnb event UID
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
 
