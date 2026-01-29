@@ -469,6 +469,10 @@ const handleStripeWebhook = async (event: Stripe.Event) => {
       return { ok: true, handled: "customer.subscription.updated" };
     }
 
+    // add optional checkout expired handler
+    case "checkout.session.expired":
+      return { ok: true, handled: "checkout.session.expired" };
+
     // add handlers for product/plan/price events (optional - for logging/monitoring)
     case "product.created":
     case "plan.created":
