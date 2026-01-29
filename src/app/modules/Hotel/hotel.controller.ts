@@ -176,7 +176,7 @@ const exportHotelIcal = catchAsync(async (req: Request, res: Response) => {
     return res.status(404).send("Hotel not found");
   }
 
-  // create iCal content
+  // create iCal formate url content
   let calendar = `BEGIN:VCALENDAR
       VERSION:2.0
       PRODID:-//YourApp//Hotel Calendar//EN
