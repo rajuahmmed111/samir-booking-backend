@@ -3,7 +3,7 @@ import ical from "node-ical";
 import prisma from "../../../shared/prisma";
 import { BookingSource, BookingStatus } from "@prisma/client";
 
-export const syncAirbnbCalendar = async () => {
+export const syncAirbnbBookedCalendar = async () => {
   //  get all hotels that should sync with Airbnb
   const hotels = await prisma.hotel.findMany({
     where: {
