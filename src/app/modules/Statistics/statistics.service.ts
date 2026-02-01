@@ -673,14 +673,6 @@ const getMyDashboardForPropertyOwner = async (userId: string) => {
     },
   });
 
-  // total hotel bookings
-  const totalBookings = await prisma.hotel_Booking.count({
-    where: {
-      userId,
-      bookingStatus: BookingStatus.CONFIRMED,
-    },
-  });
-
   // total services bookings
   const totalServices = await prisma.service_booking.count({
     where: {
@@ -689,13 +681,33 @@ const getMyDashboardForPropertyOwner = async (userId: string) => {
     },
   });
 
-  // total payments
-  const totalPayments = await prisma.payment.count({
+  // total hotel bookings (guest bookings)
+  const totalBookings = await prisma.hotel_Booking.count({
+    where: {
+      userId,
+      bookingStatus: BookingStatus.CONFIRMED,
+    },
+  });
+
+  // total payments sum
+  const totalPaymentsAgg = await prisma.payment.aggregate({
     where: {
       partnerId: userId,
       status: PaymentStatus.PAID,
     },
+    _sum: {
+      amount: true,
+    },
   });
+
+  let totalPayments = 0;
+  if (
+    totalPaymentsAgg &&
+    totalPaymentsAgg._sum &&
+    totalPaymentsAgg._sum.amount
+  ) {
+    totalPayments = totalPaymentsAgg._sum.amount;
+  }
 
   return {
     totalProperties,
