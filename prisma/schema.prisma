@@ -222,7 +222,7 @@ model Hotel {
   // inventory
   inventoryItems       InventoryItem[]
   houseRules           String // image
-  addSecurityKeys      String? // todo
+  addSecurityKeys      String?
   addLocalTips         String? // todo
   basePrice            Float
   customPrices         CustomPrice[]
