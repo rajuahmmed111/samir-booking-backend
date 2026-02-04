@@ -61,6 +61,7 @@ router.get(
   SubscriptionController.getMyPurchaseSubscription
 );
 
+// create purchase subscription
 router.post(
   "/create",
   auth(UserRole.PROPERTY_OWNER),
@@ -74,6 +75,7 @@ router.post(
   SubscriptionController.createCheckoutSessionForSubscription
 );
 
+// handle stripe webhook for subscription
 router.post(
   "/webhooks/stripe",
   express.raw({ type: "application/json" }),
