@@ -5,6 +5,8 @@ import { differenceInDays, parse, startOfDay } from "date-fns";
 import { BookingStatus, PaymentStatus } from "@prisma/client";
 import { IHotelBookingData } from "./hotelBooking.interface";
 import { uploadFile } from "../../../helpars/fileUploader";
+import { IPaginationOptions } from "../../../interfaces/paginations";
+import { paginationHelpers } from "../../../helpars/paginationHelper";
 
 // create Hotel Booking service
 const createHotelRoomBooking = async (
@@ -116,7 +118,15 @@ const createHotelRoomBooking = async (
 };
 
 // get all hotel  bookings
-const getAllHotelBookings = async (partnerId: string, filter?: string) => {
+const getAllHotelBookings = async (
+  partnerId: string,
+  filter?: string,
+  options?: IPaginationOptions,
+) => {
+  const { page, skip, limit } = paginationHelpers.calculatedPagination(
+    options || {},
+  );
+
   // find partner
   const partner = await prisma.user.findUnique({ where: { id: partnerId } });
   if (!partner) {
@@ -146,16 +156,33 @@ const getAllHotelBookings = async (partnerId: string, filter?: string) => {
 
   const result = await prisma.hotel_Booking.findMany({
     where: whereClause,
+    skip,
+    take: limit,
     include: {
       hotel: true,
       payment: true,
+      user: {
+        select: {
+          id: true,
+          fullName: true,
+        },
+      },
     },
     orderBy: {
       createdAt: "desc",
     },
   });
 
-  return result;
+  const total = await prisma.hotel_Booking.count({ where: whereClause });
+
+  return {
+    meta: {
+      page,
+      limit,
+      total,
+    },
+    data: result,
+  };
 };
 
 // get single hotel booking for owner

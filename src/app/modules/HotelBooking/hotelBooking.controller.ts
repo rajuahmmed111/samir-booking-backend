@@ -3,6 +3,8 @@ import catchAsync from "../../../shared/catchAsync";
 import { HotelBookingService } from "./hotelBooking.service";
 import sendResponse from "../../../shared/sendResponse";
 import httpStatus from "http-status";
+import { pick } from "../../../shared/pick";
+import { paginationFields } from "../../../constants/pagination";
 
 // create hotel booking
 const createHotelRoomBooking = catchAsync(
@@ -30,10 +32,12 @@ const createHotelRoomBooking = catchAsync(
 const getAllHotelBookings = catchAsync(async (req: Request, res: Response) => {
   const partnerId = req.user?.id;
   const filter = req.query.filter as string;
+  const options = pick(req.query, paginationFields);
 
   const result = await HotelBookingService.getAllHotelBookings(
     partnerId,
     filter,
+    options,
   );
   sendResponse(res, {
     statusCode: httpStatus.OK,
