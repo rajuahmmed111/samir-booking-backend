@@ -436,6 +436,7 @@ const getAllServiceProvidersForPropertyOwner = async (
       status: true,
       createdAt: true,
       updatedAt: true,
+      providerShowUserInfos: true
     },
   });
 
