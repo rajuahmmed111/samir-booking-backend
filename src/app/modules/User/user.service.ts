@@ -436,7 +436,7 @@ const getAllServiceProvidersForPropertyOwner = async (
       status: true,
       createdAt: true,
       updatedAt: true,
-      providerShowUserInfos: true
+      providerShowUserInfos: true,
     },
   });
 
@@ -755,6 +755,7 @@ const getMyProfile = async (id: string) => {
       address: true,
       country: true,
       role: true,
+      isStripeConnected: true,
       status: true,
       createdAt: true,
       updatedAt: true,
