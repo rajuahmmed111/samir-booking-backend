@@ -2,7 +2,10 @@ import prisma from "../../../shared/prisma";
 import ApiError from "../../../errors/ApiErrors";
 import httpStatus from "http-status";
 import { Prisma, UserRole, UserStatus } from "@prisma/client";
-import { IShowUserInfoFilterRequest, SafeUserWithShowUserInfo } from "./showUserInfo.interface";
+import {
+  IShowUserInfoFilterRequest,
+  SafeUserWithShowUserInfo,
+} from "./showUserInfo.interface";
 import { IPaginationOptions } from "../../../interfaces/paginations";
 import { paginationHelpers } from "../../../helpars/paginationHelper";
 import { IGenericResponse } from "../../../interfaces/common";
@@ -152,7 +155,6 @@ const getAllServiceProvidersForPropertyOwner = async (
     data: usersWithShowUserInfo,
   };
 };
-
 
 export const ShowUserInfoService = {
   createShowUserInfo,

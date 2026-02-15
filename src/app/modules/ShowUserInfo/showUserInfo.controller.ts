@@ -40,7 +40,11 @@ const updateShowUserInfo = catchAsync(async (req: Request, res: Response) => {
 const getAllServiceProvidersForPropertyOwner = catchAsync(
   async (req: Request, res: Response) => {
     const options = pick(req.query, paginationFields);
-    const result = await ShowUserInfoService.getAllServiceProvidersForPropertyOwner(req.user?.id, options);
+    const result =
+      await ShowUserInfoService.getAllServiceProvidersForPropertyOwner(
+        req.user?.id,
+        options,
+      );
 
     sendResponse(res, {
       statusCode: httpStatus.OK,
