@@ -2,8 +2,7 @@ import * as bcrypt from "bcrypt";
 import httpStatus from "http-status";
 import ApiError from "../../../errors/ApiErrors";
 import prisma from "../../../shared/prisma";
-import { Prisma, User, UserRole, UserStatus } from "@prisma/client";
-import { ObjectId } from "mongodb";
+import { Prisma, UserRole, UserStatus } from "@prisma/client";
 import { IPaginationOptions } from "../../../interfaces/paginations";
 import {
   IFilterRequest,
@@ -359,115 +358,7 @@ const getAllPropertyOwners = async (
   };
 };
 
-// get all service provider for property owner
-const getAllServiceProvidersForPropertyOwner = async (
-  params: IFilterRequest,
-  options: IPaginationOptions,
-): Promise<IGenericResponse<SafeUser[]>> => {
-  const { limit, page, skip } = paginationHelpers.calculatedPagination(options);
 
-  const { searchTerm, timeRange, ...filterData } = params;
-
-  const filters: Prisma.UserWhereInput[] = [];
-
-  // Filter for active users and role SERVICE_PROVIDER only
-  filters.push({
-    role: UserRole.SERVICE_PROVIDER,
-    status: UserStatus.ACTIVE,
-  });
-
-  // text search
-  if (params?.searchTerm) {
-    filters.push({
-      OR: searchableFields.map((field) => ({
-        [field]: {
-          contains: params.searchTerm,
-          mode: "insensitive",
-        },
-      })),
-    });
-  }
-
-  // Exact search filter
-  if (Object.keys(filterData).length > 0) {
-    filters.push({
-      AND: Object.keys(filterData).map((key) => ({
-        [key]: {
-          equals: (filterData as any)[key],
-        },
-      })),
-    });
-  }
-
-  // timeRange filter
-  if (timeRange) {
-    const dateRange = getDateRange(timeRange);
-    if (dateRange) {
-      filters.push({
-        createdAt: dateRange,
-      });
-    }
-  }
-
-  const where: Prisma.UserWhereInput = { AND: filters };
-
-  const result = await prisma.user.findMany({
-    where,
-    skip,
-    take: limit,
-    orderBy:
-      options.sortBy && options.sortOrder
-        ? {
-            [options.sortBy]: options.sortOrder,
-          }
-        : {
-            createdAt: "desc",
-          },
-    select: {
-      id: true,
-      fullName: true,
-      email: true,
-      profileImage: true,
-      passportOrNID: true,
-      contactNumber: true,
-      address: true,
-      country: true,
-      role: true,
-      status: true,
-      createdAt: true,
-      updatedAt: true,
-      providerShowUserInfos: true,
-    },
-  });
-
-  const businessPartnerIds = result.map((partner) => partner.id);
-
-  const serviceFeeByPartner = await prisma.payment.groupBy({
-    by: ["partnerId"],
-    where: {
-      partnerId: {
-        in: businessPartnerIds,
-      },
-      isDeleted: false,
-    },
-  });
-
-  // add totalServiceFee
-  const usersWithServiceFee = result.map((user) => ({
-    ...user,
-  }));
-
-  const total = await prisma.user.count({ where });
-
-  return {
-    meta: {
-      total,
-      page,
-      limit,
-    },
-    data: usersWithServiceFee,
-  };
-};
 
 // get all blocked users
 const getAllBlockedUsers = async (
@@ -839,7 +730,6 @@ export const UserService = {
   createRoleSupperAdmin,
   verifyOtpAndCreateUser,
   getAllPropertyOwners,
-  getAllServiceProvidersForPropertyOwner,
   getAllBlockedUsers,
   getAllUsers,
   updateUserStatusActiveToInActive,

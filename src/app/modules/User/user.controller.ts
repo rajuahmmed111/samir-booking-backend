@@ -80,21 +80,6 @@ const getAllPropertyOwners = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-// get all service provider for property owner
-const getAllServiceProvidersForPropertyOwner = catchAsync(
-  async (req: Request, res: Response) => {
-    const filter = pick(req.query, filterField);
-    const options = pick(req.query, paginationFields);
-    const result = await UserService.getAllServiceProvidersForPropertyOwner(filter, options);
-
-    sendResponse(res, {
-      statusCode: httpStatus.OK,
-      success: true,
-      message: "Service Providers fetched successfully",
-      data: result,
-    });
-  },
-);
 
 // get all blocked users
 const getAllBlockedUsers = catchAsync(async (req: Request, res: Response) => {
@@ -253,7 +238,6 @@ export const UserController = {
   verifyOtpAndCreateUser,
   getAllUsers,
   getAllPropertyOwners,
-  getAllServiceProvidersForPropertyOwner,
   getAllBlockedUsers,
   updateUserStatusActiveToInActive,
   updateUserStatusInActiveToActive,

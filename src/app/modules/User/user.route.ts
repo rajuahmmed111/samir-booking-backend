@@ -26,13 +26,6 @@ router.get(
   UserController.getAllPropertyOwners,
 );
 
-// get all service provider for property owner
-router.get(
-  "/service-providers-for-property-owner",
-  auth(UserRole.PROPERTY_OWNER),
-  UserController.getAllServiceProvidersForPropertyOwner,
-);
-
 // get all blocked users
 router.get(
   "/blocked-users",

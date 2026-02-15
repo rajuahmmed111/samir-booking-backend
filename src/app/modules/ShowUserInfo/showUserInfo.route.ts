@@ -19,11 +19,11 @@ router.patch(
   ShowUserInfoController.updateShowUserInfo,
 );
 
-// get all show user info
+// get all service provider for property owner
 router.get(
-  "/",
-  auth(UserRole.SUPER_ADMIN, UserRole.ADMIN),
-  ShowUserInfoController.getAllShowUserInfo,
+  "/service-providers-for-property-owner",
+  auth(UserRole.PROPERTY_OWNER),
+  ShowUserInfoController.getAllServiceProvidersForPropertyOwner,
 );
 
 export const showUserInfoRoutes = router;

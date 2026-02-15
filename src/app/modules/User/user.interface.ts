@@ -47,6 +47,8 @@ export type SafeUser = {
   updatedAt: Date;
 };
 
+
+
 export type IProfileImageResponse = {
   id: string;
   fullName: string | null;
