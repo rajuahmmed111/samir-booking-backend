@@ -55,8 +55,25 @@ const getAllServiceProvidersForPropertyOwner = catchAsync(
   },
 );
 
+// get all show user info
+const getAllShowUserInfo = catchAsync(async (req: Request, res: Response) => {
+  const options = pick(req.query, paginationFields);
+  const result = await ShowUserInfoService.getAllShowUserInfo(
+    req.query,
+    options,
+  );
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Show user info fetched successfully",
+    data: result,
+  });
+});
+
 export const ShowUserInfoController = {
   createShowUserInfo,
   updateShowUserInfo,
   getAllServiceProvidersForPropertyOwner,
+  getAllShowUserInfo,
 };
