@@ -8,7 +8,7 @@ const router = Router();
 // create show user info for property owner by providerId
 router.post(
   "/:providerId",
-  auth(UserRole.PROPERTY_OWNER, UserRole.ADMIN, UserRole.SUPER_ADMIN),
+  auth(UserRole.PROPERTY_OWNER),
   ShowUserInfoController.createShowUserInfo,
 );
 
@@ -22,7 +22,7 @@ router.patch(
 // get all service provider for property owner
 router.get(
   "/service-providers-for-property-owner",
-  auth(UserRole.PROPERTY_OWNER),
+  auth(UserRole.PROPERTY_OWNER, UserRole.ADMIN, UserRole.SUPER_ADMIN),
   ShowUserInfoController.getAllServiceProvidersForPropertyOwner,
 );
 
