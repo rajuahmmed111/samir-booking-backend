@@ -282,8 +282,15 @@ const getHotelBookingById = async (partnerId: string, bookingId: string) => {
   const booking = await prisma.hotel_Booking.findUnique({
     where: { id: bookingId, partnerId },
     include: {
-      hotel: true,
-    }
+      hotel: {
+        select: {
+          id: true,
+          propertyTitle: true,
+          propertyAddress: true,
+          uploadPhotosOrVideos: true,
+        },
+      },
+    },
   });
   if (!booking) {
     throw new ApiError(httpStatus.NOT_FOUND, "Booking not found");
