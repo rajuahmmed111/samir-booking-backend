@@ -352,7 +352,6 @@ const getServiceProviderTotalEarningsService = async (
       id: true,
     },
   });
-  console.log(earnings, "earnings");
 
   // total bookings
   const totalBookings = await prisma.service_booking.count({
