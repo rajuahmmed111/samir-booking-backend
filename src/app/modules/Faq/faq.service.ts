@@ -1,3 +1,5 @@
+import httpStatus from "http-status";
+import ApiError from "../../../errors/ApiErrors";
 import prisma from "../../../shared/prisma";
 
 // create faq
@@ -23,7 +25,16 @@ const getSingleFaq = async (id: string) => {
 // update faq
 const updateFaq = async (id: string, payload: any) => {
   const { question, answer } = payload;
- return await prisma.faq.update({
+
+  // find faq
+  const faq = await prisma.faq.findUnique({
+    where: { id },
+  });
+  if (!faq) {
+    throw new ApiError(httpStatus.NOT_FOUND, "Faq not found");
+  }
+
+  return await prisma.faq.update({
     where: { id },
     data: {
       question,
@@ -34,6 +45,14 @@ const updateFaq = async (id: string, payload: any) => {
 
 // delete faq
 const deleteFaq = async (id: string) => {
+  // find faq
+  const faq = await prisma.faq.findUnique({
+    where: { id },
+  });
+  if (!faq) {
+    throw new ApiError(httpStatus.NOT_FOUND, "Faq not found");
+  }
+
   await prisma.faq.delete({ where: { id } });
 };
 
