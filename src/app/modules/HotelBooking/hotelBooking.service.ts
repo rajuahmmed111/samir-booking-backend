@@ -165,6 +165,7 @@ const getAllHotelBookings = async (
         select: {
           id: true,
           fullName: true,
+          profileImage: true,
         },
       },
     },
