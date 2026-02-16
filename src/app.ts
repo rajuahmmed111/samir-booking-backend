@@ -42,7 +42,7 @@ export const corsOptions = {
 //   }),
 // );
 
-// Middleware setup
+// middleware setup
 app.use(cors(corsOptions));
 app.use(cookieParser());
 
@@ -61,7 +61,7 @@ app.use(
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static("public"));
 
-// Route handler for the root endpoint
+// route handler for the root endpoint
 app.get("/", (req: Request, res: Response) => {
   res.send({
     message: "How's Project API",
@@ -71,13 +71,13 @@ app.get("/", (req: Request, res: Response) => {
 // app.use("/uploads", express.static(path.join("/var/www/uploads")));
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads"))); // Serve static files from the "uploads" directory
 
-// Setup API routes
+// setup API routes
 app.use("/api/v1", router);
 
-// Error handling middleware
+// error handling middleware
 app.use(GlobalErrorHandler);
 
-// 404 Not Found handler
+// 404 not found handler
 app.use((req: Request, res: Response, next: NextFunction) => {
   res.status(httpStatus.NOT_FOUND).json({
     success: false,
