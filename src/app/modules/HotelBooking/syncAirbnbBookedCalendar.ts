@@ -27,39 +27,58 @@ export const syncAirbnbBookedCalendar = async () => {
       for (const event of Object.values(events)) {
         if (event.type !== "VEVENT") continue;
 
+        // skip invalid dates
+        if (!event.start || !event.end) continue;
+
         // default values for missing fields
         const bookedFromDate = event.start.toISOString().split("T")[0];
         const bookedToDate = event.end.toISOString().split("T")[0];
 
-        // Airbnb iCal does not provide price or guest count
-        // so we set safe defaults
-        const personOfGuests = 1;
-        const totalPrice = 0;
+        // loop prevention:
+        // only accept real Airbnb reservation events
+        if (
+          !event.uid ||
+          !event.uid.includes("@airbnb.com") ||
+          !event.summary ||
+          !event.summary.toLowerCase().includes("reserved")
+        ) {
+          continue;
+        }
 
-        // upsert booking in DB
-        await prisma.hotel_Booking.upsert({
+        // check if booking already exist
+        const existingBooking = await prisma.hotel_Booking.findUnique({
           where: {
             externalBookingId: event.uid,
           },
-          update: {
-            bookedFromDate,
-            bookedToDate,
-            bookingStatus: BookingStatus.CONFIRMED,
-            totalPrice,
-            personOfGuests,
-          },
-          create: {
-            hotelId: hotel.id,
-            partnerId: hotel.partnerId!,
-            externalBookingId: event.uid,
-            bookingStatus: BookingStatus.CONFIRMED,
-            bookingSource: BookingSource.AIRBNB,
-            bookedFromDate,
-            bookedToDate,
-            personOfGuests,
-            totalPrice,
-          },
         });
+
+        // handle cancellation
+        if (event.status === "CANCELLED" && existingBooking) {
+          await prisma.hotel_Booking.update({
+            where: { id: existingBooking.id },
+            data: {
+              bookingStatus: BookingStatus.CANCELLED,
+            },
+          });
+          continue;
+        }
+
+        // create new (airbnb) booking if not exists
+        if (!existingBooking) {
+          await prisma.hotel_Booking.create({
+            data: {
+              hotelId: hotel.id,
+              partnerId: hotel.partnerId!,
+              externalBookingId: event.uid,
+              bookingStatus: BookingStatus.CONFIRMED,
+              bookingSource: BookingSource.AIRBNB,
+              bookedFromDate,
+              bookedToDate,
+              personOfGuests: 1, // iCal does not provide guest count (but my website this field required)
+              totalPrice: 0, // iCal does not provide price (but my website this field required)
+            },
+          });
+        }
       }
     } catch (err) {
       console.error(`Failed to sync hotel ${hotel.id}:`, err);
