@@ -4,11 +4,18 @@ import prisma from "../../../shared/prisma";
 import { BookingSource, BookingStatus } from "@prisma/client";
 
 export const syncAirbnbBookedCalendar = async () => {
+  console.log("Airbnb calendar sync started...");
+
   //  get all hotels that should sync with Airbnb
   const hotels = await prisma.hotel.findMany({
     where: {
       syncWithAirbnb: true,
       airbnbIcalUrl: { not: null },
+    },
+    select: {
+      id: true,
+      partnerId: true,
+      airbnbIcalUrl: true,
     },
   });
 

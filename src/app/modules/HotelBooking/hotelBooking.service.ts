@@ -324,6 +324,13 @@ const getHotelBookingById = async (partnerId: string, bookingId: string) => {
           uploadPhotosOrVideos: true,
         },
       },
+      user: {
+        select: {
+          id: true,
+          fullName: true,
+          contactNumber: true,
+        },
+      },
     },
   });
   if (!booking) {
