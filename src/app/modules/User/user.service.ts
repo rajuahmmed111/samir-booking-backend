@@ -157,7 +157,7 @@ const verifyOtpAndCreateUser = async (email: string, otp: string) => {
   return updatedUser;
 };
 
-// get all users
+// get all users (but last i change this api . all users, property owners, service providers)
 const getAllUsers = async (
   params: IFilterRequest,
   options: IPaginationOptions,
@@ -169,10 +169,10 @@ const getAllUsers = async (
   const filters: Prisma.UserWhereInput[] = [];
 
   // Filter for active users and role USER only
-  filters.push({
-    role: UserRole.USER,
-    // status: UserStatus.ACTIVE,
-  });
+  // filters.push({
+  //   role: UserRole.USER,
+  //   status: UserStatus.ACTIVE,
+  // });
 
   // text search
   if (params?.searchTerm) {

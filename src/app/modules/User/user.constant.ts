@@ -3,6 +3,7 @@ export const filterField: string[] = [
   "fullName",
   "email",
   "contactNumber",
+  "role",
   "country",
   "status",
   "timeRange",

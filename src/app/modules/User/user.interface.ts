@@ -26,6 +26,7 @@ export type IFilterRequest = {
   fullName?: string | undefined;
   email?: string | undefined;
   contactNumber?: string | undefined;
+  role?: string | undefined;
   country?: string | undefined;
   status?: string | undefined;
   timeRange?: string | undefined;

@@ -52,7 +52,7 @@ const verifyOtpAndCreateUser = catchAsync(
   },
 );
 
-// get all users
+// get all users (but last i change this api . all users, property owners, service providers)
 const getAllUsers = catchAsync(async (req: Request, res: Response) => {
   const filter = pick(req.query, filterField);
   const options = pick(req.query, paginationFields);

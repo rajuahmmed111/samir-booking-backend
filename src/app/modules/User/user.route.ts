@@ -12,7 +12,7 @@ const router = express.Router();
 // get all admins
 router.get("/admins", auth(UserRole.SUPER_ADMIN), UserController.getAllAdmins);
 
-// get all users
+// get all users (but last i change this api . all users, property owners, service providers)
 router.get(
   "/",
   auth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
