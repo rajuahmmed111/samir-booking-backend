@@ -2,7 +2,7 @@ import httpStatus from "http-status";
 import ApiError from "../../../errors/ApiErrors";
 import prisma from "../../../shared/prisma";
 import { differenceInDays, parse, startOfDay } from "date-fns";
-import { BookingStatus, PaymentStatus } from "@prisma/client";
+import { BookingStatus } from "@prisma/client";
 import { IHotelBookingData } from "./hotelBooking.interface";
 import { uploadFile } from "../../../helpars/fileUploader";
 import { IPaginationOptions } from "../../../interfaces/paginations";
@@ -191,7 +191,7 @@ const getAllHotelBookings = async (
           createdAt: true,
           updatedAt: true,
           partnerId: true,
-          review:true
+          review: true,
         },
       },
       payment: true,
