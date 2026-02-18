@@ -129,6 +129,14 @@ const createServiceProvider = async (
     status: UserStatus.INACTIVE,
   };
 
+  // Handle location field - map to address if provided
+  if (payload.location && !payload.address) {
+    userData.address = payload.location;
+    delete userData.location;
+  } else if (payload.location) {
+    delete userData.location;
+  }
+
   // create user
   const user = await prisma.user.create({
     data: userData,
