@@ -153,43 +153,22 @@ model User {
   updatedAt DateTime @updatedAt
 
   // relationships
-  payment               Payment[]
-  notifications         Notifications[]
-  hotel                 Hotel[]
-  review                Review[]
-  hotel_bookings        Hotel_Booking[]
-  favorite              Favorite[]
-  sender                Channel[]              @relation("ChannelPerson1")
-  receiver              Channel[]              @relation("ChannelPerson2")
-  messages              Message[]              @relation("sentMessages")
-  support               Support[]
-  subscriptions         SubscriptionPlan[]
-  purchaseSubscription  Purchase_subscription?
-  services              Service[]
-  serviceBookings       Service_booking[]
-  showUserInfos         ShowUserInfo[]
-  providerShowUserInfos ShowUserInfo[]         @relation("ProviderShowUserInfos")
-  ownerShowUserInfos    ShowUserInfo[]         @relation("OwnerShowUserInfos")
+  payment              Payment[]
+  notifications        Notifications[]
+  hotel                Hotel[]
+  review               Review[]
+  hotel_bookings       Hotel_Booking[]
+  favorite             Favorite[]
+  sender               Channel[]              @relation("ChannelPerson1")
+  receiver             Channel[]              @relation("ChannelPerson2")
+  messages             Message[]              @relation("sentMessages")
+  support              Support[]
+  subscriptions        SubscriptionPlan[]
+  purchaseSubscription Purchase_subscription?
+  services             Service[]
+  serviceBookings      Service_booking[]
 
   @@map("users")
-}
-
-model ShowUserInfo {
-  id     String  @id @default(auto()) @map("_id") @db.ObjectId
-  isShow Boolean @default(false)
-
-  // relationships
-  providerId      String @db.ObjectId
-  provider        User   @relation("ProviderShowUserInfos", fields: [providerId], references: [id])
-  propertyOwnerId String @db.ObjectId
-  propertyOwner   User   @relation("OwnerShowUserInfos", fields: [propertyOwnerId], references: [id])
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  user      User?    @relation(fields: [userId], references: [id])
-  userId    String?  @db.ObjectId
-
-  @@map("show_user_infos")
 }
 
 model Admin {
