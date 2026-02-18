@@ -88,10 +88,10 @@ const getAllServiceProvidersForPropertyOwner = async (
 
   filters.push({
     role: UserRole.SERVICE_PROVIDER,
-    // status: UserStatus.ACTIVE,
+    status: UserStatus.ACTIVE,
   });
 
-  // Add service type filter if provided
+  // service type filter if provided
   if (serviceType) {
     filters.push({
       services: {
@@ -105,6 +105,7 @@ const getAllServiceProvidersForPropertyOwner = async (
     });
   }
 
+  // search filter if provided
   if (params?.searchTerm) {
     filters.push({
       OR: searchableFields.map((field) => ({
@@ -154,6 +155,25 @@ const getAllServiceProvidersForPropertyOwner = async (
     },
   });
 
+  // Calculate average service rating for each provider
+  const resultWithAverageRating = result.map((user) => {
+    const ratings = user.services
+      .map((service) => service.serviceRating)
+      .filter((rating) => rating !== null)
+      .map((rating) => parseFloat(rating as string))
+      .filter((rating) => !isNaN(rating));
+
+    const averageRating =
+      ratings.length > 0
+        ? ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length
+        : null;
+
+    return {
+      ...user,
+      averageServiceRating: averageRating,
+    };
+  });
+
   const total = await prisma.user.count({ where });
 
   return {
@@ -162,7 +182,7 @@ const getAllServiceProvidersForPropertyOwner = async (
       limit,
       total,
     },
-    data: result,
+    data: resultWithAverageRating,
   };
 };
 

@@ -28,6 +28,7 @@ export type SafeUserWithShowUserInfo = {
   country: string | null;
   createdAt: Date;
   updatedAt: Date;
+  averageServiceRating?: number | null;
   services?: {
     id: string;
     serviceType: string;
