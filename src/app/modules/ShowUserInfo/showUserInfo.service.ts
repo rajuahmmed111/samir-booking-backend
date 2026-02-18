@@ -4,11 +4,13 @@ import httpStatus from "http-status";
 import { Prisma, UserRole, UserStatus } from "@prisma/client";
 import {
   IShowUserInfoFilterRequest,
+  IUserFilterRequest,
   SafeUserWithShowUserInfo,
 } from "./showUserInfo.interface";
 import { IPaginationOptions } from "../../../interfaces/paginations";
 import { paginationHelpers } from "../../../helpars/paginationHelper";
 import { IGenericResponse } from "../../../interfaces/common";
+import { searchableFields } from "./showUserInfo.constant";
 
 // create show user info for property owner by providerId
 const createShowUserInfo = async (
@@ -76,14 +78,46 @@ const updateShowUserInfo = async (id: string) => {
 
 // get all service provider for property owner
 const getAllServiceProvidersForPropertyOwner = async (
-  propertyOwnerId: string,
+  params: IUserFilterRequest,
   options: IPaginationOptions,
 ): Promise<IGenericResponse<SafeUserWithShowUserInfo[]>> => {
+  const { searchTerm, serviceType, ...filterData } = params;
   const { limit, page, skip } = paginationHelpers.calculatedPagination(options);
 
-  const where: Prisma.UserWhereInput = {
+  const filters: Prisma.UserWhereInput[] = [];
+
+  filters.push({
     role: UserRole.SERVICE_PROVIDER,
-    status: UserStatus.ACTIVE,
+    // status: UserStatus.ACTIVE,
+  });
+
+  // Add service type filter if provided
+  if (serviceType) {
+    filters.push({
+      services: {
+        some: {
+          serviceType: {
+            contains: serviceType,
+            mode: "insensitive",
+          },
+        },
+      },
+    });
+  }
+
+  if (params?.searchTerm) {
+    filters.push({
+      OR: searchableFields.map((field) => ({
+        [field]: {
+          contains: params.searchTerm,
+          mode: "insensitive",
+        },
+      })),
+    });
+  }
+
+  const where: Prisma.UserWhereInput = {
+    AND: filters,
   };
 
   const result = await prisma.user.findMany({
@@ -101,25 +135,18 @@ const getAllServiceProvidersForPropertyOwner = async (
     select: {
       id: true,
       fullName: true,
-      email: true,
       profileImage: true,
       passportOrNID: true,
       contactNumber: true,
       address: true,
       country: true,
-      role: true,
-      status: true,
       createdAt: true,
       updatedAt: true,
-      providerShowUserInfos: {
-        where: {
-          propertyOwnerId: propertyOwnerId,
-        },
+      services: {
         select: {
           id: true,
-          isShow: true,
-          propertyOwnerId: true,
-          providerId: true,
+          serviceType: true,
+          serviceRating: true,
           createdAt: true,
           updatedAt: true,
         },
@@ -127,34 +154,15 @@ const getAllServiceProvidersForPropertyOwner = async (
     },
   });
 
-  const usersWithShowUserInfo = result.map((user) => ({
-    id: user.id,
-    fullName: user.fullName,
-    email: user.email,
-    profileImage: user.profileImage,
-    passportOrNID: user.passportOrNID,
-    contactNumber: user.contactNumber,
-    address: user.address,
-    country: user.country,
-    role: user.role,
-    status: user.status,
-    createdAt: user.createdAt,
-    updatedAt: user.updatedAt,
-    showUserInfo:
-      user.providerShowUserInfos.length > 0
-        ? user.providerShowUserInfos[0]
-        : null,
-  }));
-
   const total = await prisma.user.count({ where });
 
   return {
     meta: {
-      total,
       page,
       limit,
+      total,
     },
-    data: usersWithShowUserInfo,
+    data: result,
   };
 };
 

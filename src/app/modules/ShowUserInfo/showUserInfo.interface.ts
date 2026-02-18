@@ -1,8 +1,12 @@
-import { UserRole, UserStatus } from "@prisma/client";
-
 export type IShowUserInfoFilterRequest = {
   searchTerm?: string | undefined;
   isShow?: boolean | undefined;
+};
+
+export type IUserFilterRequest = {
+  searchTerm?: string | undefined;
+  fullName?: string | undefined;
+  serviceType?: string | undefined;
 };
 
 export interface ICreateShowUserInfo {
@@ -17,23 +21,18 @@ export interface IUpdateShowUserInfo {
 export type SafeUserWithShowUserInfo = {
   id: string;
   fullName: string | null;
-  email: string;
   profileImage: string;
   passportOrNID?: string[];
   contactNumber: string | null;
   address: string | null;
   country: string | null;
-  role: UserRole;
-  fcmToken?: string | null;
-  status: UserStatus;
   createdAt: Date;
   updatedAt: Date;
-  showUserInfo?: {
+  services?: {
     id: string;
-    isShow: boolean;
-    propertyOwnerId: string;
-    providerId: string;
+    serviceType: string;
+    serviceRating: string | null;
     createdAt: Date;
     updatedAt: Date;
-  } | null;
+  }[];
 };

@@ -5,6 +5,7 @@ import { ShowUserInfoService } from "./showUserInfo.service";
 import { Request, Response } from "express";
 import { pick } from "../../../shared/pick";
 import { paginationFields } from "../../../constants/pagination";
+import { filterField } from "./showUserInfo.constant";
 
 // create show user info for property owner by providerId
 const createShowUserInfo = catchAsync(async (req: Request, res: Response) => {
@@ -40,9 +41,11 @@ const updateShowUserInfo = catchAsync(async (req: Request, res: Response) => {
 const getAllServiceProvidersForPropertyOwner = catchAsync(
   async (req: Request, res: Response) => {
     const options = pick(req.query, paginationFields);
+    const filter = pick(req.query, filterField);
+
     const result =
       await ShowUserInfoService.getAllServiceProvidersForPropertyOwner(
-        req.user?.id,
+        filter,
         options,
       );
 
