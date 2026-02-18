@@ -88,7 +88,7 @@ router.post(
   UserController.createRoleSupperAdmin,
 );
 
-// verify user
+// verify user by otp
 router.post("/verify-user", UserController.verifyOtpAndCreateUser);
 
 // update  user status access admin (active to inactive)
