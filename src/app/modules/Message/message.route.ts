@@ -16,6 +16,8 @@ router.post(
   messageControllers.sendMessage
 );
 
+// ------------------------ reported message to admin group ------------------------
+
 // send message to admin group for resolve reports issue
 router.post(
    "/send-report-message/:reportId",
@@ -24,6 +26,15 @@ router.post(
   parseBodyData,
   messageControllers.adminSendReportMessage
 );
+
+// get all reported group channels for admin
+router.get(
+  "/reported-channels",
+  auth(UserRole.SUPER_ADMIN, UserRole.ADMIN),
+  messageControllers.getReportedChannels
+);
+
+// ------------------------ reported message to admin group ------------------------
 
 router.get("/channels", auth(), messageControllers.getUserChannels);
 

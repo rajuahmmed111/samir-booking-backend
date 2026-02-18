@@ -45,6 +45,8 @@ const sendMessage = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+// ------------------------ reported message to admin group ------------------------
+
 // send message to admin group for resolve reports issue
 const adminSendReportMessage = catchAsync(
   async (req: Request, res: Response) => {
@@ -82,6 +84,21 @@ const adminSendReportMessage = catchAsync(
     });
   },
 );
+
+// get all reported group channels for admin
+const getReportedChannels = catchAsync(async (req: Request, res: Response) => {
+
+  const result = await MessageServices.getReportedChannels();
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Reported channels retrieved successfully",
+    data: result,
+  });
+});
+
+// ------------------------ reported message to admin group ------------------------
 
 // get my channel by my id
 const getMyChannelByMyId = catchAsync(async (req: Request, res: Response) => {
@@ -171,6 +188,7 @@ const getSingleChannel = catchAsync(async (req: Request, res: Response) => {
 export const messageControllers = {
   sendMessage,
   adminSendReportMessage,
+  getReportedChannels,
   getMyChannel,
   getMyChannelByMyId,
   getMessagesFromDB,

@@ -94,6 +94,8 @@ const sendMessage = async (
   return allMessages;
 };
 
+// ------------------------ reported message to admin group ------------------------
+
 // send message to admin group for resolve reports issue
 const adminSendReportMessage = async (
   senderId: string,
@@ -156,6 +158,20 @@ const adminSendReportMessage = async (
 
   return newMessage;
 };
+
+// get all reported group channels for admin
+const getReportedChannels = async () => {
+  return await prisma.channel.findMany({
+    where: {
+      type: ChannelType.GROUP,
+    },
+    include: {
+      messages: true,
+    },
+  });
+};
+
+// ------------------------ reported message to admin group ------------------------
 
 // get my channel by my id
 const getMyChannelByMyId = async (userId: string) => {
@@ -542,6 +558,7 @@ const getSingleChannel = async (channelId: string) => {
 export const MessageServices = {
   sendMessage,
   adminSendReportMessage,
+  getReportedChannels,
   getMyChannel,
   getMyChannelByMyId,
   getMessagesFromDB,
