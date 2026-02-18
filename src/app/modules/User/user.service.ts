@@ -72,7 +72,7 @@ const createUser = async (
 // create SERVICE_PROVIDER (it's inactive, because it's not verified)
 const createServiceProvider = async (
   payload: any,
-  passportFiles?: Express.Multer.File[],
+  passportFiles: Express.Multer.File[],
   profileImageFile?: Express.Multer.File,
 ) => {
   // check if email exists
