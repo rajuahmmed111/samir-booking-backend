@@ -68,6 +68,18 @@ router.post(
   UserController.createUser,
 );
 
+// create SERVICE_PROVIDER (it's inactive, because it's not verified)
+router.post(
+  "/service-provider",
+  uploadFile.upload.fields([
+    { name: "profileImage", maxCount: 1 },
+    { name: "passportOrNID", maxCount: 10 },
+  ]),
+  parseBodyData,
+  validateRequest(userValidation.createUserZodSchema),
+  UserController.createServiceProvider,
+);
+
 // create role for supper admin
 router.post(
   "/add-role",

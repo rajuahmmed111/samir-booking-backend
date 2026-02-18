@@ -23,6 +23,30 @@ const createUser = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+// create SERVICE_PROVIDER (it's inactive, because it's not verified)
+const createServiceProvider = catchAsync(
+  async (req: Request, res: Response) => {
+    const userData = req.body;
+    const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+    const passportFiles = files?.passportOrNID || [];
+    const profileImageFile = files?.profileImage?.[0];
+
+    const result = await UserService.createServiceProvider(
+      userData,
+      passportFiles,
+      profileImageFile,
+    );
+
+    sendResponse(res, {
+      statusCode: httpStatus.CREATED,
+      success: true,
+      message:
+        "Service Provider created successfully, but it's inactive, because it's not verified",
+      data: result,
+    });
+  },
+);
+
 // create role for supper admin
 const createRoleSupperAdmin = catchAsync(
   async (req: Request, res: Response) => {
@@ -79,7 +103,6 @@ const getAllPropertyOwners = catchAsync(async (req: Request, res: Response) => {
     data: result,
   });
 });
-
 
 // get all blocked users
 const getAllBlockedUsers = catchAsync(async (req: Request, res: Response) => {
@@ -234,6 +257,7 @@ const deleteUserAccessAdmin = catchAsync(
 
 export const UserController = {
   createUser,
+  createServiceProvider,
   createRoleSupperAdmin,
   verifyOtpAndCreateUser,
   getAllUsers,

@@ -48,20 +48,86 @@ const createUser = async (
     }
   }
 
-  // handle location field - map to address if provided
   const userData = {
     ...payload,
     password: hashedPassword,
     passportOrNID: passportOrNIDUrls,
   };
 
-  // If location is provided, use it as address, otherwise keep address field
   if (payload.location && !payload.address) {
     userData.address = payload.location;
-    delete userData.location; // Remove location field as it doesn't exist in schema
+    delete userData.location;
   } else if (payload.location) {
-    delete userData.location; // Remove location field to avoid Prisma error
+    delete userData.location;
   }
+
+  // create user
+  const user = await prisma.user.create({
+    data: userData,
+  });
+
+  return user;
+};
+
+// create SERVICE_PROVIDER (it's inactive, because it's not verified)
+const createServiceProvider = async (
+  payload: any,
+  passportFiles?: Express.Multer.File[],
+  profileImageFile?: Express.Multer.File,
+) => {
+  // check if email exists
+  const existingUser = await prisma.user.findUnique({
+    where: { email: payload.email },
+  });
+
+  if (existingUser) {
+    throw new ApiError(httpStatus.BAD_REQUEST, "User already exists");
+  }
+
+  // validate required files
+  if (!profileImageFile) {
+    throw new ApiError(httpStatus.BAD_REQUEST, "Profile image is required");
+  }
+
+  if (!passportFiles || passportFiles.length === 0) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      "Passport/NID documents are required",
+    );
+  }
+
+  // hash password
+  const hashedPassword = await bcrypt.hash(payload.password, 12);
+
+  // upload passport/NID files to cloudinary
+  const passportOrNIDUrls: string[] = [];
+  if (passportFiles && passportFiles.length > 0) {
+    for (const file of passportFiles) {
+      const uploaded = await uploadFile.uploadToCloudinary(file);
+      if (uploaded?.secure_url) {
+        passportOrNIDUrls.push(uploaded.secure_url);
+      }
+    }
+  }
+
+  // upload profile image
+  let profileImageUrl = "";
+  if (profileImageFile) {
+    const uploadedProfile =
+      await uploadFile.uploadToCloudinary(profileImageFile);
+    if (uploadedProfile?.secure_url) {
+      profileImageUrl = uploadedProfile.secure_url;
+    }
+  }
+
+  const userData = {
+    ...payload,
+    password: hashedPassword,
+    passportOrNID: passportOrNIDUrls,
+    profileImage: profileImageUrl,
+    role: UserRole.SERVICE_PROVIDER,
+    status: UserStatus.INACTIVE,
+  };
 
   // create user
   const user = await prisma.user.create({
@@ -357,8 +423,6 @@ const getAllPropertyOwners = async (
     data: usersWithServiceFee,
   };
 };
-
-
 
 // get all blocked users
 const getAllBlockedUsers = async (
@@ -727,6 +791,7 @@ const deleteUserAccessAdmin = async (userId: string) => {
 
 export const UserService = {
   createUser,
+  createServiceProvider,
   createRoleSupperAdmin,
   verifyOtpAndCreateUser,
   getAllPropertyOwners,
