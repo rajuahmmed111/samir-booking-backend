@@ -16,6 +16,15 @@ router.post(
   messageControllers.sendMessage
 );
 
+// send message to admin group for resolve reports issue
+router.post(
+  "/send-admin-message",
+  auth(),
+  uploadFile.uploadMessageImages,
+  parseBodyData,
+  messageControllers.sendAdminGroupMessage
+);
+
 router.get("/channels", auth(), messageControllers.getUserChannels);
 
 // get my channel by my id

@@ -5,7 +5,6 @@ import { Prisma, UserRole, UserStatus } from "@prisma/client";
 import { IPaginationOptions } from "../../../interfaces/paginations";
 import { paginationHelpers } from "../../../helpars/paginationHelper";
 // import channelClients from '../../../server';
-import { ObjectId } from "mongodb";
 import { IMessageFilterRequest } from "./message.interface";
 import { searchableFields } from "./message.constant";
 
@@ -93,6 +92,54 @@ const sendMessage = async (
   // });
 
   return allMessages;
+};
+
+// send message to admin group for resolve reports issue
+const sendAdminGroupMessage = async (
+  senderId: string,
+  message: string,
+  imageUrls: string[]
+) => {
+  const user = await prisma.user.findUnique({
+    where: { id: senderId },
+  });
+
+  if (!user || !["ADMIN", "SUPER_ADMIN"].includes(user.role)) {
+    throw new ApiError(httpStatus.FORBIDDEN, "Forbidden");
+  }
+
+  let channel = await prisma.channel.findUnique({
+    where: { channelName: "ADMIN_CHANNEL_NAME" },
+  });
+
+  if (!channel) {
+    channel = await prisma.channel.create({
+      data: {
+        channelName: "ADMIN_CHANNEL_NAME",
+        type: "GROUP",
+      },
+    });
+  }
+
+  const newMessage = await prisma.message.create({
+    data: {
+      message,
+      senderId,
+      channelName: "ADMIN_CHANNEL_NAME",
+      files: imageUrls,
+    },
+    include: {
+      sender: {
+        select: {
+          id: true,
+          fullName: true,
+          profileImage: true,
+        },
+      },
+    },
+  });
+
+  return newMessage;
 };
 
 // get my channel by my id
@@ -479,6 +526,7 @@ const getSingleChannel = async (channelId: string) => {
 
 export const MessageServices = {
   sendMessage,
+  sendAdminGroupMessage,
   getMyChannel,
   getMyChannelByMyId,
   getMessagesFromDB,

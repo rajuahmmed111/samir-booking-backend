@@ -550,11 +550,17 @@ model Privacy_Policy {
   @@map("privacy_policies")
 }
 
+enum ChannelType {
+  DIRECT
+  GROUP
+}
+
 model Channel {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  channelName String   @unique
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id          String      @id @default(auto()) @map("_id") @db.ObjectId
+  channelName String      @unique
+  type        ChannelType @default(DIRECT)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
 
   //Relations
   person1Id String?   @db.ObjectId

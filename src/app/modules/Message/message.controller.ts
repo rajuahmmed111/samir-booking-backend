@@ -25,7 +25,7 @@ const sendMessage = catchAsync(async (req: Request, res: Response) => {
       files.map(async (file) => {
         const uploaded = await uploadFile.uploadToCloudinary(file);
         return uploaded?.secure_url; // cloudinary URL
-      })
+      }),
     );
     imageUrls = uploadResults.filter((url): url is string => !!url);
   }
@@ -34,7 +34,7 @@ const sendMessage = catchAsync(async (req: Request, res: Response) => {
     senderId!,
     receiverId,
     message,
-    imageUrls
+    imageUrls,
   );
 
   sendResponse(res, {
@@ -44,6 +44,42 @@ const sendMessage = catchAsync(async (req: Request, res: Response) => {
     data: result,
   });
 });
+
+// send message to admin group for resolve reports issue
+const sendAdminGroupMessage = catchAsync(
+  async (req: Request, res: Response) => {
+    const senderId = req.user?.id;
+    const { message } = req.body;
+
+    const files = req.files as Express.Multer.File[] | undefined;
+
+    let imageUrls: string[] = [];
+
+    if (files?.length) {
+      const uploadResults = await Promise.all(
+        files.map(async (file) => {
+          const uploaded = await uploadFile.uploadToCloudinary(file);
+          return uploaded?.secure_url;
+        }),
+      );
+
+      imageUrls = uploadResults.filter((url): url is string => !!url);
+    }
+
+    const result = await MessageServices.sendAdminGroupMessage(
+      senderId!,
+      message,
+      imageUrls,
+    );
+
+    sendResponse(res, {
+      statusCode: httpStatus.CREATED,
+      success: true,
+      message: "Admin message sent successfully",
+      data: result,
+    });
+  },
+);
 
 // get my channel by my id
 const getMyChannelByMyId = catchAsync(async (req: Request, res: Response) => {
@@ -56,8 +92,6 @@ const getMyChannelByMyId = catchAsync(async (req: Request, res: Response) => {
     data: result,
   });
 });
-
-
 
 // get my channel through my id and receiver id
 const getMyChannel = catchAsync(async (req: Request, res: Response) => {
@@ -78,7 +112,7 @@ const getMessagesFromDB = catchAsync(async (req: Request, res: Response) => {
   const options = pick(req.query, paginationFields);
   const messages = await MessageServices.getMessagesFromDB(
     channelName,
-    options
+    options,
   );
 
   sendResponse(res, {
@@ -94,7 +128,11 @@ const getUserChannels = catchAsync(async (req: Request, res: Response) => {
   const filter = pick(req.query, filterField);
   const options = pick(req.query, paginationFields);
 
-  const channels = await MessageServices.getUserChannels(userId, filter, options);
+  const channels = await MessageServices.getUserChannels(
+    userId,
+    filter,
+    options,
+  );
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -130,6 +168,7 @@ const getSingleChannel = catchAsync(async (req: Request, res: Response) => {
 
 export const messageControllers = {
   sendMessage,
+  sendAdminGroupMessage,
   getMyChannel,
   getMyChannelByMyId,
   getMessagesFromDB,
