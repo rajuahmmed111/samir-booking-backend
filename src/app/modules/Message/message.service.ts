@@ -1,7 +1,7 @@
 import httpStatus from "http-status";
 import ApiError from "../../../errors/ApiErrors";
 import prisma from "../../../shared/prisma";
-import { Prisma, UserRole, UserStatus } from "@prisma/client";
+import { ChannelType, Prisma, UserRole, UserStatus } from "@prisma/client";
 import { IPaginationOptions } from "../../../interfaces/paginations";
 import { paginationHelpers } from "../../../helpars/paginationHelper";
 // import channelClients from '../../../server';
@@ -13,7 +13,7 @@ const sendMessage = async (
   senderId: string,
   receiverId: string,
   message: string,
-  imageUrls: string[]
+  imageUrls: string[],
 ) => {
   const [person1, person2] = [senderId, receiverId].sort();
   const channelName = person1 + person2;
@@ -61,7 +61,7 @@ const sendMessage = async (
       });
 
       return [channel, newMessage];
-    }
+    },
   );
 
   //  all messages channel for the sender and receiver
@@ -95,11 +95,22 @@ const sendMessage = async (
 };
 
 // send message to admin group for resolve reports issue
-const sendAdminGroupMessage = async (
+const adminSendReportMessage = async (
   senderId: string,
+  reportId: string,
   message: string,
-  imageUrls: string[]
+  imageUrls: string[],
 ) => {
+  // check report exists
+  const report = await prisma.support.findUnique({
+    where: { id: reportId },
+  });
+
+  if (!report) {
+    throw new ApiError(httpStatus.NOT_FOUND, "Report not found");
+  }
+
+  // check permission
   const user = await prisma.user.findUnique({
     where: { id: senderId },
   });
@@ -108,24 +119,28 @@ const sendAdminGroupMessage = async (
     throw new ApiError(httpStatus.FORBIDDEN, "Forbidden");
   }
 
+  // find or create channel (channelName = reportId)
   let channel = await prisma.channel.findUnique({
-    where: { channelName: "ADMIN_CHANNEL_NAME" },
+    where: { channelName: reportId },
   });
 
   if (!channel) {
     channel = await prisma.channel.create({
       data: {
-        channelName: "ADMIN_CHANNEL_NAME",
-        type: "GROUP",
+        channelName: reportId,
+        type: ChannelType.GROUP,
+        person1Id: senderId, // admin optional,
+        person2Id: report.userId, // report owner
       },
     });
   }
 
+  //  create message
   const newMessage = await prisma.message.create({
     data: {
       message,
       senderId,
-      channelName: "ADMIN_CHANNEL_NAME",
+      channelName: reportId,
       files: imageUrls,
     },
     include: {
@@ -199,7 +214,7 @@ const getMyChannelByMyId = async (userId: string) => {
         channel.person2 &&
         channel.person2.status === UserStatus.ACTIVE &&
         ([UserRole.USER, UserRole.PROPERTY_OWNER] as UserRole[]).includes(
-          channel.person2.role
+          channel.person2.role,
         )
           ? channel.person2
           : null;
@@ -208,7 +223,7 @@ const getMyChannelByMyId = async (userId: string) => {
         channel.person1 &&
         channel.person1.status === UserStatus.ACTIVE &&
         ([UserRole.USER, UserRole.PROPERTY_OWNER] as UserRole[]).includes(
-          channel.person1.role
+          channel.person1.role,
         )
           ? channel.person1
           : null;
@@ -249,7 +264,7 @@ const getMyChannel = async (userId: string, receiverId: string) => {
 // get all messages
 const getMessagesFromDB = async (
   channelName: string,
-  options: IPaginationOptions
+  options: IPaginationOptions,
 ) => {
   const { limit, page, skip } = paginationHelpers.calculatedPagination(options);
 
@@ -296,7 +311,7 @@ const getMessagesFromDB = async (
 const getUserChannels = async (
   userId: string,
   params: IMessageFilterRequest,
-  options: IPaginationOptions
+  options: IPaginationOptions,
 ) => {
   const { searchTerm } = params;
   const { limit, page, skip } = paginationHelpers.calculatedPagination(options);
@@ -526,7 +541,7 @@ const getSingleChannel = async (channelId: string) => {
 
 export const MessageServices = {
   sendMessage,
-  sendAdminGroupMessage,
+  adminSendReportMessage,
   getMyChannel,
   getMyChannelByMyId,
   getMessagesFromDB,

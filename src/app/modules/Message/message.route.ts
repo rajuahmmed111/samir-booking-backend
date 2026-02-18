@@ -18,11 +18,11 @@ router.post(
 
 // send message to admin group for resolve reports issue
 router.post(
-  "/send-admin-message",
+   "/send-report-message/:reportId",
   auth(),
   uploadFile.uploadMessageImages,
   parseBodyData,
-  messageControllers.sendAdminGroupMessage
+  messageControllers.adminSendReportMessage
 );
 
 router.get("/channels", auth(), messageControllers.getUserChannels);

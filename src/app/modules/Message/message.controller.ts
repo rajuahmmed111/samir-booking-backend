@@ -46,9 +46,10 @@ const sendMessage = catchAsync(async (req: Request, res: Response) => {
 });
 
 // send message to admin group for resolve reports issue
-const sendAdminGroupMessage = catchAsync(
+const adminSendReportMessage = catchAsync(
   async (req: Request, res: Response) => {
     const senderId = req.user?.id;
+    const reportId = req.params.reportId;
     const { message } = req.body;
 
     const files = req.files as Express.Multer.File[] | undefined;
@@ -66,8 +67,9 @@ const sendAdminGroupMessage = catchAsync(
       imageUrls = uploadResults.filter((url): url is string => !!url);
     }
 
-    const result = await MessageServices.sendAdminGroupMessage(
+    const result = await MessageServices.adminSendReportMessage(
       senderId!,
+      reportId,
       message,
       imageUrls,
     );
@@ -168,7 +170,7 @@ const getSingleChannel = catchAsync(async (req: Request, res: Response) => {
 
 export const messageControllers = {
   sendMessage,
-  sendAdminGroupMessage,
+  adminSendReportMessage,
   getMyChannel,
   getMyChannelByMyId,
   getMessagesFromDB,
