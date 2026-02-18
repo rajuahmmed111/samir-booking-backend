@@ -160,15 +160,70 @@ const adminSendReportMessage = async (
 };
 
 // get all reported group channels for admin
-const getReportedChannels = async () => {
-  return await prisma.channel.findMany({
-    where: {
-      type: ChannelType.GROUP,
-    },
+const getReportedChannels = async (
+  params: IMessageFilterRequest,
+  options: IPaginationOptions,
+) => {
+  const { searchTerm } = params;
+  const { limit, page, skip } = paginationHelpers.calculatedPagination(options);
+
+  const filters: Prisma.ChannelWhereInput[] = [];
+
+  // type group
+  filters.push({ type: ChannelType.GROUP });
+
+  // search reported user by name, email
+  if (searchTerm) {
+    filters.push({
+      person2: {
+        OR: [
+          { fullName: { contains: searchTerm, mode: "insensitive" } },
+          { email: { contains: searchTerm, mode: "insensitive" } },
+        ],
+      },
+    });
+  }
+
+  const where: Prisma.ChannelWhereInput = {
+    AND: filters,
+  };
+
+  const channels = await prisma.channel.findMany({
+    where,
+    skip,
+    take: limit,
+    orderBy:
+      options.sortBy && options.sortOrder
+        ? { [options.sortBy]: options.sortOrder }
+        : { createdAt: "desc" },
     include: {
-      messages: true,
+      person2: {
+        select: {
+          id: true,
+          fullName: true,
+          profileImage: true,
+        },
+      },
+      messages: {
+        orderBy: {
+          createdAt: "desc",
+        },
+        take: 1, // only last message
+      },
     },
   });
+
+  // total count for pagination
+  const total = await prisma.channel.count({ where });
+
+  return {
+    meta: {
+      total,
+      page,
+      limit,
+    },
+    data: channels,
+  };
 };
 
 // ------------------------ reported message to admin group ------------------------

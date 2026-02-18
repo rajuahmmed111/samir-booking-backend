@@ -87,8 +87,10 @@ const adminSendReportMessage = catchAsync(
 
 // get all reported group channels for admin
 const getReportedChannels = catchAsync(async (req: Request, res: Response) => {
+  const filter = pick(req.query, filterField);
+  const options = pick(req.query, paginationFields);
 
-  const result = await MessageServices.getReportedChannels();
+  const result = await MessageServices.getReportedChannels(filter, options);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
