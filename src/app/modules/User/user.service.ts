@@ -83,12 +83,10 @@ const createUser = async (
     data: { otp: randomOtp, otpExpiry },
   });
 
-   return {
-  message: "OTP sent to your email",
+  return {
+    message: "OTP sent to your email",
     email: user.email,
-   };
-
- 
+  };
 };
 
 // create SERVICE_PROVIDER (it's inactive, because it's not verified)
@@ -164,7 +162,27 @@ const createServiceProvider = async (
     data: userData,
   });
 
-  return user;
+  // generate OTP
+  const randomOtp = Math.floor(1000 + Math.random() * 9000).toString();
+  // 5 minutes
+  const otpExpiry = new Date(Date.now() + 5 * 60 * 1000);
+
+  // prepare email html
+  const html = createOtpEmailTemplate(randomOtp);
+
+  // send email
+  await emailSender("OTP Verification", user.email, html);
+
+  // update user with OTP + expiry
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { otp: randomOtp, otpExpiry },
+  });
+
+  return {
+    message: "OTP sent to your email",
+    email: user.email,
+  };
 };
 
 // create role for supper admin
