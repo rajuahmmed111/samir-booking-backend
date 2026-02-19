@@ -40,8 +40,7 @@ const createServiceProvider = catchAsync(
     sendResponse(res, {
       statusCode: httpStatus.CREATED,
       success: true,
-      message:
-        "Service Provider created successfully, but it's inactive, because it's not verified",
+      message: "OTP sent to email successfully",
       data: result,
     });
   },
