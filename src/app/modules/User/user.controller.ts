@@ -23,7 +23,7 @@ const createUser = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-// create SERVICE_PROVIDER (it's inactive, because it's not verified
+// create SERVICE_PROVIDER (it's inactive, because it's not verified)
 const createServiceProvider = catchAsync(
   async (req: Request, res: Response) => {
     const userData = req.body;
