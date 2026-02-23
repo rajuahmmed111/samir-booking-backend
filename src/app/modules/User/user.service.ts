@@ -393,7 +393,7 @@ const getAllInactiveServiceProviders = async (
       address: true,
       country: true,
       role: true,
-      fcmToken: true,
+      passportOrNID: true,
       status: true,
       createdAt: true,
       updatedAt: true,
