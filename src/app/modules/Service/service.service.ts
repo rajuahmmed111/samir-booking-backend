@@ -320,6 +320,7 @@ const getAllServices = async (
           slots: true,
         },
       },
+      reviews: true,
     },
   });
 
