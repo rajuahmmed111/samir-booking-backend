@@ -320,7 +320,17 @@ const getAllServices = async (
           slots: true,
         },
       },
-      reviews: true,
+      reviews: {
+        include: {
+          user: {
+            select: {
+              id: true,
+              fullName: true,
+              profileImage: true,
+            },
+          },
+        },
+      },
     },
   });
 
