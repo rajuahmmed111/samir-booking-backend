@@ -50,6 +50,7 @@ router.post(
   uploadFile.upload.fields([
     { name: "uploadPhotosOrVideos", maxCount: 5 },
     { name: "houseRules", maxCount: 5 },
+    { name: "subcategoryImage", maxCount: 10 },
   ]),
   parseBodyData,
   validateRequest(hotelValidation.createHotelSchema),
@@ -73,6 +74,7 @@ router.patch(
   uploadFile.upload.fields([
     { name: "uploadPhotosOrVideos", maxCount: 5 },
     { name: "houseRules", maxCount: 5 },
+    { name: "subcategoryImage", maxCount: 10 },
   ]),
   parseBodyData,
   HotelController.updateHotel,

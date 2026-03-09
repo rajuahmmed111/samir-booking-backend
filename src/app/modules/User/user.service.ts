@@ -1,4 +1,4 @@
-import * as bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import httpStatus from "http-status";
 import ApiError from "../../../errors/ApiErrors";
 import prisma from "../../../shared/prisma";
@@ -330,11 +330,11 @@ const getAllUsers = async (
     orderBy:
       options.sortBy && options.sortOrder
         ? {
-            [options.sortBy]: options.sortOrder,
-          }
+          [options.sortBy]: options.sortOrder,
+        }
         : {
-            createdAt: "desc",
-          },
+          createdAt: "desc",
+        },
     select: {
       id: true,
       fullName: true,
@@ -379,11 +379,11 @@ const getAllInactiveServiceProviders = async (
     orderBy:
       options.sortBy && options.sortOrder
         ? {
-            [options.sortBy]: options.sortOrder,
-          }
+          [options.sortBy]: options.sortOrder,
+        }
         : {
-            createdAt: "desc",
-          },
+          createdAt: "desc",
+        },
     select: {
       id: true,
       fullName: true,
@@ -476,11 +476,11 @@ const getAllPropertyOwners = async (
     orderBy:
       options.sortBy && options.sortOrder
         ? {
-            [options.sortBy]: options.sortOrder,
-          }
+          [options.sortBy]: options.sortOrder,
+        }
         : {
-            createdAt: "desc",
-          },
+          createdAt: "desc",
+        },
     select: {
       id: true,
       fullName: true,
@@ -584,11 +584,11 @@ const getAllBlockedUsers = async (
     orderBy:
       options.sortBy && options.sortOrder
         ? {
-            [options.sortBy]: options.sortOrder,
-          }
+          [options.sortBy]: options.sortOrder,
+        }
         : {
-            createdAt: "desc",
-          },
+          createdAt: "desc",
+        },
     select: {
       id: true,
       fullName: true,

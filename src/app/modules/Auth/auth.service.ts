@@ -1,5 +1,5 @@
 import { UserRole, UserStatus } from "@prisma/client";
-import * as bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import httpStatus from "http-status";
 import { JwtPayload, Secret } from "jsonwebtoken";
 import config from "../../../config";

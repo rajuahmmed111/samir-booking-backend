@@ -207,7 +207,7 @@ model Hotel {
   inventoryItems       InventoryItem[]
   houseRules           String // image
   addSecurityKeys      String?
-  addLocalTips         String? // todo
+  addLocalTips         LocalTip[]
   basePrice            Float
   customPrices         CustomPrice[]
   weeklyOffers         Float? // 10% off
@@ -323,6 +323,13 @@ model Traveler {
 type OfferedService {
   price           Float
   serviceTypeName String
+}
+
+type LocalTip {
+  category      String?
+  subcategory   String?
+  subcategoryImage String?
+  floor_details String?
 }
 
 model Service {

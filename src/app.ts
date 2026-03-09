@@ -64,7 +64,7 @@ app.use(express.static("public"));
 // route handler for the root endpoint
 app.get("/", (req: Request, res: Response) => {
   res.send({
-    message: "How's Project API",
+    message: "Welcome to Samir Booking API",
   });
 });
 

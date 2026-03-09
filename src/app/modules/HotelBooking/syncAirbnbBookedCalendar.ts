@@ -8,7 +8,7 @@ export const syncAirbnbBookedCalendar = async () => {
   const hotels = await prisma.hotel.findMany({
     where: {
       syncWithAirbnb: true,
-      airbnbIcalUrl: { not: null },
+      NOT: [{ airbnbIcalUrl: null }, { airbnbIcalUrl: "" }],
     },
     select: {
       id: true,
@@ -19,7 +19,9 @@ export const syncAirbnbBookedCalendar = async () => {
 
   for (const hotel of hotels) {
     try {
-      const response = await axios.get(hotel.airbnbIcalUrl!);
+      if (!hotel.airbnbIcalUrl) continue;
+
+      const response = await axios.get(hotel.airbnbIcalUrl);
       const events = ical.parseICS(response.data);
 
       for (const event of Object.values(events)) {
@@ -34,11 +36,13 @@ export const syncAirbnbBookedCalendar = async () => {
 
         // loop prevention:
         // only accept real Airbnb reservation events
+        const summary = typeof event.summary === "string" ? event.summary : (event.summary as any)?.val;
+
         if (
           !event.uid ||
           !event.uid.includes("@airbnb.com") ||
-          !event.summary ||
-          !event.summary.toLowerCase().includes("reserved")
+          !summary ||
+          !summary.toLowerCase().includes("reserved")
         ) {
           continue;
         }
