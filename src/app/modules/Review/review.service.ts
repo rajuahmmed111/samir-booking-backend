@@ -3,7 +3,7 @@ import prisma from "../../../shared/prisma";
 import ApiError from "../../../errors/ApiErrors";
 import httpStatus from "http-status";
 
-// create hotel reviews
+// create hotel review
 const createHotelReview = async (
   userId: string,
   hotelId: string,
