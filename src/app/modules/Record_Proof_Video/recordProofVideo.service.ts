@@ -3,7 +3,7 @@ import ApiError from "../../../errors/ApiErrors";
 import httpStatus from "http-status";
 import { uploadFile } from "../../../helpars/fileUploader";
 
-// create record proof video starting
+// create record proof video starting for every job
 const createRecordProofVideoStarting = async (
   bookingId: string,
   userId: string,
