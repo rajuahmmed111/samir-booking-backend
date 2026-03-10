@@ -45,7 +45,7 @@ const updateService = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-// get single service
+// get single service by id
 const getServiceById = catchAsync(async (req: Request, res: Response) => {
   const serviceId = req.params.serviceId;
   const result = await ServiceService.getServiceById(serviceId);
