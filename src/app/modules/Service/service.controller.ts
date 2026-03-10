@@ -24,7 +24,7 @@ const createService = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-// update service
+// update service by id
 const updateService = catchAsync(async (req: Request, res: Response) => {
   const files = req.files;
   const coverImageFile = !Array.isArray(files)
