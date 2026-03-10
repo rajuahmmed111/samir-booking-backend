@@ -71,7 +71,7 @@ const getAllServices = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-// get all my services
+// get all my services with filter and pagination
 const getMyServices = catchAsync(async (req: Request, res: Response) => {
   const providerId = req.user?.id;
   const filter = pick(req.query, filterField);
