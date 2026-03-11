@@ -159,7 +159,7 @@ const adminSendReportMessage = async (
   return newMessage;
 };
 
-// get all reported group channels for admin
+// get all reported group channels for admin need pagination
 const getReportedChannels = async (
   params: IMessageFilterRequest,
   options: IPaginationOptions,
