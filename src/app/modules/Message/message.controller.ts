@@ -47,7 +47,7 @@ const sendMessage = catchAsync(async (req: Request, res: Response) => {
 
 // ------------------------ reported message to admin group ------------------------
 
-// send message to admin group for resolve reports issue
+// send message to admin group for resolve reports issues
 const adminSendReportMessage = catchAsync(
   async (req: Request, res: Response) => {
     const senderId = req.user?.id;
