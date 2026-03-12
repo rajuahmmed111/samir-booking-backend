@@ -1,4 +1,4 @@
-// message filter request
+// message filter
 export type IMessageFilterRequest = {
   searchTerm?: string | undefined;
   fullName?: string | undefined;
