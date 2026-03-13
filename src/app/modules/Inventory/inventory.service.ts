@@ -32,6 +32,7 @@ const updateMultipleInventoryItems = async (
         );
       }
 
+      // return
       return prisma.inventoryItem.update({
         where: { id: item.id },
         data: {
