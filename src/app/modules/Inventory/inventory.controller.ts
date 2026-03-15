@@ -15,6 +15,7 @@ const updateMultipleInventoryItems = catchAsync(
       req.body,
     );
 
+    // response
     sendResponse(res, {
       statusCode: httpStatus.OK,
       success: true,
