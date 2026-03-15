@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-// update multiple inventory items validation
+// update multiple inventory validation
 const updateMultipleInventoryItemsValidation = z.object({
   body: z.object({
     items: z
