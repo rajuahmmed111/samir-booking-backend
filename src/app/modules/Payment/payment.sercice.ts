@@ -139,7 +139,7 @@ const stripeAccountOnboarding = async (userId: string) => {
   };
 };
 
-// checkout session on stripe for hotel
+// checkout session on stripe for hotel booking
 const createStripeCheckoutSessionForHotel = async (
   userId: string,
   bookingId: string,
