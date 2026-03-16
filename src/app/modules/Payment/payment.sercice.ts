@@ -193,7 +193,7 @@ const createStripeCheckoutSessionForHotel = async (
     // full amount goes to property owner
     payment_intent_data: {
       transfer_data: {
-        destination: provider.stripeAccountId, // property owner gets full amount
+        destination: provider.stripeAccountId,
       },
       description,
     },
