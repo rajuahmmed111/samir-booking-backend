@@ -558,6 +558,7 @@ const createStripeCheckoutSessionForService = async (
 // };
 
 // stripe webhook payment
+
 const stripeHandleWebhook = async (event: Stripe.Event) => {
   switch (event.type) {
     // checkout session completed
