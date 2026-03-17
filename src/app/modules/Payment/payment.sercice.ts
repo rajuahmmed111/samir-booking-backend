@@ -200,7 +200,6 @@ const createStripeCheckoutSessionForHotel = async (
     metadata: {
       userId,
       bookingId,
-      // partnerId: provider.id,
     },
   });
 
