@@ -213,7 +213,7 @@ const createStripeCheckoutSessionForHotel = async (
     );
   }
 
-  // update DB with checkoutSessionId
+  // update checkoutSessionId
   await prisma.hotel_Booking.update({
     where: { id: bookingId },
     data: {
