@@ -576,7 +576,7 @@ const stripeHandleWebhook = async (event: Stripe.Event) => {
 
       if (!payment) break;
 
-      // paymentIntentId
+      // update paymentIntentId
       await prisma.payment.update({
         where: { id: payment.id },
         data: { paymentIntentId },
