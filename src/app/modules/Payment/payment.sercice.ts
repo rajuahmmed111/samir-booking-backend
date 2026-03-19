@@ -697,7 +697,6 @@ const stripeHandleWebhook = async (event: Stripe.Event) => {
             serviceTypes: ServiceTypes.SERVICE,
             serviceName: booking.serviceName || booking.property,
             totalPrice: payment.amount,
-            // hotelId: payment.hotelId || undefined,
             serviceId: booking.serviceId || undefined,
           };
 
