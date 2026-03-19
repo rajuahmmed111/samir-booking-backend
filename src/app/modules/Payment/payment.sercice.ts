@@ -634,7 +634,7 @@ const stripeHandleWebhook = async (event: Stripe.Event) => {
         });
       }
 
-      // ------------------- send notifications for HOTEL bookings immediately after checkout -------------------
+      // ------------------- send notifications for HOTEL bookings  after checkout -------------------
       if (payment.serviceType === "HOTEL") {
         try {
           const notificationData: IBookingNotificationData = {
