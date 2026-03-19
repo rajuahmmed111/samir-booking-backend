@@ -733,7 +733,7 @@ const cancelStripeBooking = async (
 ) => {
   // Get config for the service type
   const serviceCfg = serviceConfig[serviceType.toUpperCase() as ServiceType];
-  // console.log(serviceCfg, "serviceCfg");
+
   if (!serviceCfg) {
     throw new ApiError(httpStatus.BAD_REQUEST, "Invalid service type");
   }
