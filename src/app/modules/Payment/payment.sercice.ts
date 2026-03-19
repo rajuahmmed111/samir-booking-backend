@@ -725,7 +725,7 @@ const stripeHandleWebhook = async (event: Stripe.Event) => {
   }
 };
 
-// cancel booking service stripe
+// cancel booking service
 const cancelStripeBooking = async (
   serviceType: ServiceType,
   bookingId: string,
