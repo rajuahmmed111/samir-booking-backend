@@ -741,7 +741,7 @@ const cancelStripeBooking = async (
   const bookingModel = serviceCfg.bookingModel;
   const serviceModel = serviceCfg.serviceModel;
 
-  // Fetch booking with payment and user
+  // fetch booking with payment and user
   const booking = await (bookingModel as any).findUnique({
     where: { id: bookingId, userId },
     include: { payment: true, user: true },
