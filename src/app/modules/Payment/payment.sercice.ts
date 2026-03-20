@@ -731,7 +731,7 @@ const cancelStripeBooking = async (
   bookingId: string,
   userId: string,
 ) => {
-  // Get config for the service type
+  // get config for the service type
   const serviceCfg = serviceConfig[serviceType.toUpperCase() as ServiceType];
 
   if (!serviceCfg) {
