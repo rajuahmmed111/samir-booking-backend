@@ -759,7 +759,7 @@ const cancelStripeBooking = async (
     );
   }
 
-  // Find partner (service provider)
+  // find partner (service provider)
   const partner = await prisma.user.findUnique({
     where: { id: payment.partnerId },
   });
