@@ -783,13 +783,13 @@ const cancelStripeBooking = async (
     });
   }
 
-  // Update payment status
+  // update payment status
   await prisma.payment.update({
     where: { id: payment.id },
     data: { status: PaymentStatus.REFUNDED },
   });
 
-  // Update booking status → CANCELLED
+  // update booking status → CANCELLED
   await (bookingModel as any).update({
     where: { id: bookingId },
     data: { bookingStatus: BookingStatus.CANCELLED },
