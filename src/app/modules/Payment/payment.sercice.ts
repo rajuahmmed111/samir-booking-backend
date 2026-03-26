@@ -804,7 +804,7 @@ const cancelStripeBooking = async (
     });
   }
 
-  // Send cancellation notification
+  // send cancellation notification
   const service = serviceId
     ? await (serviceModel as any).findUnique({ where: { id: serviceId } })
     : null;
