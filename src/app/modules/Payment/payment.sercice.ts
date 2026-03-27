@@ -776,7 +776,7 @@ const cancelStripeBooking = async (
     amount: Math.round(payment.amount * 100),
   });
 
-  // Reverse transfer to partner if applicable
+  // reverse transfer to partner if applicable
   if (payment.transfer_id && payment.service_fee > 0) {
     await stripe.transfers.createReversal(payment.transfer_id, {
       amount: payment.service_fee,
