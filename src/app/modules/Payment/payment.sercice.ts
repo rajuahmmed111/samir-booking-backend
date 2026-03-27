@@ -770,7 +770,7 @@ const cancelStripeBooking = async (
     );
   }
 
-  // Refund full amount
+  // refund full amount
   await stripe.refunds.create({
     payment_intent: payment.payment_intent,
     amount: Math.round(payment.amount * 100),
