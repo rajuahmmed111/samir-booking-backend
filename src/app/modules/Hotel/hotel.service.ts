@@ -66,7 +66,6 @@ const createHotel = async (req: Request) => {
   });
 
   const {
-    // propertyName,
     propertyTitle,
     propertyAddress,
     propertyDescription,
