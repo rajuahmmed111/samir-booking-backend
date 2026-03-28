@@ -100,7 +100,6 @@ const createHotel = async (req: Request) => {
 
   const result = await prisma.hotel.create({
     data: {
-      // propertyName,
       uploadPhotosOrVideos: uploadedMedia,
       propertyTitle,
       propertyAddress,
