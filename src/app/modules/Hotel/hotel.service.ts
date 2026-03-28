@@ -1,6 +1,5 @@
 import { Request } from "express";
 import prisma from "../../../shared/prisma";
-import { IUploadedFile } from "../../../interfaces/file";
 import ApiError from "../../../errors/ApiErrors";
 import httpStatus from "http-status";
 import { Hotel, Prisma } from "@prisma/client";
