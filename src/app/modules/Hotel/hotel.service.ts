@@ -2,7 +2,7 @@ import { Request } from "express";
 import prisma from "../../../shared/prisma";
 import ApiError from "../../../errors/ApiErrors";
 import httpStatus from "http-status";
-import { Hotel, Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { paginationHelpers } from "../../../helpars/paginationHelper";
 import { IPaginationOptions } from "../../../interfaces/paginations";
 import { IHotelFilterRequest } from "./hotel.interface";
