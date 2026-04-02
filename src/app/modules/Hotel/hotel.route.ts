@@ -66,7 +66,7 @@ router.post(
   HotelController.createGuard,
 );
 
-// update hotel
+// update hotel info
 router.patch(
   "/:hotelId",
   auth(UserRole.PROPERTY_OWNER),
