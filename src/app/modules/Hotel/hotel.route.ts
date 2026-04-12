@@ -56,7 +56,7 @@ router.post(
   HotelController.createHotel,
 );
 
-// create guard for specific hotel
+// create guard  specific hotel
 router.post(
   "/guard/:hotelId",
   auth(UserRole.PROPERTY_OWNER),
