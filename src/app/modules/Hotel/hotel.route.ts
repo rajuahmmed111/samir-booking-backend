@@ -9,7 +9,7 @@ import { hotelValidation } from "./hotel.validation";
 
 const router = express.Router();
 
-// get all hotels
+// get all hotel
 router.get("/", HotelController.getAllHotels);
 
 // get all my hotels for partner
