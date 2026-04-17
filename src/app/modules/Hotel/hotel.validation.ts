@@ -46,6 +46,14 @@ const inventoryItemSchema = z.object({
   quantity: z.number().int().positive("Quantity must be positive"),
 });
 
+// local tip schema
+const localTipSchema = z.object({
+  category: z.string().optional(),
+  subcategory: z.string().optional(),
+  subcategoryImage: z.string().optional(),
+  floor_details: z.string().optional(),
+});
+
 const createHotelSchema = z.object({
   body: z.object({
     // propertyName: z.string().min(1, "Property name is required"),
@@ -66,7 +74,7 @@ const createHotelSchema = z.object({
     amenities: z.string().min(1, "Amenities are required"),
     // additional info
     addSecurityKeys: z.string().optional(),
-    addLocalTips: z.string().optional(),
+    addLocalTips: z.union([z.string(), z.array(localTipSchema)]).optional(),
     // pricing
     basePrice: z.string().min(1, "Base price is required"),
     weeklyOffers: z.string().optional(),
@@ -139,4 +147,5 @@ export const hotelValidation = {
   createGuardSchema,
   customPriceSchema,
   inventoryItemSchema,
+  localTipSchema,
 };

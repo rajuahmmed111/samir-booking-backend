@@ -64,6 +64,21 @@ const createHotel = async (req: Request) => {
     uploadedMedia.push(u.secure_url);
   });
 
+  // upload subcategory images
+  const subcategoryImages = files?.subcategoryImage || [];
+  const uploadedSubcategoryImages: string[] = [];
+  if (subcategoryImages.length > 0) {
+    const subUploads = await Promise.all(
+      subcategoryImages.map((file) => uploadFile.uploadToCloudinary(file)),
+    );
+    subUploads.forEach((u) => {
+      if (!u?.secure_url) {
+        throw new Error("Cloudinary subcategory upload failed");
+      }
+      uploadedSubcategoryImages.push(u.secure_url);
+    });
+  }
+
   const {
     propertyTitle,
     propertyAddress,
@@ -115,11 +130,22 @@ const createHotel = async (req: Request) => {
       keyBoxPin,
       wifiPassword,
 
-      amenities: amenities ? JSON.parse(amenities) : [],
+      amenities:
+        typeof amenities === "string" ? JSON.parse(amenities) : amenities || [],
 
       houseRules: uploadedHouseRules as string,
       addSecurityKeys,
-      addLocalTips,
+      addLocalTips: (() => {
+        const tips = typeof addLocalTips === "string" ? JSON.parse(addLocalTips) : addLocalTips || [];
+        let imageIndex = 0;
+        return tips.map((tip: any) => {
+          // If Tip specifies it needs an image (either as a placeholder or just sequentially)
+          if (uploadedSubcategoryImages[imageIndex]) {
+            tip.subcategoryImage = uploadedSubcategoryImages[imageIndex++];
+          }
+          return tip;
+        });
+      })(),
 
       basePrice: parseFloat(basePrice),
       weeklyOffers: weeklyOffers ? parseFloat(weeklyOffers) : undefined,
@@ -130,33 +156,39 @@ const createHotel = async (req: Request) => {
       // custom Price Range
       customPrices: customPrices
         ? {
-            create: JSON.parse(customPrices).map((p: any) => {
-              // Handle single date case
-              if (p.date) {
-                return {
-                  startDate: new Date(p.date),
-                  endDate: new Date(p.date), // same date for single day
-                  price: p.price,
-                };
-              }
-              // Handle date range case
+          create: (typeof customPrices === "string"
+            ? JSON.parse(customPrices)
+            : customPrices
+          ).map((p: any) => {
+            // Handle single date case
+            if (p.date) {
               return {
-                startDate: new Date(p.startDate),
-                endDate: new Date(p.endDate),
+                startDate: new Date(p.date),
+                endDate: new Date(p.date), // same date for single day
                 price: p.price,
               };
-            }),
-          }
+            }
+            // Handle date range case
+            return {
+              startDate: new Date(p.startDate),
+              endDate: new Date(p.endDate),
+              price: p.price,
+            };
+          }),
+        }
         : undefined,
 
       // inventory
       inventoryItems: inventoryItems
         ? {
-            create: JSON.parse(inventoryItems).map((item: any) => ({
-              name: item.name,
-              quantity: item.quantity,
-            })),
-          }
+          create: (typeof inventoryItems === "string"
+            ? JSON.parse(inventoryItems)
+            : inventoryItems
+          ).map((item: any) => ({
+            name: item.name,
+            quantity: item.quantity,
+          })),
+        }
         : undefined,
 
       availableForBooking,
@@ -564,6 +596,21 @@ const updateHotel = async (req: Request) => {
     uploadedMedia.push(u.secure_url);
   });
 
+  // upload subcategory images
+  const subcategoryImages = files?.subcategoryImage || [];
+  const uploadedSubcategoryImages: string[] = [];
+  if (subcategoryImages.length > 0) {
+    const subUploads = await Promise.all(
+      subcategoryImages.map((file) => uploadFile.uploadToCloudinary(file)),
+    );
+    subUploads.forEach((u) => {
+      if (!u?.secure_url) {
+        throw new Error("Cloudinary subcategory upload failed");
+      }
+      uploadedSubcategoryImages.push(u.secure_url);
+    });
+  }
+
   const {
     // propertyName,
     propertyTitle,
@@ -609,7 +656,17 @@ const updateHotel = async (req: Request) => {
       amenities: amenities ? JSON.parse(amenities) : undefined,
       houseRules: uploadedHouseRules || hotelExists.houseRules,
       addSecurityKeys,
-      addLocalTips,
+      addLocalTips: (() => {
+        const tips = typeof addLocalTips === "string" ? JSON.parse(addLocalTips) : addLocalTips;
+        if (!tips) return undefined;
+        let imageIndex = 0;
+        return tips.map((tip: any) => {
+          if (uploadedSubcategoryImages[imageIndex]) {
+            tip.subcategoryImage = uploadedSubcategoryImages[imageIndex++];
+          }
+          return tip;
+        });
+      })(),
       basePrice: basePrice ? parseFloat(basePrice) : undefined,
       weeklyOffers: weeklyOffers ? parseFloat(weeklyOffers) : undefined,
       monthlyOffers: monthlyOffers ? parseFloat(monthlyOffers) : undefined,
@@ -617,24 +674,24 @@ const updateHotel = async (req: Request) => {
       // Handle custom prices - delete existing and create new ones
       customPrices: customPrices
         ? {
-            deleteMany: {},
-            create: JSON.parse(customPrices).map((p: any) => ({
-              startDate: new Date(p.startDate),
-              endDate: new Date(p.endDate),
-              price: parseFloat(p.price),
-            })),
-          }
+          deleteMany: {},
+          create: JSON.parse(customPrices).map((p: any) => ({
+            startDate: new Date(p.startDate),
+            endDate: new Date(p.endDate),
+            price: parseFloat(p.price),
+          })),
+        }
         : undefined,
 
       // Handle inventory items - delete existing and create new ones
       inventoryItems: inventoryItems
         ? {
-            deleteMany: {},
-            create: JSON.parse(inventoryItems).map((item: any) => ({
-              name: item.name,
-              quantity: item.quantity,
-            })),
-          }
+          deleteMany: {},
+          create: JSON.parse(inventoryItems).map((item: any) => ({
+            name: item.name,
+            quantity: item.quantity,
+          })),
+        }
         : undefined,
 
       syncWithAirbnb: String(syncWithAirbnb) === "true" ? true : false,
